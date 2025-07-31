@@ -1,9 +1,11 @@
 <template>
-  <div class="node-editor" @mousedown="onEditorMouseDown">
-    <button @click="addNode">Add Node</button>
-    <button @click="addActionNode">Add Action Node</button>
-    <button @click="addSystemNode">Add System Node</button>
-    <svg class="connections" width="100%" height="100%" style="position:absolute;top:0;left:0;z-index:1;pointer-events:none">
+  <div class="relative w-full h-full overflow-hidden bg-zinc-900 text-white font-sans" @mousedown="onEditorMouseDown">
+    <div class="absolute top-4 left-4 z-10 flex gap-2">
+      <button @click="addNode" class="bg-cyan-700 hover:bg-cyan-800 text-white rounded px-4 py-2 text-base">Add Node</button>
+      <button @click="addActionNode" class="bg-yellow-700 hover:bg-yellow-800 text-white rounded px-4 py-2 text-base">Add Action Node</button>
+      <button @click="addSystemNode" class="bg-green-700 hover:bg-green-800 text-white rounded px-4 py-2 text-base">Add System Node</button>
+    </div>
+    <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-20 connections" width="100%" height="100%" >
       <g v-for="(conn, i) in connections" :key="i">
         <template v-if="getConnectionPoints(conn)">
           <line
@@ -185,6 +187,11 @@ function connectNodes({ from, to }) {
   };
   const fromType = getType(fromNode, from?.output, 'output');
   const toType = getType(toNode, to?.input, 'input');
+
+  console.log({
+    fromType,
+    toType,
+  })
   if (fromType && toType) {
     if (fromType === toType) {
       connections.value.push({ from, to });
@@ -249,6 +256,7 @@ function startConnectionDrag({ nodeId, ioType, ioName, x, y }) {
 
 function onConnectionDragMove(e) {
   if (draggingConnection.value) {
+    console.log({ x: e.clientX, y: e.clientY });
     draggingConnection.value.mouse = { x: e.clientX, y: e.clientY };
   }
 }
@@ -280,7 +288,20 @@ function getConnectionPoints(conn) {
   const from = ioPositions.value[conn.from.nodeId]?.outputs?.[conn.from.output];
   const to = ioPositions.value[conn.to.nodeId]?.inputs?.[conn.to.input];
   if (!from || !to) return null;
-  return { x1: from.x, y1: from.y, x2: to.x, y2: to.y };
+  // Offset by IO circle radius (default 8px)
+  const r = 8;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return { x1: from.x, y1: from.y, x2: to.x, y2: to.y };
+  const offsetX = (dx / len) * r;
+  const offsetY = (dy / len) * r;
+  return {
+    x1: from.x + offsetX,
+    y1: from.y + offsetY,
+    x2: to.x - offsetX,
+    y2: to.y - offsetY
+  };
 }
 
 function isActionFlow(conn) {
@@ -339,135 +360,18 @@ function getNodeComponent(node) {
   if (node.type === 'system') return SystemNode;
   return NodeBase;
 }
+
+function deleteConnection({ from, to }) {
+  // Remove the connection matching both endpoints
+  connections.value = connections.value.filter(conn => {
+    return !(
+      conn.from?.nodeId === from?.nodeId && conn.from?.output === from?.output &&
+      conn.to?.nodeId === to?.nodeId && conn.to?.input === to?.input
+    );
+  });
+}
 </script>
 
 <style>
-.node-editor {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #222;
-  color: #000;
-}
-
-.connections {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-button {
-  margin: 10px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.node {
-  position: absolute;
-  width: 120px;
-  padding: 10px;
-  background-color: #333;
-  border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  color: #fff;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  user-select: none;
-}
-
-.node.selected {
-  border-color: #0ff;
-}
-
-.node .title {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.node .input, .node .output {
-  margin: 5px 0;
-  padding: 5px;
-  background-color: #444;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.node .input {
-  border: 1px solid #0f0;
-}
-
-.node .output {
-  border: 1px solid #f00;
-}
-
-.node .exec {
-  background-color: #00f;
-  color: #fff;
-  font-weight: bold;
-  text-align: center;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.node .exec:hover {
-  background-color: #005;
-}
-
-.node-settings {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 300px;
-  padding: 20px;
-  background-color: #333;
-  border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  color: #fff;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  z-index: 10;
-}
-
-.node-settings h3 {
-  margin-top: 0;
-}
-
-.node-settings label {
-  display: block;
-  margin: 10px 0 5px;
-}
-
-.node-settings input, .node-settings select {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  background-color: #444;
-  border: 1px solid #555;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 14px;
-}
-
-.node-settings button {
-  width: 100%;
-  padding: 10px;
-  background-color: #007bff;
-  border: none;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.node-settings button:hover {
-  background-color: #0056b3;
-}
+/* Add any global styles here */
 </style>

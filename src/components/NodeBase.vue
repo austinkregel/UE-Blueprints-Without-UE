@@ -1,39 +1,50 @@
 <template>
   <div
-    class="node"
+    class="absolute inline-block min-w-[120px] max-w-[420px] p-2.5 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg text-white font-sans text-sm select-none cursor-grab"
     :style="{ left: node.x + 'px', top: node.y + 'px' }"
     :data-node-id="node.id"
     ref="nodeRef"
     @mousedown.stop="startDrag"
     @click.stop="selectNode"
   >
-    <div class="node-header">
+    <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-10" width="100%" height="100%">
+      <g v-for="conn in nodeConnections" :key="connKey(conn)">
+        <line
+          v-if="getConnectionPoints(conn)"
+          :x1="getConnectionPoints(conn).x1"
+          :y1="getConnectionPoints(conn).y1"
+          :x2="getConnectionPoints(conn).x2"
+          :y2="getConnectionPoints(conn).y2"
+          stroke="#0ff" stroke-width="3" />
+      </g>
+    </svg>
+    <div class="bg-zinc-700 px-3 py-1.5 rounded-t-lg font-bold">
       <slot name="header">Node {{ node.id }}</slot>
     </div>
-    <div class="io-list">
-      <div class="inputs">
+    <div class="flex justify-between p-2 gap-4">
+      <div class="flex flex-col gap-1 inputs">
         <div
           v-for="input in node.inputs"
           :key="input.name || input"
-          class="io input"
+          class="io input bg-zinc-600 px-1.5 py-0.5 rounded text-xs flex items-center cursor-pointer"
           @mousedown.stop.prevent="startConnect('input', input)"
           @contextmenu="onIOContextMenu('input', input, $event)"
         >
-          ● <span class="io-label">{{ input.name || input }}</span>
-          <span v-if="input.type" class="io-type">: {{ input.type }}</span>
+          ● <span class="mx-0.5 io-label">{{ input.name || input }}</span>
+          <span v-if="input.type" class="io-type text-cyan-300 text-[0.85em] ml-0.5">: {{ input.type }}</span>
         </div>
         <slot name="inputs"></slot>
       </div>
-      <div class="outputs">
+      <div class="flex flex-col gap-1 outputs">
         <div
           v-for="output in node.outputs"
           :key="output.name || output"
-          class="io output"
+          class="io output bg-zinc-600 px-1.5 py-0.5 rounded text-xs flex items-center cursor-pointer justify-end"
           @mousedown.stop.prevent="startConnect('output', output)"
           @contextmenu="onIOContextMenu('output', output, $event)"
         >
-          <span class="io-label">{{ output.name || output }}</span>
-          <span v-if="output.type" class="io-type">: {{ output.type }}</span> ●
+          <span class="io-label mx-0.5">{{ output.name || output }}</span>
+          <span v-if="output.type" class="io-type text-cyan-300 text-[0.85em] ml-0.5">: {{ output.type }}</span> ●
         </div>
         <slot name="outputs"></slot>
       </div>
@@ -43,12 +54,12 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, ref, onMounted, nextTick } from 'vue';
+import { onBeforeUnmount, ref, onMounted, nextTick, computed } from 'vue';
 const props = defineProps({
   node: Object,
   connections: Array,
 });
-const emit = defineEmits(['move', 'connect', 'select', 'register-io']);
+const emit = defineEmits(['move', 'connect', 'select', 'register-io', 'start-connection-drag']);
 
 let dragging = false;
 let offset = { x: 0, y: 0 };
@@ -163,10 +174,11 @@ function finishConnect(e) {
         const isInput = el.classList.contains('input');
         const type = isInput ? 'input' : 'output';
         // Find the node id and io name from DOM tree
-        let nodeEl = el.closest('.node');
+        let nodeEl = el.closest('[data-node-id]');
         let nodeId = nodeEl ? Number(nodeEl.getAttribute('data-node-id')) : undefined;
         let ioName = el.querySelector('.io-label')?.textContent?.trim() || el.textContent?.trim();
         found = { type, nodeId, ioName };
+        console.log('finishConnect found:', found);
       }
     });
     if (found && found.nodeId !== undefined) {
@@ -175,24 +187,44 @@ function finishConnect(e) {
         (connecting.type === 'output' && found.type === 'input') ||
         (connecting.type === 'input' && found.type === 'output')
       ) {
-        const isExec = (x) => (x === 'Exec');
+        // More robust exec pin check: case-insensitive, allow type property
+        const isExec = (x) => {
+          if (!x) return false;
+          if (typeof x === 'string') return x.trim().toLowerCase() === 'exec';
+          if (typeof x === 'object' && x.type) return String(x.type).trim().toLowerCase() === 'exec';
+          return false;
+        };
         if (
           (isExec(found.ioName) && isExec(connecting.name)) ||
           (!isExec(found.ioName) && !isExec(connecting.name))
         ) {
           if (connecting.type === 'output') {
+            console.log('Emitting connect (output):', {
+              from: { nodeId: props.node.id, output: connecting.name },
+              to: { nodeId: found.nodeId, input: found.ioName },
+            });
             emit('connect', {
               from: { nodeId: props.node.id, output: connecting.name },
               to: { nodeId: found.nodeId, input: found.ioName },
             });
           } else {
+            console.log('Emitting connect (input):', {
+              from: { nodeId: found.nodeId, output: found.ioName },
+              to: { nodeId: props.node.id, input: connecting.name },
+            });
             emit('connect', {
               from: { nodeId: found.nodeId, output: found.ioName },
               to: { nodeId: props.node.id, input: connecting.name },
             });
           }
+        } else {
+          console.log('Exec pin mismatch:', found.ioName, connecting.name);
         }
+      } else {
+        console.log('Connection type mismatch:', connecting.type, found.type);
       }
+    } else {
+      console.log('No valid IO found under mouse for connection.');
     }
   }
   connecting = null;
@@ -200,83 +232,43 @@ function finishConnect(e) {
   window.removeEventListener('mouseup', finishConnect);
 }
 
-// Add right-click to delete connection
-function onIOContextMenu(type, io, event) {
-  event.preventDefault();
-  emit('delete-connection', { nodeId: props.node.id, ioType: type, ioName: io.name || io });
+function connKey(conn) {
+  // Create a unique key for a connection based on node and IO names
+  return `${conn.from?.nodeId ?? ''}:${conn.from?.output ?? ''}->${conn.to?.nodeId ?? ''}:${conn.to?.input ?? ''}`;
 }
 
-function selectNode() {
-  emit('select', { id: props.node.id });
+function getConnectionPoints(conn) {
+  // Use the same logic as NodeEditor.vue to get IO positions from props
+  const from = props.connections && conn.from?.nodeId !== undefined && conn.from?.output !== undefined
+    ? document.querySelector(`[data-node-id='${conn.from.nodeId}'] .io.output .io-label:contains('${conn.from.output}')`)
+    : null;
+  const to = props.connections && conn.to?.nodeId !== undefined && conn.to?.input !== undefined
+    ? document.querySelector(`[data-node-id='${conn.to.nodeId}'] .io.input .io-label:contains('${conn.to.input}')`)
+    : null;
+  if (!from || !to) return null;
+  const fromRect = from.getBoundingClientRect();
+  const toRect = to.getBoundingClientRect();
+  return {
+    x1: fromRect.left + fromRect.width / 2 + window.scrollX,
+    y1: fromRect.top + fromRect.height / 2 + window.scrollY,
+    x2: toRect.left + toRect.width / 2 + window.scrollX,
+    y2: toRect.top + toRect.height / 2 + window.scrollY
+  };
 }
 
-onBeforeUnmount(() => {
-  window.removeEventListener('mousemove', onDrag);
-  window.removeEventListener('mouseup', stopDrag);
-  window.removeEventListener('mouseup', finishConnect);
+const nodeConnections = computed(() => {
+  // Only show connections where this node is the source or target
+  if (!props.connections) return [];
+  return props.connections.filter(conn =>
+    (conn.from && conn.from.nodeId === props.node.id) ||
+    (conn.to && conn.to.nodeId === props.node.id)
+  );
 });
 </script>
 
 <style scoped>
-.node {
-  position: absolute;
-  display: inline-block;
-  width: auto;
-  min-width: 120px;
-  max-width: 420px;
-  padding: 10px;
-  background-color: #333;
-  border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  color: #fff;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  user-select: none;
-  cursor: grab;
-}
-.node-header {
-  background: #444;
-  padding: 6px 12px;
-  border-radius: 8px 8px 0 0;
-  font-weight: bold;
-}
-.io-list {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px;
-  gap: 1em;
-}
-.inputs, .outputs {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.io {
-  background: #555;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-.io-label {
-  margin: 0 2px;
-}
-.io-type {
-  color: #0ff;
-  font-size: 0.85em;
-  margin-left: 2px;
-}
-.input {
-  align-items: flex-start;
-}
-.output {
-  align-items: flex-end;
-}
-.io.valid-target {
-  outline: 2px solid #0ff;
-  background: #224;
+.valid-target {
+  border: 2px dashed #0ff !important;
+  opacity: 1 !important;
 }
 </style>

@@ -1,48 +1,48 @@
 <template>
-  <div class="settings-sidebar">
-    <div class="settings-content">
-      <h3>Node {{ node.id }} Settings</h3>
-      <label>Inputs:</label>
-      <ul>
-        <li v-for="(input, i) in localInputs.filter(inp => inp.type !== 'Exec')" :key="i">
-          <input v-model="localInputs[i].name" placeholder="Input name" />
-          <select v-model="localInputs[i].type">
-            <option v-for="type in typeOptions.filter(t => t !== 'Exec')" :key="type" :value="type">{{ type }}</option>
-            <option :value="localInputs[i].type" v-if="!typeOptions.includes(localInputs[i].type) && localInputs[i].type !== 'Exec'">{{ localInputs[i].type }}</option>
+  <div class="fixed top-0 right-0 h-screen w-[540px] bg-zinc-900 text-white shadow-2xl z-[1000] flex flex-col items-stretch animate-slideIn">
+    <div class="p-6 flex-1 flex flex-col overflow-y-auto">
+      <h3 class="text-lg font-bold mb-4">Node {{ node.id }} Settings</h3>
+      <label class="block font-semibold mb-1">Inputs:</label>
+      <ul class="flex flex-col">
+        <li v-for="input in filteredInputs" :key="input.name + '-' + input.type" class="mb-2 flex items-center gap-2">
+          <input v-model="input.name" placeholder="Input name" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28" />
+          <select v-model="input.type" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28">
+            <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
+            <option :value="input.type" v-if="!typeOptions.includes(input.type)">{{ input.type }}</option>
           </select>
-          <input v-model="localInputs[i].type" placeholder="Type (e.g. int, string, array)" />
-          <button @click="removeInput(i)">Remove</button>
+          <input v-model="input.type" placeholder="Type (e.g. int, string, array)" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-32" />
+          <button @click="removeInput(localInputs.indexOf(input))" class="bg-zinc-700 hover:bg-zinc-600 text-white rounded px-2 py-1">Remove</button>
         </li>
       </ul>
-      <button @click="addInput">Add Input</button>
-      <label>Outputs:</label>
-      <ul>
-        <li v-for="(output, i) in localOutputs.filter(out => out.type !== 'Exec')" :key="i">
-          <input v-model="localOutputs[i].name" placeholder="Output name" />
-          <select v-model="localOutputs[i].type">
-            <option v-for="type in typeOptions.filter(t => t !== 'Exec')" :key="type" :value="type">{{ type }}</option>
-            <option :value="localOutputs[i].type" v-if="!typeOptions.includes(localOutputs[i].type) && localOutputs[i].type !== 'Exec'">{{ localOutputs[i].type }}</option>
+      <button @click="addInput" class="bg-zinc-700 hover:bg-zinc-600 text-white rounded px-3 py-1 mb-4">Add Input</button>
+      <label class="block font-semibold mb-1">Outputs:</label>
+      <ul class="flex flex-col">
+        <li v-for="output in filteredOutputs" :key="output.name + '-' + output.type" class="mb-2 flex items-center gap-2">
+          <input v-model="output.name" placeholder="Output name" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28" />
+          <select v-model="output.type" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28">
+            <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
+            <option :value="output.type" v-if="!typeOptions.includes(output.type)">{{ output.type }}</option>
           </select>
-          <input v-model="localOutputs[i].type" placeholder="Type (e.g. int, string, array)" />
-          <button @click="removeOutput(i)">Remove</button>
+          <input v-model="output.type" placeholder="Type (e.g. int, string, array)" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-32" />
+          <button @click="removeOutput(localOutputs.indexOf(output))" class="bg-zinc-700 hover:bg-zinc-600 text-white rounded px-2 py-1">Remove</button>
         </li>
       </ul>
-      <button @click="addOutput">Add Output</button>
-      <div class="actions">
-        <button @click="save">Save</button>
-        <button @click="$emit('close')">Close</button>
+      <button @click="addOutput" class="bg-zinc-700 hover:bg-zinc-600 text-white rounded px-3 py-1 mb-4">Add Output</button>
+      <div class="mt-4 flex gap-2">
+        <button @click="save" class="bg-cyan-600 hover:bg-cyan-700 text-white rounded px-4 py-2">Save</button>
+        <button @click="$emit('close')" class="bg-zinc-700 hover:bg-zinc-600 text-white rounded px-4 py-2">Close</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 const props = defineProps({ node: Object });
 const emit = defineEmits(['close', 'update-io']);
 
 const typeOptions = [
-  'int', 'float', 'string', 'bool', 'array', 'object', 'callable', 'mixed', 'void', 'resource', 'null', 'Exec'
+  'int', 'float', 'string', 'bool', 'array', 'object', 'callable', 'mixed', 'void', 'resource', 'null'
 ];
 
 function normalizeIO(ioArr) {
@@ -56,6 +56,9 @@ watch(() => props.node, (newNode) => {
   localInputs.value = normalizeIO(newNode.inputs);
   localOutputs.value = normalizeIO(newNode.outputs);
 });
+
+const filteredInputs = computed(() => localInputs.value.filter(inp => inp.type !== 'Exec'));
+const filteredOutputs = computed(() => localOutputs.value.filter(out => out.type !== 'Exec'));
 
 function addInput() {
   localInputs.value.push({ name: 'Input', type: '' });
@@ -78,55 +81,3 @@ function save() {
   emit('close');
 }
 </script>
-
-<style scoped>
-.settings-sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  width: 340px;
-  background: #222;
-  color: #fff;
-  box-shadow: -2px 0 12px #000a;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  animation: slideIn 0.2s;
-}
-@keyframes slideIn {
-  from { right: -400px; }
-  to { right: 0; }
-}
-.settings-content {
-  padding: 24px;
-  flex: 1;
-  overflow-y: auto;
-}
-.actions {
-  margin-top: 16px;
-  display: flex;
-  gap: 8px;
-}
-input, select {
-  background: #333;
-  color: #fff;
-  border: 1px solid #555;
-  border-radius: 4px;
-  padding: 2px 6px;
-  margin-right: 8px;
-  margin-bottom: 4px;
-}
-button {
-  background: #444;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 10px;
-  cursor: pointer;
-}
-button:hover {
-  background: #666;
-}
-</style>
