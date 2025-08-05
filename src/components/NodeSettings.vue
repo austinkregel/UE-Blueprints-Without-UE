@@ -40,7 +40,7 @@
 import { ref, watch, computed } from 'vue';
 const props = defineProps({ node: Object });
 const emit = defineEmits(['close', 'update-io']);
-
+const { node } = props;
 const typeOptions = [
   'int', 'float', 'string', 'bool', 'array', 'object', 'callable', 'mixed', 'void', 'resource', 'null'
 ];
@@ -49,12 +49,17 @@ function normalizeIO(ioArr) {
   return ioArr.map(io => typeof io === 'object' ? io : { name: io, type: '' });
 }
 
-const localInputs = ref(normalizeIO(props.node.inputs));
-const localOutputs = ref(normalizeIO(props.node.outputs));
+const localInputs = ref(props.node ? normalizeIO(props.node.inputs) : []);
+const localOutputs = ref(props.node ? normalizeIO(props.node.outputs) : []);
 
 watch(() => props.node, (newNode) => {
-  localInputs.value = normalizeIO(newNode.inputs);
-  localOutputs.value = normalizeIO(newNode.outputs);
+  if (newNode) {
+    localInputs.value = normalizeIO(newNode.inputs);
+    localOutputs.value = normalizeIO(newNode.outputs);
+  } else {
+    localInputs.value = [];
+    localOutputs.value = [];
+  }
 });
 
 const filteredInputs = computed(() => localInputs.value.filter(inp => inp.type !== 'Exec'));
@@ -74,7 +79,7 @@ function removeOutput(i) {
 }
 function save() {
   emit('update-io', {
-    id: props.node.id,
+    id: props.node?.id ?? null,
     inputs: localInputs.value.map(io => ({ ...io })),
     outputs: localOutputs.value.map(io => ({ ...io })),
   });

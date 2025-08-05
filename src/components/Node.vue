@@ -1,6 +1,7 @@
 <template>
   <div
     class="node"
+    :data-node-id="node.id"
     :style="{ left: node.x + 'px', top: node.y + 'px' }"
     @mousedown.stop="startDrag"
     @click.stop="selectNode"
@@ -33,37 +34,20 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import {construction} from "./base-node-utils.js";
 const props = defineProps({
   node: Object,
   connections: Array,
 });
 const emit = defineEmits(['move', 'connect', 'select']);
+const {
+  startDrag,
+  onDrag,
+  stopDrag,
+  startConnect,
+  connecting,
+} = construction(emit, props);
 
-let dragging = false;
-let offset = { x: 0, y: 0 };
-
-function startDrag(e) {
-  dragging = true;
-  offset.x = e.clientX - props.node.x;
-  offset.y = e.clientY - props.node.y;
-  window.addEventListener('mousemove', onDrag);
-  window.addEventListener('mouseup', stopDrag);
-}
-function onDrag(e) {
-  if (!dragging) return;
-  emit('move', { id: props.node.id, x: e.clientX - offset.x, y: e.clientY - offset.y });
-}
-function stopDrag() {
-  dragging = false;
-  window.removeEventListener('mousemove', onDrag);
-  window.removeEventListener('mouseup', stopDrag);
-}
-
-let connecting = ref(null); // { type, name }
-function startConnect(type, name) {
-  connecting.value = { type, name };
-  window.addEventListener('mouseup', finishConnect);
-}
 function finishConnect(e) {
   if (connecting.value) {
     // For demo: just emit a connect event with dummy data
@@ -79,7 +63,6 @@ function finishConnect(e) {
 function selectNode() {
   emit('select', { id: props.node.id });
 }
-
 onBeforeUnmount(() => {
   window.removeEventListener('mousemove', onDrag);
   window.removeEventListener('mouseup', stopDrag);

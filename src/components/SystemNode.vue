@@ -15,7 +15,7 @@
 
 <script setup>
 import NodeBase from './NodeBase.vue';
-const props = defineProps({
+const { node, connections } = defineProps({
   node: Object,
   connections: Array,
 });
