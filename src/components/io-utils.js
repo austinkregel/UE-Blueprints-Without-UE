@@ -15,22 +15,23 @@ export function getConnectionPointsArray(conn) {
 
 export function renderConnectionPath(points, { offset = true } = {}) {
     if (!points || points.length < 2) return '';
-    // Only offset if requested (default: true)
     const start = offset ? { x: points[0].x, y: points[0].y } : points[0];
     const end = offset ? { x: points[points.length - 1].x, y: points[points.length - 1].y } : points[points.length - 1];
-    let d = `M${start.x},${start.y}`;
-    for (let i = 0; i < points.length - 1; i++) {
-        const p0 = i === 0 ? start : points[i - 1] || points[i];
-        const p1 = i === 0 ? start : points[i];
-        const p2 = i === points.length - 2 ? end : points[i + 1];
-        const p3 = i === points.length - 2 ? end : points[i + 2] || p2;
-        const c1x = p1.x + (p2.x - p0.x) / 6;
-        const c1y = p1.y + (p2.y - p0.y) / 6;
-        const c2x = p2.x - (p3.x - p1.x) / 6;
-        const c2y = p2.y - (p3.y - p1.y) / 6;
-        d += ` C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`;
-    }
-    return d;
+    // Stick out in the direction of the connection, then curve
+    const stickOut = 40;
+    // Calculate direction vector
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.sqrt(dx * dx + dy * dy) || 1;
+    // Normalize direction
+    const nx = dx / length;
+    const ny = dy / length;
+    // Control points stick out from start/end in the direction of the connection
+    const c1x = start.x + nx * stickOut;
+    const c1y = start.y + ny * stickOut;
+    const c2x = end.x - nx * stickOut;
+    const c2y = end.y - ny * stickOut;
+    return `M${start.x},${start.y} C${c1x},${c1y} ${c2x},${c2y} ${end.x},${end.y}`;
 }
 
 export function registerAllIOForNode(node, nodeRef) {

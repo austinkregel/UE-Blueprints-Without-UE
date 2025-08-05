@@ -3,7 +3,6 @@
     :node="computedNode"
     :connections="connections"
     @move="$emit('move', $event)"
-    @connect="$emit('connect', $event)"
     @select="$emit('select', $event)"
     @register-io="$emit('register-io', $event)"
     >
@@ -16,6 +15,7 @@
 <script setup>
 import NodeBase from './NodeBase.vue';
 import {computed} from "vue";
+import SidewaysHouseIcon from "./SidewaysHouseIcon.vue";
 const props = defineProps({
   node: Object,
   connections: Array,
