@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full h-full overflow-hidden bg-zinc-900 text-white font-sans" @mousedown="onEditorMouseDown">
+  <div class="relative bg-grid w-full h-full overflow-hidden bg-zinc-900 text-white font-sans" @mousedown="onEditorMouseDown">
     <div class="absolute top-4 left-4 z-10 flex gap-2">
       <button @click="addNode" class="bg-cyan-700 hover:bg-cyan-800 text-white rounded px-4 py-2 text-base">Add Node</button>
       <button @click="addActionNode" class="bg-yellow-700 hover:bg-yellow-800 text-white rounded px-4 py-2 text-base">Add Action Node</button>
@@ -99,4 +99,33 @@ import { onEditorMouseDown } from './editor-utils.js';
 
 <style>
 /* Add your styles here */
+.bg-checkerboard {
+  background-color: #222;
+  background-image: linear-gradient(45deg, #444 25%, transparent 25%),
+    linear-gradient(-45deg, #444 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #444 75%),
+    linear-gradient(-45deg, transparent 75%, #444 75%);
+  background-size: 40px 40px;
+  background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+}
+
+.bg-grid {
+  background-color: #444444;
+  background-image:
+    /* Large black grid lines */
+    linear-gradient(0deg, #000 2px, transparent 2px),
+    linear-gradient(90deg, #000 2px, transparent 2px),
+    /* Small light gray grid lines */
+    linear-gradient(0deg, #222 1px, transparent 1px),
+    linear-gradient(90deg, #222 1px, transparent 1px);
+
+  background-size:
+    80px 80px, 80px 80px,
+    20px 20px, 20px 20px,
+    80px 80px, 80px 80px;
+  background-position:
+    0 0, 0 0,
+    0 0, 0 0,
+    0 0, 0 0;
+}
 </style>

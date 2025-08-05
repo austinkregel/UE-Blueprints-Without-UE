@@ -1,6 +1,6 @@
 import { onBeforeUnmount, ref, onMounted, nextTick } from 'vue';
 
-let dragging = false;
+export let dragging = false;
 let offset = { x: 0, y: 0 };
 
 import VariableNode from './VariableNode.vue';
@@ -8,7 +8,7 @@ import FunctionNode from './FunctionNode.vue';
 import NodeBase from './NodeBase.vue';
 import SystemNode from './SystemNode.vue';
 import { connectNodes } from './connection-utils.js';
-import { registerIO, getConnectionPointsArray, renderConnectionPath, registerAllIOForNode } from './io-utils.js';
+import { renderConnectionPath, registerAllIOForNode } from './io-utils.js';
 import { connections } from './connection-manager.js';
 
 export const nodes = ref([

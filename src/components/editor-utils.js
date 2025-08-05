@@ -1,34 +1,39 @@
-import {nodes, draggingConnection, log} from './base-node-utils.js';
+import {nodes, draggingConnection, log, ioPositions} from './base-node-utils.js';
 import { connectNodes } from './connection-utils.js'
 
 export function onEditorMouseDown(e) {
     // Do NOT clear draggingConnection on mouse down (so it stays attached to the mouse)
-    // Are we dropping it on a node?
-    const targetNode = nodes.value.find(node => {
-        const rect = document.querySelector(`[data-node-id="${node.id}"]`).getBoundingClientRect();
-        return (e.clientX >= rect.left && e.clientX <= rect.right &&
-            e.clientY >= rect.top && e.clientY <= rect.bottom);
-    });
-    if (targetNode) {
-        log(`Dropping on node: ${targetNode.id}`, { targetNode, draggingConnection: draggingConnection.value });
-        // If draggingConnection is set, connect it to the target node's input
-        if (draggingConnection.value) {
-            const { type, from, to } = draggingConnection.value;
-            log(`Connecting ${type} from ${from.nodeId}:${from.output} to ${to.nodeId}:${to.input}`, { type, from, to, targetNode });
-            if (type === 'output' && targetNode.inputs.length > 0) {
-                // Connect to the first input of the target node
-                const input = targetNode.inputs[0].name || targetNode.inputs[0];
-                connectNodes({ from: { nodeId: from.nodeId, output: from.output }, to: { nodeId: targetNode.id, input } });
-                log(`Connected output ${from.output} to input ${input} of node ${targetNode.id}`);
-            } else if (type === 'input' && targetNode.outputs.length > 0) {
-                // Connect to the first output of the target node
-                const output = targetNode.outputs[0].name || targetNode.outputs[0];
-                connectNodes({ from: { nodeId: targetNode.id, output }, to: { nodeId: to.nodeId, input: to.input } });
-                log(`Connected input ${to.input} of node ${to.nodeId} to output ${output} of node ${targetNode.id}`);
-            } else {
-                log('Unknown connection type or no compatible inputs/outputs', { type, targetNode });
+    // Find the closest IO point under the cursor
+    let closestIO = null;
+    let minDist = 32; // threshold in pixels
+    for (const nodeId in ioPositions.value) {
+        for (const type of ['inputs', 'outputs']) {
+            for (const ioName in ioPositions.value[nodeId][type]) {
+                const pos = ioPositions.value[nodeId][type][ioName];
+                const dx = e.clientX + window.scrollX - pos.x;
+                const dy = e.clientY + window.scrollY - pos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestIO = { nodeId, type, ioName, pos };
+                }
             }
         }
     }
+    if (closestIO && draggingConnection.value) {
+        const drag = draggingConnection.value;
+        // Only allow connections to inputs when dragging from output/exec
+        if ((drag.ioType === 'output' || drag.ioType === 'exec') && closestIO.type === 'inputs') {
+            connectNodes({
+                from: { nodeId: drag.nodeId, output: drag.ioName },
+                to: { nodeId: closestIO.nodeId, input: closestIO.ioName }
+            });
+        // Only allow connections to outputs when dragging from input
+        } else if (drag.ioType === 'input' && closestIO.type === 'outputs') {
+            connectNodes({
+                from: { nodeId: closestIO.nodeId, output: closestIO.ioName },
+                to: { nodeId: drag.nodeId, input: drag.ioName }
+            });
+        }
+    }
 }
-

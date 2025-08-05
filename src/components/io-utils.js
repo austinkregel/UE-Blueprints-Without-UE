@@ -48,9 +48,16 @@ export function registerAllIOForNode(node, nodeRef) {
                 nodeId: node.id,
                 type,
                 name: ioName,
-                x: rect.left + (type === 'input' ? 10 : (rect.width ?? 0) - 10)  + window.scrollX,
-                y: rect.top + 10 + window.scrollY,
+                x: getRectXBasedOnType(type, rect),
+                y: getRectYBasedOnType(type, rect),
             });
         });
     });
+}
+
+export function getRectXBasedOnType(type, rect) {
+    return rect.left + (type === 'input' ? 10 : (rect.width ?? 0) - 10)  + window.scrollX;
+}
+export function getRectYBasedOnType(type, rect) {
+    return rect.top + 10 + window.scrollY;
 }

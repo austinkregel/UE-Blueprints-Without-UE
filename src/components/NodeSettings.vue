@@ -6,7 +6,7 @@
       <ul class="flex flex-col">
         <li v-for="input in filteredInputs" :key="input.name + '-' + input.type" class="mb-2 flex items-center gap-2">
           <input v-model="input.name" placeholder="Input name" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28" />
-          <select v-model="input.type" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28">
+          <select v-model="input.type" class="appearance-none bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28">
             <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
             <option :value="input.type" v-if="!typeOptions.includes(input.type)">{{ input.type }}</option>
           </select>
@@ -19,7 +19,7 @@
       <ul class="flex flex-col">
         <li v-for="output in filteredOutputs" :key="output.name + '-' + output.type" class="mb-2 flex items-center gap-2">
           <input v-model="output.name" placeholder="Output name" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28" />
-          <select v-model="output.type" class="bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28">
+          <select v-model="output.type" class="appearance-none bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1 mr-2 mb-0.5 w-28">
             <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
             <option :value="output.type" v-if="!typeOptions.includes(output.type)">{{ output.type }}</option>
           </select>

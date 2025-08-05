@@ -1,11 +1,11 @@
 <template>
   <div
-    class="node-glass absolute inline-block min-w-[120px] max-w-[420px]  text-white font-sans text-sm select-none cursor-grab"
+    class="node-glass absolute inline-block min-w-[120px] max-w-[420px] text-white font-sans text-sm select-none cursor-grab"
     :style="{ left: node.x + 'px', top: node.y + 'px' }"
     :data-node-id="node.id"
     ref="nodeRef"
-    @mousedown.stop="startDrag"
-    @click.stop="() => selectNode(node)"
+    @mousedown.stop="handleMouseDown"
+    @click.stop="handleClick"
   >
     <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-10" width="100%" height="100%">
       <g v-for="conn in nodeConnections" :key="connKey(conn)">
@@ -23,9 +23,15 @@
     </div>
     <slot></slot>
     <div class="flex justify-between p-2 flex-wrap">
-      <div class="flex justify-between w-full">
-        <SidewaysHouseIcon class="w-6 h-6 text-gray-500" />
-        <SidewaysHouseIcon class="w-6 h-6 text-gray-500" />
+      <div class="flex justify-between w-full io">
+        <SidewaysHouseIcon
+          class="w-6 h-6 text-gray-500 io-type"
+          @mousedown.stop.prevent="handleIOStart('exec', { name: 'Exec', type: 'Exec', icon: true }, $event)"
+        />
+        <SidewaysHouseIcon
+          class="w-6 h-6 text-gray-500 io-type"
+          @mousedown.stop.prevent="handleIOStart('exec', { name: 'Exec', type: 'Exec', icon: true }, $event)"
+        />
 
       </div>
       <div class="flex flex-col gap-1 inputs">
@@ -64,6 +70,7 @@
 import {onMounted, nextTick, computed, watch, ref} from 'vue';
 import {construction, log, selectNode, startConnectionDrag} from "./base-node-utils.js";
 import SidewaysHouseIcon from "./SidewaysHouseIcon.vue";
+import {getRectXBasedOnType, getRectYBasedOnType, registerIO} from "./io-utils.js";
 const emit = defineEmits([
   'move', 'connect', 'register-io', 'select', 'start-connection-drag', 'delete-connection'
 ]);
@@ -79,7 +86,24 @@ const {
 } = construction(emit, props, nodeRef);
 
 onMounted(() => {
-  nextTick(registerAllIO);
+  nextTick(() => {
+    registerAllIO();
+    // Register exec IO points for SidewaysHouseIcon
+    const iconEls = nodeRef.value?.querySelectorAll('.io-type');
+    const type = 'output';
+    if (iconEls) {
+      iconEls.forEach((el, idx) => {
+        const rect = el.getBoundingClientRect();
+        registerIO({
+          nodeId: props.node.id,
+          type, // or 'input' if you want to support both
+          name: `ExecIcon${idx}`,
+          x: getRectXBasedOnType(type, rect),
+          y: getRectYBasedOnType(type, rect),
+        });
+      });
+    }
+  });
 });
 
 watch(
@@ -116,20 +140,69 @@ function handleIOStart(type, io, event) {
     ioType: type,
     ioName: io.name || io,
     x,
-    y
+    y,
+    icon: !!io.icon
   });
+}
+
+const isDragging = ref(false);
+let dragStartX = 0;
+let dragStartY = 0;
+let dragStarted = false;
+
+function handleMouseDown(event) {
+  event.preventDefault();
+  dragStartX = event.clientX;
+  dragStartY = event.clientY;
+  isDragging.value = false;
+  dragStarted = false;
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
+}
+
+function handleMouseMove(event) {
+  if (!isDragging.value) {
+    const dx = Math.abs(event.clientX - dragStartX);
+    const dy = Math.abs(event.clientY - dragStartY);
+    if (dx > 3 || dy > 3) {
+      isDragging.value = true;
+      if (!dragStarted) {
+        startDrag(event);
+        dragStarted = true;
+      }
+    }
+  }
+}
+
+function handleMouseUp(event) {
+  window.removeEventListener('mousemove', handleMouseMove);
+  window.removeEventListener('mouseup', handleMouseUp);
+  if (!isDragging.value) {
+    selectNode(props.node);
+  }
+  isDragging.value = false;
+  dragStarted = false;
+}
+
+function handleClick(event) {
+  // No-op: selection is handled in mouseup
 }
 </script>
 
 <style scoped>
 .node-glass {
-  background: linear-gradient(135deg, rgba(40,40,50,0.85) 60%, rgba(80,80,120,0.7) 100%);
+  background: linear-gradient(135deg, rgba(40,40,50,0.5) 60%, rgba(80,80,120,0.3) 100%);
   border-radius: 18px;
   box-shadow: 0 4px 24px 0 rgba(0,0,0,0.25), 0 1.5px 6px 0 rgba(0,255,255,0.08);
   border: 1.5px solid rgba(180,180,220,0.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   transition: box-shadow 0.2s;
+}
+.bg-linear-to-r {
+  background: linear-gradient(to right, rgba(59,130,255,0.5), rgba(31,41,55,0.5));
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 .node-glass:active {
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.35), 0 1.5px 6px 0 rgba(0,255,255,0.18);
