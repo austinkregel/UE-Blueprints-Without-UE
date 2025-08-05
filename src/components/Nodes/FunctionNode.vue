@@ -15,7 +15,7 @@
 <script setup>
 import NodeBase from './NodeBase.vue';
 import {computed} from "vue";
-import SidewaysHouseIcon from "./SidewaysHouseIcon.vue";
+import ExecutionIcon from "../icons/ExecutionIcon.vue";
 const props = defineProps({
   node: Object,
   connections: Array,

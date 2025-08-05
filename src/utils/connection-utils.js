@@ -1,4 +1,4 @@
-import {nodes, ioPositions, draggingConnection, log, getIOPosition} from './base-node-utils';
+import {nodes, ioPositions, draggingConnection, log, getIOPosition} from './base-node-utils.js';
 import { getNextNodeId } from './id-utils.js';
 import { connections, addConnection } from './connection-manager.js';
 import {nextTick} from "vue";
@@ -99,11 +99,6 @@ export function connectNodes({ from, to, areTypesCompatible }) {
             start: getIOPosition(to.nodeId, fromIsOutput ? fromType : toType, fromIsOutput ? to.input : from.input) || { x: 0, y: 0 },
             mouse: getIOPosition(to.nodeId, fromIsOutput ? fromType : toType, fromIsOutput ? to.input : from.input) || { x: 0, y: 0 }
         };
-        log('Connection established:', {
-            t: {to, from},
-            to: getIOPosition(to.nodeId, fromIsOutput ? fromType : toType, fromIsOutput ? to.input : from.input) || { x: 0, y: 0 },
-            ioPositions: JSON.parse(JSON.stringify(ioPositions.value)),
-        });
         return;
     }
     if (typeof areTypesCompatible !== 'undefined' && areTypesCompatible(fromType, toType)) {

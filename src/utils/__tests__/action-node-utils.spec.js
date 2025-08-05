@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
-import * as actionNodeUtils from '../action-node-utils';
-import { nodes } from '../base-node-utils';
-import { log } from '../base-node-utils';
+import * as actionNodeUtils from '../action-node-utils.js';
+import { nodes } from '../base-node-utils.js';
+import { log } from '../base-node-utils.js';
 
 vi.mock('../id-utils', () => ({
   getNextNodeId: vi.fn(() => 42)

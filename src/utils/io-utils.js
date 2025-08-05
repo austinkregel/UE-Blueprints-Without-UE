@@ -1,8 +1,7 @@
-import {ioPositions, log} from './base-node-utils';
+import {ioPositions, log} from './base-node-utils.js';
 
 export function registerIO({ nodeId, type, name, x, y }) {
     if (!ioPositions.value[nodeId]) ioPositions.value[nodeId] = { inputs: {}, outputs: {} };
-    console.log('Registering IO:', { nodeId, type, name, x, y });
     ioPositions.value[nodeId][type + 's'][name] = { x, y };
 }
 

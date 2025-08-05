@@ -1,4 +1,4 @@
-import {nodes, getNextNodeId, log} from './base-node-utils';
+import {nodes, getNextNodeId, log} from './base-node-utils.js';
 
 export function addFunctionNode() {
     nodes.value.push({

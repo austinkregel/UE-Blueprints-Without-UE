@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
-import * as functionNodeUtils from '../function-node-utils';
-import { nodes, nextId } from '../base-node-utils';
-import { log } from '../base-node-utils';
+import * as functionNodeUtils from '../function-node-utils.js';
+import { nodes, nextId } from '../base-node-utils.js';
+import { log } from '../base-node-utils.js';
 
 vi.mock('../base-node-utils', async (importOriginal) => {
   const actual = await importOriginal();

@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
-import { nodes, draggingConnection } from '../base-node-utils';
-import { getNextNodeId } from '../id-utils';
-import * as connectionUtils from '../connection-utils';
+import { nodes, draggingConnection } from '../base-node-utils.js';
+import { getNextNodeId } from '../id-utils.js';
+import * as connectionUtils from '../connection-utils.js';
 import { addConnection } from '../connection-manager.js';
 
 // Mock addConnection and log in connection-manager.js

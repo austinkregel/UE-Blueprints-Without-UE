@@ -3,10 +3,10 @@ import { onBeforeUnmount, ref, onMounted, nextTick } from 'vue';
 export let dragging = false;
 let offset = { x: 0, y: 0 };
 
-import VariableNode from './VariableNode.vue';
-import FunctionNode from './FunctionNode.vue';
-import NodeBase from './NodeBase.vue';
-import SystemNode from './SystemNode.vue';
+import VariableNode from '../components/Nodes/VariableNode.vue';
+import FunctionNode from '../components/Nodes/FunctionNode.vue';
+import NodeBase from '../components/Nodes/NodeBase.vue';
+import SystemNode from '../components/Nodes/SystemNode.vue';
 import { connectNodes } from './connection-utils.js';
 import { renderConnectionPath, registerAllIOForNode } from './io-utils.js';
 import { connections } from './connection-manager.js';
@@ -130,7 +130,6 @@ export function onConnectionDragEnd(e) {
                 e.clientY >= rect.top && e.clientY <= rect.bottom);
         });
 
-        log('Dropping connection on node:',draggingConnection.value?.from?.nodeId, '->', targetNode?.id);
         if (targetNode) {
             const { type, from, to } = draggingConnection.value;
             // Try to find the IO pin under the mouse
@@ -270,7 +269,6 @@ export function construction(emit, props, nodeRef) {
         dragging = false;
         window.removeEventListener('mousemove', onDrag);
         window.removeEventListener('mouseup', stopDrag);
-        log('Stopping drag for node, deregistering IO positions');
     }
 
     let connecting = null;

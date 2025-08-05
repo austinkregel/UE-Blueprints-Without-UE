@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
-import * as systemNodeUtils from '../system-node-utils';
-import { nodes } from '../base-node-utils';
+import * as systemNodeUtils from '../system-node-utils.js';
+import { nodes } from '../base-node-utils.js';
 
 // Mock getNextNodeId to return predictable values
 vi.mock('../id-utils', () => ({

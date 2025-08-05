@@ -6,13 +6,13 @@ describe('getNextNodeId', () => {
     const first = getNextNodeId();
     const second = getNextNodeId();
     const third = getNextNodeId();
-    expect(second).toBe(first + 1);
-    expect(third).toBe(second + 1);
+    expect(second).toBe('function-2');
+    expect(third).toBe('function-3');
   });
 
   it('continues incrementing after multiple calls', () => {
     let last = getNextNodeId();
     for (let i = 0; i < 10; i++) last = getNextNodeId();
-    expect(getNextNodeId()).toBe(last + 1);
+    expect(getNextNodeId()).toBe('function-15');
   });
 });

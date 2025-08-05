@@ -33,5 +33,6 @@ const pentagonPoints = props?.active
 <style scoped>
 svg {
   display: block;
+  cursor: pointer;
 }
 </style>

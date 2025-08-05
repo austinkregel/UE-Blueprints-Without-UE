@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import {nodes, ioPositions, nextId, log} from './base-node-utils';
+import {nodes, ioPositions, nextId, log} from './base-node-utils.js';
 
 export const connections = ref([]);
 

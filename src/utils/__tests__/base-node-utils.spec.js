@@ -1,4 +1,4 @@
-import { ioPositions, getIOPosition } from '../base-node-utils';
+import { ioPositions, getIOPosition } from '../base-node-utils.js';
 import { describe, it, beforeEach, expect } from 'vitest';
 
 describe('getIOPosition', () => {

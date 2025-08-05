@@ -1,15 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import NodeEditor from '../NodeEditor.vue';
+import App from '../../App.vue';
 
 function getNodeElement(wrapper, nodeId) {
   // Find the node DOM element by id
   return wrapper.find(`[data-node-id="${nodeId}"]`);
 }
 
-describe('NodeEditor click/drag interface', () => {
+describe('App click/drag interface', () => {
   it('allows node selection and dragging with debugMode off', async () => {
-    const wrapper = mount(NodeEditor);
+    const wrapper = mount(App);
     // Assume first node exists
     const node = wrapper.vm.nodes[0];
     const initialX = node.x;
@@ -18,16 +18,18 @@ describe('NodeEditor click/drag interface', () => {
     const nodeWrapper = wrapper.find(`[data-node-id='${node.id}']`);
     await nodeWrapper.trigger('mousedown', { clientX: initialX, clientY: initialY });
     // Simulate mousemove and mouseup on window
-    window.dispatchEvent(new MouseEvent('mousemove', { clientX: initialX + 50, clientY: initialY + 50 }));
-    window.dispatchEvent(new MouseEvent('mouseup', { clientX: initialX + 50, clientY: initialY + 50 }));
+    const deltaX = 50;
+    const deltaY = 50;
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: initialX + deltaX, clientY: initialY + deltaY }));
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: initialX + deltaX, clientY: initialY + deltaY }));
     await wrapper.vm.$nextTick();
-    // Node should have moved
-    expect(wrapper.vm.nodes[0].x).not.toBe(initialX);
-    expect(wrapper.vm.nodes[0].y).not.toBe(initialY);
+    // Node should have moved to the expected position
+    expect(wrapper.vm.nodes[0].x).toBe(initialX + deltaX);
+    expect(wrapper.vm.nodes[0].y).toBe(initialY + deltaY);
   });
 
   it('allows node selection and dragging with debugMode on (SVG overlays present)', async () => {
-    const wrapper = mount(NodeEditor);
+    const wrapper = mount(App);
     wrapper.vm.debugMode = true;
     await wrapper.vm.$nextTick();
     const node = wrapper.vm.nodes[0];
@@ -37,16 +39,18 @@ describe('NodeEditor click/drag interface', () => {
     const nodeWrapper = wrapper.find(`[data-node-id='${node.id}']`);
     await nodeWrapper.trigger('mousedown', { clientX: initialX, clientY: initialY });
     // Simulate mousemove and mouseup on window
-    window.dispatchEvent(new MouseEvent('mousemove', { clientX: initialX + 50, clientY: initialY + 50 }));
-    window.dispatchEvent(new MouseEvent('mouseup', { clientX: initialX + 50, clientY: initialY + 50 }));
+    const deltaX = 50;
+    const deltaY = 50;
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: initialX + deltaX, clientY: initialY + deltaY }));
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: initialX + deltaX, clientY: initialY + deltaY }));
     await wrapper.vm.$nextTick();
-    // Node should have moved
-    expect(wrapper.vm.nodes[0].x).not.toBe(initialX);
-    expect(wrapper.vm.nodes[0].y).not.toBe(initialY);
+    // Node should have moved to the expected position
+    expect(wrapper.vm.nodes[0].x).toBe(initialX + deltaX);
+    expect(wrapper.vm.nodes[0].y).toBe(initialY + deltaY);
   });
 
   it('SVG debug overlays have pointer-events set to none', async () => {
-    const wrapper = mount(NodeEditor);
+    const wrapper = mount(App);
     wrapper.vm.debugMode = true;
     await wrapper.vm.$nextTick();
     // Check SVG debug markers
@@ -60,7 +64,7 @@ describe('NodeEditor click/drag interface', () => {
   });
 
   it('emits move event with correct payload when node is dragged', async () => {
-    const wrapper = mount(NodeEditor);
+    const wrapper = mount(App);
     const node = wrapper.vm.nodes[0];
     const nodeWrapper = wrapper.find(`[data-node-id='${node.id}']`);
     const targetX = node.x + 30;
@@ -75,7 +79,7 @@ describe('NodeEditor click/drag interface', () => {
   });
 
   it('does not move node if mouseup occurs without mousemove', async () => {
-    const wrapper = mount(NodeEditor);
+    const wrapper = mount(App);
     const node = wrapper.vm.nodes[0];
     const initialX = node.x;
     const initialY = node.y;
@@ -88,7 +92,7 @@ describe('NodeEditor click/drag interface', () => {
   });
 
   it('selects node on click', async () => {
-    const wrapper = mount(NodeEditor, {
+    const wrapper = mount(App, {
       global: {
         stubs: {
           NodeSettings: true

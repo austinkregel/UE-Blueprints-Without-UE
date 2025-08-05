@@ -24,11 +24,11 @@
     <slot></slot>
     <div class="flex justify-between p-2 flex-wrap">
       <div class="flex justify-between w-full io">
-        <SidewaysHouseIcon
+        <ExecutionIcon
           class="w-6 h-6 text-gray-500 io-type"
           @mousedown.stop.prevent="handleIOStart('exec', { name: 'Exec', type: 'Exec', icon: true }, $event)"
         />
-        <SidewaysHouseIcon
+        <ExecutionIcon
           class="w-6 h-6 text-gray-500 io-type"
           @mousedown.stop.prevent="handleIOStart('exec', { name: 'Exec', type: 'Exec', icon: true }, $event)"
         />
@@ -42,8 +42,9 @@
           @mousedown.stop.prevent="handleIOStart('input', input, $event)"
           @contextmenu="onIOContextMenu('input', input, $event)"
         >
-          <div v-if="input.type !== 'Exec'" class="flex items-center">
-            ● <span class="mx-0.5 io-label">{{ input.name || input }}</span>
+          <div class="flex items-center">
+            <ConnectionIcon class="w-4 h-4 mr-1" />
+            <span class="mx-0.5 io-label">{{ input.name || input }}</span>
             <span v-if="input.type" class="io-type text-cyan-300 text-[0.85em] ml-0.5">: {{ input.type }}</span>
           </div>
         </div>
@@ -68,9 +69,10 @@
 
 <script setup>
 import {onMounted, nextTick, computed, watch, ref} from 'vue';
-import {construction, log, selectNode, startConnectionDrag} from "./base-node-utils.js";
-import SidewaysHouseIcon from "./SidewaysHouseIcon.vue";
-import {getRectXBasedOnType, getRectYBasedOnType, registerIO} from "./io-utils.js";
+import {construction, log, selectNode, startConnectionDrag} from "../../utils/base-node-utils.js";
+import ExecutionIcon from "../icons/ExecutionIcon.vue";
+import {getRectXBasedOnType, getRectYBasedOnType, registerIO} from "../../utils/io-utils.js";
+import ConnectionIcon from "../icons/ConnectionIcon.vue";
 const emit = defineEmits([
   'move', 'connect', 'register-io', 'select', 'start-connection-drag', 'delete-connection'
 ]);
@@ -107,7 +109,7 @@ onMounted(() => {
 });
 
 watch(
-  () => [props.node.inputs, props.node.outputs],
+  () => [props.node],
   () => {
     nextTick(registerAllIO);
   },
@@ -127,14 +129,9 @@ function handleIOStart(type, io, event) {
   // Get the IO element's position for accurate drag start
   const el = event.currentTarget;
   const rect = el.getBoundingClientRect();
-  const x = rect.left + rect.width / 2 + window.scrollX;
-  const y = rect.top + rect.height / 2 + window.scrollY;
+  const x = getRectXBasedOnType(type, rect);
+  const y = getRectYBasedOnType(type, rect);
 
-  log('Starting connection drag:', {
-    type,
-    ioName: io.name || io,
-    x, y
-  });
   startConnectionDrag({
     nodeId: props.node.id,
     ioType: type,
@@ -149,11 +146,15 @@ const isDragging = ref(false);
 let dragStartX = 0;
 let dragStartY = 0;
 let dragStarted = false;
+let nodeStartX = 0;
+let nodeStartY = 0;
 
 function handleMouseDown(event) {
   event.preventDefault();
   dragStartX = event.clientX;
   dragStartY = event.clientY;
+  nodeStartX = props.node.x;
+  nodeStartY = props.node.y;
   isDragging.value = false;
   dragStarted = false;
   window.addEventListener('mousemove', handleMouseMove);
@@ -162,15 +163,17 @@ function handleMouseDown(event) {
 
 function handleMouseMove(event) {
   if (!isDragging.value) {
-    const dx = Math.abs(event.clientX - dragStartX);
-    const dy = Math.abs(event.clientY - dragStartY);
-    if (dx > 3 || dy > 3) {
+    const dx = event.clientX - dragStartX;
+    const dy = event.clientY - dragStartY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
       isDragging.value = true;
       if (!dragStarted) {
-        startDrag(event);
         dragStarted = true;
       }
     }
+  }
+  if (isDragging.value) {
+    emit('move', { id: props.node.id, x: nodeStartX + (event.clientX - dragStartX), y: nodeStartY + (event.clientY - dragStartY) });
   }
 }
 

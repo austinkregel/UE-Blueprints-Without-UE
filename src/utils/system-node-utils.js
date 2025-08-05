@@ -1,4 +1,4 @@
-import { nodes } from './base-node-utils';
+import { nodes } from './base-node-utils.js';
 import { getNextNodeId } from './id-utils.js';
 
 export function addSystemNode() {

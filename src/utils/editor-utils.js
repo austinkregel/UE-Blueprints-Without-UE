@@ -34,6 +34,8 @@ export function onEditorMouseDown(e) {
                 from: { nodeId: closestIO.nodeId, output: closestIO.ioName },
                 to: { nodeId: drag.nodeId, input: drag.ioName }
             });
+        } else {
+            log("Ahhhhhh")
         }
     }
 }
