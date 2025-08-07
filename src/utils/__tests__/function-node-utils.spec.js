@@ -15,6 +15,7 @@ vi.mock('../base-node-utils', async (importOriginal) => {
 describe('addFunctionNode', () => {
   beforeEach(() => {
     nodes.value = [];
+    nextId.value = 1;
     log.mockClear();
   });
 
