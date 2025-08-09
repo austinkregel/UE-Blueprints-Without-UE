@@ -1,17 +1,49 @@
 import {nodes, draggingConnection, log, ioPositions} from './base-node-utils.js';
-import { connectNodes } from './connection-utils.js'
+import { connectNodes } from './connection-utils.js';
+import { startPanning, updatePanning, stopPanning, isPanning, screenToWorld } from './viewport-utils.js';
 
 export function onEditorMouseDown(e) {
+    // Check if we're right-clicking on empty space (not on a node)
+    const target = e.target;
+    const nodeElement = target.closest('[data-node-id]');
+    
+    // Handle right-click panning if not on a node and not currently dragging a connection
+    if (e.button === 2 && !nodeElement && !draggingConnection.value) {
+        e.preventDefault();
+        startPanning(e.clientX, e.clientY);
+        
+        // Add event listeners for panning
+        const handlePanMove = (moveEvent) => {
+            updatePanning(moveEvent.clientX, moveEvent.clientY);
+        };
+        
+        const handlePanEnd = () => {
+            stopPanning();
+            document.removeEventListener('mousemove', handlePanMove);
+            document.removeEventListener('mouseup', handlePanEnd);
+        };
+        
+        document.addEventListener('mousemove', handlePanMove);
+        document.addEventListener('mouseup', handlePanEnd);
+        
+        return;
+    }
+    
+    // Only handle connection logic for left clicks or when already dragging
+    if (e.button !== 0 && !draggingConnection.value) return;
+    
     // Do NOT clear draggingConnection on mouse down (so it stays attached to the mouse)
-    // Find the closest IO point under the cursor
+    // Find the closest IO point under the cursor, convert screen to world coordinates first
+    const worldPos = screenToWorld(e.clientX, e.clientY);
+    
     let closestIO = null;
-    let minDist = 32; // threshold in pixels
+    let minDist = 32; // threshold in pixels (in world space)
     for (const nodeId in ioPositions.value) {
         for (const type of ['inputs', 'outputs']) {
             for (const ioName in ioPositions.value[nodeId][type]) {
                 const pos = ioPositions.value[nodeId][type][ioName];
-                const dx = e.clientX + window.scrollX - pos.x;
-                const dy = e.clientY + window.scrollY - pos.y;
+                const dx = worldPos.x - pos.x;
+                const dy = worldPos.y - pos.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < minDist) {
                     minDist = dist;

@@ -6,15 +6,19 @@
     @connect="$emit('connect', $event)"
     @select="$emit('select', $event)"
     @register-io="$emit('register-io', $event)"
+    @node-context-menu="$emit('node-context-menu', $event)"
   >
-    <template #header>
-      Variable: {{ node.varName }} ({{ node.varAction }})
-    </template>
+    <!-- Variable nodes don't use custom headers - handled by NodeBase -->
   </NodeBase>
 </template>
 
 <script setup>
 import NodeBase from './NodeBase.vue';
+
+const emit = defineEmits([
+  'move', 'connect', 'select', 'register-io', 'node-context-menu'
+]);
+
 const { node, connections } = defineProps({
   node: Object,
   connections: Array,

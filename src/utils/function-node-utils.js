@@ -5,15 +5,10 @@ export function addFunctionNode() {
         id: getNextNodeId('function'),
         type: 'function',
         funcName: 'myAction',
-        hasExec: true,
         x: 300,
         y: 300,
-        inputs: [
-            { name: 'Exec', type: 'Exec' }
-        ],
-        outputs: [
-            { name: 'Exec', type: 'Exec' }
-        ]
+        inputs: [],
+        outputs: []
     });
 
     log('Function node added', nodes.value[nodes.value.length - 1]);

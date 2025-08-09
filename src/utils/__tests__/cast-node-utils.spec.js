@@ -41,8 +41,8 @@ function resetNodes() {
       hasExec: true,
       x: 600,
       y: 180,
-      inputs: [ { name: 'Exec', type: 'Exec' }, { name: 'msg', type: 'string' } ],
-      outputs: [ { name: 'Exec', type: 'Exec' } ]
+      inputs: [ { name: 'msg', type: 'string' } ],
+      outputs: [ ]
     }
   ];
 }

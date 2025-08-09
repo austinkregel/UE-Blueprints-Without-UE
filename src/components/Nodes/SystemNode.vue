@@ -6,6 +6,7 @@
     @connect="$emit('connect', $event)"
     @select="$emit('select', $event)"
     @register-io="$emit('register-io', $event)"
+    @node-context-menu="$emit('node-context-menu', $event)"
   >
     <template #header>
       System: {{ node.systemOp || 'Operation' }}
@@ -15,6 +16,11 @@
 
 <script setup>
 import NodeBase from './NodeBase.vue';
+
+const emit = defineEmits([
+  'move', 'connect', 'select', 'register-io', 'node-context-menu'
+]);
+
 const { node, connections } = defineProps({
   node: Object,
   connections: Array,

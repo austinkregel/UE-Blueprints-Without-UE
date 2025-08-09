@@ -1,20 +1,15 @@
 import {nodes, log} from './base-node-utils.js';
 import { getNextNodeId } from './id-utils.js';
 
-export function addActionNode() {
+export function addActionNode(position = { x: 400, y: 200 }) {
     nodes.value.push({
         id: getNextNodeId('action'),
         type: 'function',
         funcName: 'action',
-        hasExec: true,
-        x: 400,
-        y: 200,
-        inputs: [
-            { name: 'Exec', type: 'Exec' }
-        ],
-        outputs: [
-            { name: 'Exec', type: 'Exec' }
-        ]
+        x: position.x,
+        y: position.y,
+        inputs: [],
+        outputs: []
     });
     log('Action node added', nodes.value[nodes.value.length - 1]);
 }

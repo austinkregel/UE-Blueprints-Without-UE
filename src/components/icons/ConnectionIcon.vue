@@ -3,25 +3,37 @@
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
   >
-    <!-- House-shaped pentagon -->
-    <circle cx="12" cy="12" r="8" stroke="black" stroke-width="2"/>
+    <!-- Connection circle with type-based color -->
+    <circle cx="12" cy="12" r="8" :stroke="connectionColor" :fill="connection ? connectionColor : 'transparent'" :fill-opacity="connection ? '0.7' : '0'" stroke-width="2"/>
   </svg>
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, computed } from 'vue';
+import { getTypeColorHex } from '../../utils/language-definition.js';
 
 const props = defineProps({
   active: {
     type: Boolean,
     default: false,
   },
+  connection: {
+    type: Object,
+    default: () => null
+  },
+  ioType: {
+    type: String,
+    default: 'mixed'
+  }
 });
 
-// Pentagon points: shaped like a sideways house
-const pentagonPoints = props?.active
-    ? 'M6.73516 1L13.6023 7.54883L6.69317 15.1357H1.13555V1H6.73516Z'
-    :'M11.9354 4.5L19.3006 11.5244L11.9139 19.6357H5.63555V4.5H11.9354Z';
+const connection = computed(() => props.connection || null);
+
+const connectionColor = computed(() => {
+    // Use the IO type color for unconnected pins
+    return getTypeColorHex(props.ioType);
+
+});
 </script>
 
 <style scoped>

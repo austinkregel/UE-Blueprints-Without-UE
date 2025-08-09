@@ -53,8 +53,8 @@ describe('App click/drag interface', () => {
     const wrapper = mount(App);
     wrapper.vm.debugMode = true;
     await wrapper.vm.$nextTick();
-    // Check SVG debug markers
-    const svg = wrapper.find('svg');
+    // Check SVG debug markers - look for the connections SVG specifically
+    const svg = wrapper.find('svg.connections');
     expect(svg.attributes('class')).toContain('pointer-events-none');
     // Check that circles/text have pointer-events="none"
     const debugCircles = svg.findAll('circle[pointer-events="none"]');

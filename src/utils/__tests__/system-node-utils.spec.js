@@ -13,17 +13,22 @@ describe('addSystemNode', () => {
   });
 
   it('adds a system node with correct properties', () => {
-    systemNodeUtils.addSystemNode();
+    systemNodeUtils.addSystemNode('print');
     expect(nodes.value.length).toBe(1);
     const node = nodes.value[0];
     expect(node).toMatchObject({
       id: 77,
       type: 'system',
-      systemName: 'mySystem',
+      systemName: 'print',
       x: 500,
       y: 300,
-      inputs: [],
-      outputs: []
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'value', type: 'mixed' }
+      ],
+      outputs: [
+        { name: 'Exec', type: 'exec' }
+      ]
     });
   });
 });

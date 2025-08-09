@@ -1,4 +1,5 @@
 import {ioPositions, log} from './base-node-utils.js';
+import { screenToWorld } from './viewport-utils.js';
 
 export function registerIO({ nodeId, type, name, x, y }) {
     if (!ioPositions.value[nodeId]) ioPositions.value[nodeId] = { inputs: {}, outputs: {} };
@@ -16,21 +17,26 @@ export function renderConnectionPath(points, { offset = true } = {}) {
     if (!points || points.length < 2) return '';
     const start = offset ? { x: points[0].x, y: points[0].y } : points[0];
     const end = offset ? { x: points[points.length - 1].x, y: points[points.length - 1].y } : points[points.length - 1];
-    // Stick out in the direction of the connection, then curve
-    const stickOut = 40;
-    // Calculate direction vector
+    
+    // Calculate distance between points
     const dx = end.x - start.x;
     const dy = end.y - start.y;
-    const length = Math.sqrt(dx * dx + dy * dy) || 1;
-    // Normalize direction
-    const nx = dx / length;
-    const ny = dy / length;
-    // Control points stick out from start/end in the direction of the connection
-    const c1x = start.x + nx * stickOut;
-    const c1y = start.y + ny * stickOut;
-    const c2x = end.x - nx * stickOut;
-    const c2y = end.y - ny * stickOut;
-    return `M${start.x},${start.y} C${c1x},${c1y} ${c2x},${c2y} ${end.x},${end.y}`;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Create curves that flow naturally from outputs (right) to inputs (left)
+    // Close connections get more dramatic curves, far ones get wider curves
+    const baseCurve = Math.min(200, Math.max(80, distance * 0.4));
+    
+    // Control points:
+    // - First control point: flow OUT from output (to the right)
+    // - Second control point: flow IN to input (from the left)
+    const c1x = start.x + baseCurve;  // Output flows right
+    const c1y = start.y;              // Keep vertical position
+    
+    const c2x = end.x - baseCurve;    // Input receives from left
+    const c2y = end.y;                // Keep vertical position
+    
+    return `M${start.x-5},${start.y+5} C${c1x},${c1y} ${c2x},${c2y} ${end.x+5},${end.y+5}`;
 }
 
 export function registerAllIOForNode(node, nodeRef) {
@@ -43,20 +49,28 @@ export function registerAllIOForNode(node, nodeRef) {
             if (!io) return;
             const rect = el.getBoundingClientRect();
             const ioName = io.name || io;
+            
+            // Get screen coordinates first
+            const screenX = getRectXBasedOnType(type, rect);
+            const screenY = getRectYBasedOnType(type, rect);
+            
+            // Convert to world coordinates for storage
+            const worldPos = screenToWorld(screenX, screenY);
+            
             registerIO({
                 nodeId: node.id,
                 type,
                 name: ioName,
-                x: getRectXBasedOnType(type, rect),
-                y: getRectYBasedOnType(type, rect),
+                x: worldPos.x,
+                y: worldPos.y,
             });
         });
     });
 }
 
 export function getRectXBasedOnType(type, rect) {
-    return rect.left + (type === 'input' ? 10 : (rect.width ?? 0) - 10)  + window.scrollX;
+    return rect.left + (type === 'input' ? 10 : (rect.width ?? 0) - 10);
 }
 export function getRectYBasedOnType(type, rect) {
-    return rect.top + 10 + window.scrollY;
+    return rect.top + 10;
 }

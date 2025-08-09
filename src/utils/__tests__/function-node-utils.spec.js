@@ -27,11 +27,10 @@ describe('addFunctionNode', () => {
       id: 'function-100', // Updated to match the string ID format
       type: 'function',
       funcName: 'myAction',
-      hasExec: true,
       x: 300,
       y: 300,
-      inputs: [ { name: 'Exec', type: 'Exec' } ],
-      outputs: [ { name: 'Exec', type: 'Exec' } ]
+      inputs: [],
+      outputs: []
     });
   });
 
@@ -42,11 +41,10 @@ describe('addFunctionNode', () => {
       expect.objectContaining({
         funcName: 'myAction',
         type: 'function',
-        hasExec: true,
         x: 300,
         y: 300,
-        inputs: [ { name: 'Exec', type: 'Exec' } ],
-        outputs: [ { name: 'Exec', type: 'Exec' } ]
+        inputs: [],
+        outputs: []
       })
     );
   });
