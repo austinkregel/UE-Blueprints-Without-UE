@@ -292,6 +292,176 @@ export const NODE_DEFINITIONS = {
       outputs: [],
       description: 'Switch statement for multiple conditions',
       dynamicOutputs: true
+    },
+    
+    // ===== EXECUTION FLOW CONTROL NODES =====
+    'sequence': {
+      name: 'Sequence',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' }
+      ],
+      outputs: [
+        { name: 'Then 0', type: 'exec' },
+        { name: 'Then 1', type: 'exec' },
+        { name: 'Then 2', type: 'exec' }
+      ],
+      description: 'Execute multiple outputs in sequence',
+      dynamicOutputs: true
+    },
+    'branch': {
+      name: 'Branch',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'condition', type: 'bool' }
+      ],
+      outputs: [
+        { name: 'True', type: 'exec' },
+        { name: 'False', type: 'exec' }
+      ],
+      description: 'Branch execution based on condition'
+    },
+    'gate': {
+      name: 'Gate',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Enter', type: 'exec' },
+        { name: 'Open', type: 'exec' },
+        { name: 'Close', type: 'exec' },
+        { name: 'Toggle', type: 'exec' },
+        { name: 'Start Closed', type: 'bool', optional: true, defaultValue: false }
+      ],
+      outputs: [
+        { name: 'Exit', type: 'exec' }
+      ],
+      description: 'Allow or block execution flow based on open/closed state'
+    },
+    'multigate': {
+      name: 'MultiGate',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Reset', type: 'exec' },
+        { name: 'Is Random', type: 'bool', optional: true, defaultValue: false },
+        { name: 'Loop', type: 'bool', optional: true, defaultValue: false },
+        { name: 'Start Index', type: 'int', optional: true, defaultValue: 0 }
+      ],
+      outputs: [
+        { name: 'Output 0', type: 'exec' },
+        { name: 'Output 1', type: 'exec' },
+        { name: 'Output 2', type: 'exec' },
+        { name: 'Output 3', type: 'exec' }
+      ],
+      description: 'Route execution to different outputs in sequence or randomly',
+      dynamicOutputs: true
+    },
+    'do_once': {
+      name: 'DoOnce',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Reset', type: 'exec' },
+        { name: 'Start Closed', type: 'bool', optional: true, defaultValue: false }
+      ],
+      outputs: [
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Execute only once until reset'
+    },
+    'do_n': {
+      name: 'DoN',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Reset', type: 'exec' },
+        { name: 'N', type: 'int', defaultValue: 1 }
+      ],
+      outputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Counter', type: 'int' }
+      ],
+      description: 'Execute N times then stop'
+    },
+    'delay': {
+      name: 'Delay',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Duration', type: 'float', defaultValue: 1.0 }
+      ],
+      outputs: [
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Delay execution for specified duration'
+    },
+    'retriggerable_delay': {
+      name: 'Retriggerable Delay',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Duration', type: 'float', defaultValue: 1.0 }
+      ],
+      outputs: [
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Delay that resets when retriggered'
+    },
+    'flip_flop': {
+      name: 'FlipFlop',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' }
+      ],
+      outputs: [
+        { name: 'A', type: 'exec' },
+        { name: 'B', type: 'exec' },
+        { name: 'Is A', type: 'bool' }
+      ],
+      description: 'Alternate between two outputs each time executed'
+    },
+    'for_loop': {
+      name: 'For Loop',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'First Index', type: 'int', defaultValue: 0 },
+        { name: 'Last Index', type: 'int', defaultValue: 10 }
+      ],
+      outputs: [
+        { name: 'Loop Body', type: 'exec' },
+        { name: 'Index', type: 'int' },
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Execute loop body for each index in range'
+    },
+    'for_each_loop': {
+      name: 'For Each Loop',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Array', type: 'array' }
+      ],
+      outputs: [
+        { name: 'Loop Body', type: 'exec' },
+        { name: 'Array Element', type: 'mixed' },
+        { name: 'Array Index', type: 'int' },
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Execute loop body for each element in array'
+    },
+    'while_loop': {
+      name: 'While Loop',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Condition', type: 'bool' }
+      ],
+      outputs: [
+        { name: 'Loop Body', type: 'exec' },
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Execute loop body while condition is true'
     }
   },
 
@@ -1562,6 +1732,43 @@ export const NODE_DEFINITIONS = {
         { name: 'success', type: 'bool' }
       ],
       description: 'Set environment variable'
+    },
+    'emit_event': {
+      name: 'Emit Event',
+      category: 'SYSTEM',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'eventName', type: 'string' },
+        { name: 'data', type: 'mixed', optional: true }
+      ],
+      outputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'eventName', type: 'string' }
+      ],
+      description: 'Emit a custom event with optional data'
+    },
+    'on_event': {
+      name: 'On Event',
+      category: 'SYSTEM',
+      inputs: [
+        { name: 'eventName', type: 'string' }
+      ],
+      outputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'eventData', type: 'mixed' },
+        { name: 'eventName', type: 'string' },
+        { name: 'timestamp', type: 'int' }
+      ],
+      description: 'Listen for a custom event and execute when triggered'
+    },
+    'on_start': {
+      name: 'On Start',
+      category: 'SYSTEM',
+      inputs: [],
+      outputs: [
+        { name: 'Exec', type: 'exec' }
+      ],
+      description: 'Entry point - executes when graph starts'
     }
   }
 };

@@ -1,7 +1,7 @@
 <template>
   <div
     class="node-glass absolute inline-block min-w-[220px] max-w-[420px] text-white font-sans text-sm select-none cursor-grab border-2"
-    :class="[colorClasses.border, colorClasses.shadow]"
+    :class="[colorClasses.border, colorClasses.shadow, executionStatusClass]"
     :style="{ left: node.x + 'px', top: node.y + 'px' }"
     :data-node-id="node.id"
     ref="nodeRef"
@@ -9,40 +9,19 @@
     @click.stop="handleClick"
     @contextmenu.stop.prevent="handleNodeContextMenu"
   >
-    <svg class="absolute top-0 left-0 w-full h-full pointer-events-none" width="100%" height="100%" style="z-index: -1;">
-      <g v-for="conn in nodeConnections" :key="connKey(conn)">
-        <line
-          v-if="getConnectionPoints(conn)"
-          :x1="getConnectionPoints(conn).x1"
-          :y1="getConnectionPoints(conn).y1"
-          :x2="getConnectionPoints(conn).x2"
-          :y2="getConnectionPoints(conn).y2"
-          :stroke="getConnectionColor(conn)" stroke-width="3" />
-      </g>
-    </svg>
     <div 
       v-if="shouldShowHeader"
-      class="px-3 py-1.5 rounded-t-lg font-bold bg-gradient-to-r relative z-10"
+      class="px-3 py-1.5 rounded-t-lg font-bold bg-gradient-to-r relative z-10 flex items-center justify-between"
       :class="colorClasses.header"
     >
       <slot name="header">{{ getDefaultHeaderText() }}</slot>
+      <div v-if="executionStatus.executed" class="ml-2 text-xs">
+        <span v-if="executionStatus.success === false" class="text-red-300">❌</span>
+        <span v-else class="text-green-300">✅</span>
+      </div>
     </div>
     <slot></slot>
     <div class="flex justify-between p-2 flex-wrap relative z-10">
-      <div class="flex justify-between w-full io" v-if="hasExecutionPins">
-        <ExecutionIcon
-          class="w-6 h-6 text-gray-500 io-type"
-          :data-io-name="'Exec'"
-          @mousedown.stop.prevent="handleIOStart('exec', { name: 'Exec', type: 'Exec', icon: true }, $event)"
-        />
-        <ExecutionIcon
-          class="w-6 h-6 text-gray-500 io-type"
-          :data-io-name="'Exec'"
-          @mousedown.stop.prevent="handleIOStart('exec', { name: 'Exec', type: 'Exec', icon: true }, $event)"
-        />
-
-      </div>
-      
       <!-- Variable nodes: Special compact layout -->
       <div v-if="props.node.type === 'variable'" class="flex items-end justify-end w-full">
         <div
@@ -56,7 +35,8 @@
             :type="props.node.varType || 'mixed'" 
             class="io-label font-medium"
           />
-          <ConnectionIcon class="w-4 h-4 ml-2" :connection="getOutputConnection(props.node.varName)" :io-type="props.node.varType || 'mixed'" />
+          <ExecutionIcon v-if="props.node.varType === 'exec'" class="w-4 h-4 ml-2" :active="!!getOutputConnection(props.node.varName)" />
+          <ConnectionIcon v-else class="w-4 h-4 ml-2" :connection="getOutputConnection(props.node.varName)" :io-type="props.node.varType || 'mixed'" />
         </div>
       </div>
       
@@ -71,7 +51,8 @@
             @mousedown.stop.prevent="handleIOStart('input', input, $event)"
             @contextmenu="onIOContextMenu('input', input, $event)"
           >
-            <ConnectionIcon class="w-4 h-4 mr-1" :connection="getInputConnection(input)" :io-type="input.type || 'mixed'" />
+            <ExecutionIcon v-if="input.type === 'exec'" class="w-4 h-4 mr-1" :active="!!getInputConnection(input)" />
+            <ConnectionIcon v-else class="w-4 h-4 mr-1" :connection="getInputConnection(input)" :io-type="input.type || 'mixed'" />
             <Type 
               :name="input.name" 
               :type="input.type" 
@@ -95,7 +76,8 @@
               :type="output.type" 
               class="io-label"
             />
-            <ConnectionIcon class="w-4 h-4 ml-1" :connection="getOutputConnection(output)" :io-type="output.type || 'mixed'" />
+            <ExecutionIcon v-if="output.type === 'exec'" class="w-4 h-4 ml-1" :active="!!getOutputConnection(output)" />
+            <ConnectionIcon v-else class="w-4 h-4 ml-1" :connection="getOutputConnection(output)" :io-type="output.type || 'mixed'" />
           </div>
           <slot name="outputs"></slot>
         </div>
@@ -106,13 +88,15 @@
 
 <script setup>
 import {onMounted, nextTick, computed, watch, ref} from 'vue';
-import {construction, getConnectionColor, log, selectNode, startConnectionDrag} from "../../utils/base-node-utils.js";
+import {construction} from "../../utils/node-interaction.js";
+import { startConnectionDrag } from "../../utils/drag-connect.js";
 import ExecutionIcon from "../icons/ExecutionIcon.vue";
-import {getRectXBasedOnType, getRectYBasedOnType, registerIO} from "../../utils/io-utils.js";
+import { getRectXBasedOnType, getRectYBasedOnType } from "../../utils/io-utils.js";
 import { screenToWorld, viewport } from "../../utils/viewport-utils.js";
 import ConnectionIcon from "../icons/ConnectionIcon.vue";
 import { getNodeColor } from "../../utils/node-colors.js";
 import Type from "../Type.vue";
+import { getNodeExecutionStatus } from "../../utils/graph-executor.js";
 const emit = defineEmits([
   'move', 'connect', 'register-io', 'select', 'start-connection-drag', 'delete-connection', 'node-context-menu'
 ]);
@@ -125,29 +109,12 @@ const nodeRef = ref();
 const {
   registerAllIO,
   startDrag,
-  onIOContextMenu,
-  connKey,
-  getConnectionPoints
+  onIOContextMenu
 } = construction(emit, props, nodeRef);
 
 onMounted(() => {
   nextTick(() => {
     registerAllIO();
-    // Register exec IO points for SidewaysHouseIcon
-    const iconEls = nodeRef.value?.querySelectorAll('.io-type');
-    const type = 'output';
-    if (iconEls) {
-      iconEls.forEach((el, idx) => {
-        const rect = el.getBoundingClientRect();
-        registerIO({
-          nodeId: props.node.id,
-          type, // or 'input' if you want to support both
-          name: `ExecIcon${idx}`,
-          x: getRectXBasedOnType(type, rect),
-          y: getRectYBasedOnType(type, rect),
-        });
-      });
-    }
   });
 });
 
@@ -158,15 +125,6 @@ watch(
   },
   { deep: true }
 );
-
-const nodeConnections = computed(() => {
-  // Only show connections where this node is the source or target
-  if (!props.connections) return [];
-  return props.connections.filter(conn =>
-    (conn.from && conn.from.nodeId === props.node.id) ||
-    (conn.to && conn.to.nodeId === props.node.id)
-  );
-});
 
 // Get connection for a specific input
 const getInputConnection = (inputName) => {
@@ -187,6 +145,9 @@ const getOutputConnection = (outputName) => {
     (conn.from.output === outputName || conn.from.output === (outputName.name || outputName))
   ) || null;
 };
+
+// Get execution status for visual indicators
+const executionStatus = computed(() => getNodeExecutionStatus(props.node.id));
 
 // Color mappings for different node types
 const colorClasses = computed(() => {
@@ -242,6 +203,19 @@ const colorClasses = computed(() => {
   };
   
   return colorMap[nodeColor] || colorMap.blue;
+});
+
+// Execution status styling
+const executionStatusClass = computed(() => {
+  if (!executionStatus.value.executed) return '';
+  
+  if (executionStatus.value.success === false) {
+    return 'border-red-500 shadow-red-500/30';
+  } else if (executionStatus.value.executed) {
+    return 'border-green-500 shadow-green-500/30';
+  }
+  
+  return '';
 });
 
 // Determine if this node type should have execution pins
@@ -378,7 +352,7 @@ function handleMouseUp(event) {
   window.removeEventListener('mousemove', handleMouseMove);
   window.removeEventListener('mouseup', handleMouseUp);
   if (!isDragging.value) {
-    selectNode(props.node);
+    emit('select', props.node);
   }
   isDragging.value = false;
   dragStarted = false;

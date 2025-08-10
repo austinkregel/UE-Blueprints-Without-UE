@@ -3,7 +3,8 @@ const nodeTypeCounters = {
   variable: 1,
   system: 1,
   action: 1,
-  cast: 1
+  cast: 1,
+  exec: 1
 };
 
 export function getNextNodeId(type = 'function') {

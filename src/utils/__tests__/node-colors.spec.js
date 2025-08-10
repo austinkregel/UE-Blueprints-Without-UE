@@ -56,7 +56,7 @@ describe('Node Colors', () => {
       expect(getNodeColor('math')).toBe('green');
       expect(getNodeColor('string')).toBe('pink');
       expect(getNodeColor('array')).toBe('orange');
-      expect(getNodeColor('comparison')).toBe('red');
+      expect(getNodeColor('comparison')).toBe('green');
       expect(getNodeColor('cast')).toBe('cyan');
     });
 
@@ -174,7 +174,7 @@ describe('Node Colors', () => {
         'math': 'green',
         'string': 'pink',
         'array': 'orange',
-        'comparison': 'red',
+        'comparison': 'green',
         'cast': 'cyan'
       };
 

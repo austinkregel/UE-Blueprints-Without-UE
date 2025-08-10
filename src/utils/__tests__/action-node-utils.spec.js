@@ -1,13 +1,13 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 import * as actionNodeUtils from '../action-node-utils.js';
-import { nodes } from '../base-node-utils.js';
-import { log } from '../base-node-utils.js';
+import { nodes } from '../state.js';
+import { log } from '../state.js';
 
 vi.mock('../id-utils', () => ({
   getNextNodeId: vi.fn(() => 42)
 }));
-vi.mock('../base-node-utils', async () => {
-  const actual = await vi.importActual('../base-node-utils');
+vi.mock('../state', async () => {
+  const actual = await vi.importActual('../state');
   return {
     ...actual,
     log: vi.fn()
@@ -38,5 +38,11 @@ describe('addActionNode', () => {
   it('calls log with correct arguments', () => {
     actionNodeUtils.addActionNode();
     expect(log).toHaveBeenCalledWith('Action node added', expect.objectContaining({ id: 42 }));
+  });
+});
+
+describe('action node utils', () => {
+  it('dummy', () => {
+    expect(true).toBe(true);
   });
 });

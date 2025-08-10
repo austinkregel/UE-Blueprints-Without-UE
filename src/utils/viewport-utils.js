@@ -7,28 +7,35 @@ export const viewport = ref({
   zoom: 1.0  // Current zoom level
 });
 
+// Canvas offset (top-left of the canvas area relative to the page/client)
+export const canvasOffset = ref({ x: 0, y: 0 });
+export function setCanvasOffset(x, y) { canvasOffset.value = { x, y }; }
+
 // Panning state
 export const isPanning = ref(false);
 export const panStart = ref({ x: 0, y: 0 });
 export const panOffset = ref({ x: 0, y: 0 });
 
+// Suppress the next contextmenu event if a right-drag (pan) occurred
+export const suppressNextContextMenu = ref(false);
+
 /**
- * Convert screen coordinates to world coordinates
+ * Convert screen (client) coordinates to world coordinates
  */
 export function screenToWorld(screenX, screenY) {
   return {
-    x: (screenX - viewport.value.x) / viewport.value.zoom,
-    y: (screenY - viewport.value.y) / viewport.value.zoom
+    x: (screenX - canvasOffset.value.x - viewport.value.x) / viewport.value.zoom,
+    y: (screenY - canvasOffset.value.y - viewport.value.y) / viewport.value.zoom
   };
 }
 
 /**
- * Convert world coordinates to screen coordinates
+ * Convert world coordinates to screen (client) coordinates
  */
 export function worldToScreen(worldX, worldY) {
   return {
-    x: worldX * viewport.value.zoom + viewport.value.x,
-    y: worldY * viewport.value.zoom + viewport.value.y
+    x: worldX * viewport.value.zoom + viewport.value.x + canvasOffset.value.x,
+    y: worldY * viewport.value.zoom + viewport.value.y + canvasOffset.value.y
   };
 }
 

@@ -3,7 +3,7 @@
     class="inline-flex items-center px-2 py-1 rounded text-xs font-medium pointer-events-none"
     :class="typeClasses"
   >
-    {{ name }}: {{ type }}
+    {{ name }}
   </span>
 </template>
 

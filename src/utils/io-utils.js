@@ -1,4 +1,4 @@
-import {ioPositions, log} from './base-node-utils.js';
+import {ioPositions, log} from './state.js';
 import { screenToWorld } from './viewport-utils.js';
 
 export function registerIO({ nodeId, type, name, x, y }) {
@@ -13,7 +13,7 @@ export function getConnectionPointsArray(conn) {
     return [from, to];
 }
 
-export function renderConnectionPath(points, { offset = true } = {}) {
+export function renderConnectionPath(points, { offset = true, startDirection = 'right', endDirection = 'left' } = {}) {
     if (!points || points.length < 2) return '';
     const start = offset ? { x: points[0].x, y: points[0].y } : points[0];
     const end = offset ? { x: points[points.length - 1].x, y: points[points.length - 1].y } : points[points.length - 1];
@@ -28,13 +28,13 @@ export function renderConnectionPath(points, { offset = true } = {}) {
     const baseCurve = Math.min(200, Math.max(80, distance * 0.4));
     
     // Control points:
-    // - First control point: flow OUT from output (to the right)
-    // - Second control point: flow IN to input (from the left)
-    const c1x = start.x + baseCurve;  // Output flows right
-    const c1y = start.y;              // Keep vertical position
+    // - First control point: flow OUT from the start side (left/right)
+    // - Second control point: flow IN to the end side (left/right)
+    const c1x = startDirection === 'left' ? (start.x - baseCurve) : (start.x + baseCurve);
+    const c1y = start.y;
     
-    const c2x = end.x - baseCurve;    // Input receives from left
-    const c2y = end.y;                // Keep vertical position
+    const c2x = endDirection === 'right' ? (end.x + baseCurve) : (end.x - baseCurve);
+    const c2y = end.y;
     
     return `M${start.x-5},${start.y+5} C${c1x},${c1y} ${c2x},${c2y} ${end.x+5},${end.y+5}`;
 }

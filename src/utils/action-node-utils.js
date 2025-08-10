@@ -1,8 +1,8 @@
-import {nodes, log} from './base-node-utils.js';
+import {nodes, log} from './state.js';
 import { getNextNodeId } from './id-utils.js';
 
 export function addActionNode(position = { x: 400, y: 200 }) {
-    nodes.value.push({
+    const newNode = {
         id: getNextNodeId('action'),
         type: 'function',
         funcName: 'action',
@@ -10,6 +10,8 @@ export function addActionNode(position = { x: 400, y: 200 }) {
         y: position.y,
         inputs: [],
         outputs: []
-    });
-    log('Action node added', nodes.value[nodes.value.length - 1]);
+    };
+    nodes.value.push(newNode);
+    log('Action node added', newNode);
+    return newNode;
 }

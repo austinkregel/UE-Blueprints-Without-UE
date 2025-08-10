@@ -1,4 +1,4 @@
-import { nodes } from './base-node-utils.js';
+import { nodes } from './state.js';
 import { getNextNodeId } from './id-utils.js';
 import { 
   getSystemNodes, 
@@ -68,8 +68,18 @@ export function addCommonSystemNode(nodeName, position = { x: 500, y: 300 }) {
     'file_write': 'write_file',
     'http_get': 'http_get',
     'spawn': 'spawn_actor',
+    // Execution flow control nodes
     'sequence': 'sequence',
-    'gate': 'gate'
+    'branch': 'branch',
+    'gate': 'gate',
+    'multigate': 'multigate',
+    'do_once': 'do_once',
+    'do_n': 'do_n',
+    'flip_flop': 'flip_flop',
+    'for_loop': 'for_loop',
+    'for_each_loop': 'for_each_loop',
+    'while_loop': 'while_loop',
+    'retriggerable_delay': 'retriggerable_delay'
   };
   
   const nodeDefId = commonNodes[nodeName];
@@ -132,6 +142,54 @@ export function addNodeGroup(groupType, startPosition = { x: 100, y: 100 }) {
         y: startPosition.y 
       }));
       addedNodes.push(addSystemNode('normalize_vector', { 
+        x: startPosition.x + spacing.x * 2, 
+        y: startPosition.y 
+      }));
+      break;
+      
+    case 'exec_flow_basic':
+      addedNodes.push(addSystemNode('sequence', startPosition));
+      addedNodes.push(addSystemNode('branch', { 
+        x: startPosition.x + spacing.x, 
+        y: startPosition.y 
+      }));
+      addedNodes.push(addSystemNode('gate', { 
+        x: startPosition.x + spacing.x * 2, 
+        y: startPosition.y 
+      }));
+      break;
+      
+    case 'exec_flow_advanced':
+      addedNodes.push(addSystemNode('multigate', startPosition));
+      addedNodes.push(addSystemNode('do_once', { 
+        x: startPosition.x + spacing.x, 
+        y: startPosition.y 
+      }));
+      addedNodes.push(addSystemNode('flip_flop', { 
+        x: startPosition.x + spacing.x * 2, 
+        y: startPosition.y 
+      }));
+      break;
+      
+    case 'exec_flow_loops':
+      addedNodes.push(addSystemNode('for_loop', startPosition));
+      addedNodes.push(addSystemNode('for_each_loop', { 
+        x: startPosition.x, 
+        y: startPosition.y + spacing.y 
+      }));
+      addedNodes.push(addSystemNode('while_loop', { 
+        x: startPosition.x + spacing.x, 
+        y: startPosition.y 
+      }));
+      break;
+      
+    case 'exec_flow_timing':
+      addedNodes.push(addSystemNode('delay', startPosition));
+      addedNodes.push(addSystemNode('retriggerable_delay', { 
+        x: startPosition.x + spacing.x, 
+        y: startPosition.y 
+      }));
+      addedNodes.push(addSystemNode('do_n', { 
         x: startPosition.x + spacing.x * 2, 
         y: startPosition.y 
       }));

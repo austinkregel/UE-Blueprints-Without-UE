@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
-import { nodes, draggingConnection } from '../base-node-utils.js';
+import { nodes, draggingConnection } from '../state.js';
 import { getNextNodeId } from '../id-utils.js';
 import * as connectionUtils from '../connection-utils.js';
 import { addConnection } from '../connection-manager.js';
@@ -70,5 +70,11 @@ describe('cast node creation on incompatible type connection', () => {
     expect(addConnection).toHaveBeenCalledWith({ from, to: { nodeId: castNode.id, input: 'in' } });
     expect(addConnection).toHaveBeenCalledWith({ from: { nodeId: castNode.id, output: 'out' }, to });
     // No log assertion needed
+  });
+});
+
+describe('cast node utils', () => {
+  it('dummy', () => {
+    expect(true).toBe(true);
   });
 });

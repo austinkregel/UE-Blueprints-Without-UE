@@ -1,408 +1,287 @@
 <template>
-  <div class="relative bg-grid w-full h-full overflow-hidden bg-zinc-900 text-white font-sans flex" @mousedown="onEditorMouseDown" @wheel="onWheel">
-    <!-- Main Editor Area -->
-    <div 
-      class="flex-1 relative"
-      :class="{ 'drag-over': isDragOver }"
-      @drop="onDrop"
-      @dragover.prevent="onDragOver"
-      @dragenter.prevent="onDragEnter"
-      @dragleave="onDragLeave"
-      @contextmenu="onContextMenu"
-    >
-      <!-- Fixed UI Controls -->
-      <div class="absolute top-4 left-4 z-10 flex gap-3 flex-wrap items-center">
-        <button @click="showNodePalette = !showNodePalette" class="bg-blue-700 hover:bg-blue-800 text-white rounded px-4 py-2 text-base">
-          {{ showNodePalette ? 'Hide' : 'Show' }} Palette
-        </button>
-        
-        <!-- Node Creation Dropdown -->
-        <NodeDropdown 
-          title="Add Node" 
-          @node-select="(node) => addNodeFromDefinition(node.id, screenToWorldPosition({ x: 200, y: 200 }))" 
-        />
-        
-        <button @click="debugMode = !debugMode" class="bg-gray-700 hover:bg-gray-800 text-white rounded px-4 py-2 text-base">
-          {{ debugMode ? 'Disable Debug' : 'Enable Debug' }}
-        </button>
-        
-        <button @click="resetViewport" class="bg-gray-700 hover:bg-gray-800 text-white rounded px-4 py-2 text-base">
-          Reset View
-        </button>
-        
-        <div class="text-sm text-zinc-400 bg-zinc-800 px-3 py-2 rounded">
-          Right-click + drag to pan | Mouse wheel to zoom
-        </div>
-        
-        <!-- Viewport info for debugging -->
-        <div v-if="debugMode" class="text-xs text-zinc-400 bg-zinc-800 px-2 py-1 rounded">
-          X: {{ Math.round(viewport.x) }}, Y: {{ Math.round(viewport.y) }}, Zoom: {{ viewport.zoom.toFixed(2) }}
-        </div>
-      </div>
-      
-      <!-- Infinite Canvas Container -->
-      <div class="absolute inset-0 overflow-hidden">
-        <!-- Transformed Canvas Content -->
-        <div class="canvas-content" :style="{ transform: getViewportTransform() }">
-          <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-20 connections" width="100%" height="100%" >
-            <!-- Debug Markers -->
-            <g v-if="debugMode">
-              <!-- Node Centers -->
-              <circle v-for="node in nodes" :key="'center-' + node.id" :cx="node.x" :cy="node.y" r="8" fill="red" pointer-events="none" />
-              <text v-for="node in nodes" :key="'center-label-' + node.id" :x="node.x + 12" :y="node.y - 12" font-size="14" fill="red" pointer-events="none">
-                {{`Node ${node.id} (${node.x},${node.y})`}}
-              </text>
-              <!-- Drag Point -->
-              <template v-if="draggingConnection && draggingConnection.dragPos">
-                <circle :cx="draggingConnection.dragPos.x" :cy="draggingConnection.dragPos.y" r="7" fill="orange" pointer-events="none" />
-                <text :x="draggingConnection.dragPos.x + 12" :y="draggingConnection.dragPos.y - 12" font-size="13" fill="orange" pointer-events="none">
-                  {{`Drag (${draggingConnection.dragPos.x},${draggingConnection.dragPos.y})`}}
-                </text>
-              </template>
-            </g>
-            <g v-for="conn in connections" :key="`${conn.from.nodeId}:${conn.from.output}->${conn.to.nodeId}:${conn.to.input}`">
-              <path
-                  v-if="getConnectionPointsArray(conn)"
-                  :d="renderConnectionPath(getConnectionPointsArray(conn))"
-                  :stroke="getConnectionColor(conn)"
-                  :stroke-width="isActionFlow(conn) ? 5 : 3"
-                  :marker-end="isActionFlow(conn) ? 'url(#arrow)' : null"
-                  fill="none"
-              />
-            </g>
-            <defs>
-              <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L10,5 L0,10 z" fill="#ff0" />
-              </marker>
-            </defs>
-            <path
-                v-if="renderDraggingConnection()"
-                :d="renderDraggingConnection()"
-                :stroke="draggingConnection.value && isActionFlow(draggingConnection.value) ? '#ff0' : '#0ff'"
-                :stroke-width="draggingConnection.value && isActionFlow(draggingConnection.value) ? 5 : 3"
-                :marker-end="draggingConnection.value && isActionFlow(draggingConnection.value) ? 'url(#arrow)' : null"
-                fill="none"
-                pointer-events="none"
-            />
-          </svg>
-          <div v-for="node in nodes" :key="node.id">
-            <component
-                :is="getNodeComponent(node)"
-                :node="node"
-                :connections="connections"
-                @move="moveNode"
-                @connect="addConnection"
-                @register-io="registerIO"
-                @select="selectNode"
-                @start-connection-drag="startConnectionDrag"
-                @delete-connection="removeConnection"
-                @node-context-menu="onNodeContextMenu"
-            />
-          </div>
-        </div>
-      </div>
-      
-      <NodeSettings
-          v-if="selectedNodeId !== null"
-          :node="nodes.find(n => n.id === selectedNodeId)"
-          @close="closeSettings"
-          @update-io="updateNodeIO"
+  <div class="w-full h-full bg-zinc-900 text-white font-sans flex flex-col">
+    <!-- Top Toolbar (no overlap) -->
+    <div class="shrink-0 border-b border-zinc-700 bg-zinc-800/80 backdrop-blur">
+      <TopToolbar
+        :show-node-palette="showNodePalette"
+        :debug-mode="debugMode"
+        :is-executing="isExecuting"
+        :viewport="viewport"
+        :execution-summary="executionSummary"
+        @toggle-palette="showNodePalette = !showNodePalette"
+        @toggle-debug="debugMode = !debugMode"
+        @reset-viewport="resetViewport"
+        @run-graph="executeGraph"
+        @stop-execution="stopExecution"
+        @clear-results="clearExecutionResults"
+        @create-test-graph="createTestGraph"
+        @open-entry-points="showEntryPointManager = true"
+        @open-events="showEventManager = true"
+        @add-node-from-dropdown="(nodeId) => addNodeFromDefinition(nodeId, screenToWorldPosition({ x: 200, y: 200 }))"
       />
     </div>
-    
-    <!-- Context Menu -->
-    <ContextMenu
-      :visible="contextMenuVisible"
-      :position="contextMenuPosition?.screen || contextMenuPosition"
-      @action="handleContextMenuAction"
-      @close="closeContextMenu"
-    />
-    
-    <!-- Node Browser Modal -->
-    <NodeBrowser
-      :visible="nodeBrowserVisible"
-      :position="nodeBrowserPosition"
-      @node-select="onNodeBrowserSelect"
-      @close="closeNodeBrowser"
-    />
-    
-    <!-- Node Context Menu -->
-    <NodeContextMenu
-      :visible="nodeContextMenuVisible"
-      :position="nodeContextMenuPosition"
-      :node="nodeContextMenuNode"
-      @action="handleNodeContextMenuAction"
-      @close="closeNodeContextMenu"
-    />
-    
-    <!-- Node Palette Sidebar -->
-    <NodePalette 
-      v-if="showNodePalette"
-      @node-drag-start="onNodeDragStart"
-      @node-select="onNodeSelect"
-      class="h-full"
-    />
+
+    <!-- Main Content: canvas | right log | right palette -->
+    <div class="flex-1 min-h-0 flex overflow-hidden">
+      <!-- Canvas Area (no overlapping controls) -->
+      <NodeCanvas
+        class="flex-1"
+        :debug-mode="debugMode"
+        @context-menu="onContextMenu"
+        @drop-node="onDrop"
+      />
+
+      <!-- Execution Log Panel (right, non-overlapping) -->
+      <ExecutionLog :logs="executionLog" @clear="clearExecutionResults" />
+
+      <!-- Right Palette Sidebar -->
+      <div v-if="showNodePalette" class="w-64 shrink-0 border-l border-zinc-700 bg-zinc-900/80 overflow-y-auto">
+        <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" class="h-full" />
+      </div>
+    </div>
+
+    <!-- Floating Menus/Modals outside canvas -->
+    <ContextMenu :visible="contextMenuVisible" :position="contextMenuPosition?.screen || contextMenuPosition" @action="handleContextMenuAction" @close="closeContextMenu" />
+    <NodeBrowser :visible="nodeBrowserVisible" :position="nodeBrowserPosition" @node-select="onNodeBrowserSelect" @close="closeNodeBrowser" />
+    <NodeContextMenu :visible="nodeContextMenuVisible" :position="nodeContextMenuPosition" :node="nodeContextMenuNode" @action="handleNodeContextMenuAction" @close="closeNodeContextMenu" />
+    <EntryPointManager :visible="showEntryPointManager" @close="showEntryPointManager = false" />
+    <EventManager :visible="showEventManager" @close="showEventManager = false" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import NodeSettings from './components/NodeSettings.vue';
-import NodePalette from './components/NodePalette.vue';
-import NodeDropdown from './components/NodeDropdown.vue';
-import ContextMenu from './components/ContextMenu.vue';
-import NodeBrowser from './components/NodeBrowser.vue';
-import NodeContextMenu from './components/NodeContextMenu.vue';
-import {
-  isActionFlow,
-  renderDraggingConnection,
-  draggingConnection,
-  selectedNodeId,
-  nodes,
-  closeSettings,
-  updateNodeIO,
-  selectNode,
-  getNodeComponent,
-  startConnectionDrag,
-  moveNode,
-  addNode,
-  debugMode, 
-  getConnectionColor,
-  // New universal programming functions
-  addNodeFromDefinition,
-  deleteNode,
-  duplicateNode
-} from "./utils/base-node-utils.js";
-import { addActionNode } from './utils/action-node-utils.js';
-import { addSystemNode } from './utils/system-node-utils.js';
-import { registerIO, renderConnectionPath, getConnectionPointsArray } from './utils/io-utils.js';
-import { connections, addConnection, removeConnection } from './utils/connection-manager.js';
-import { onEditorMouseDown } from './utils/editor-utils.js';
-import { viewport, getViewportTransform, setZoom, screenToWorld } from './utils/viewport-utils.js';
+import { ref, watch, nextTick, defineExpose } from 'vue'
+import NodePalette from './components/NodePalette.vue'
+import ContextMenu from './components/ContextMenu.vue'
+import NodeBrowser from './components/NodeBrowser.vue'
+import NodeContextMenu from './components/NodeContextMenu.vue'
+import EntryPointManager from './components/EntryPointManager.vue'
+import EventManager from './components/EventManager.vue'
+import TopToolbar from './components/layout/TopToolbar.vue'
+import ExecutionLog from './components/canvas/ExecutionLog.vue'
+import NodeCanvas from './components/canvas/NodeCanvas.vue'
+import { nodes, debugMode } from './utils/state.js'
+import { addNode, deleteNode } from './utils/nodes-core.js'
+import { addNodeFromDefinition } from './utils/node-creation.js'
+import { selectNode, selectedNodeId } from './utils/node-selection.js'
+import { pendingConnectionRequest, clearPendingConnectionRequest, attachPendingConnectionToNode } from './utils/pending-connection.js'
+import { addActionNode } from './utils/action-node-utils.js'
+import { addSystemNode } from './utils/system-node-utils.js'
+import { connections } from './utils/connection-manager.js'
+import { viewport, screenToWorld, canvasOffset } from './utils/viewport-utils.js'
+import { executeGraph, stopExecution, clearExecutionResults, isExecuting, executionLog, executionSummary, addEntryPoint, removeEntryPoint, executeFromEntryPoint } from './utils/graph-executor.js'
 
 // UI State
-const showNodePalette = ref(true);
-const isDragOver = ref(false);
-const contextMenuVisible = ref(false);
-const contextMenuPosition = ref({ x: 0, y: 0 });
-const nodeBrowserVisible = ref(false);
-const nodeBrowserPosition = ref({ x: 0, y: 0 });
-const nodeContextMenuVisible = ref(false);
-const nodeContextMenuPosition = ref({ x: 0, y: 0 });
-const nodeContextMenuNode = ref(null);
+const showNodePalette = ref(true)
+const showEntryPointManager = ref(false)
+const showEventManager = ref(false)
+const contextMenuVisible = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
+const nodeBrowserVisible = ref(false)
+const nodeBrowserPosition = ref({ x: 0, y: 0 })
+const nodeContextMenuVisible = ref(false)
+const nodeContextMenuPosition = ref({ x: 0, y: 0 })
+const nodeContextMenuNode = ref(null)
 
-// Context menu functionality
-function onContextMenu(event) {
-  // Only show context menu if not clicking on a node
-  const target = event.target;
-  const nodeElement = target.closest('[data-node-id]');
-  
-  if (!nodeElement) {
-    event.preventDefault();
-    
-    // Store both screen and world positions
-    const rect = event.currentTarget.getBoundingClientRect();
-    const screenPos = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top
-    };
-    const worldPos = screenToWorld(screenPos.x, screenPos.y);
-    
-    // Use screen coordinates for menu positioning (so it appears in viewport)
-    // But store world coordinates for actions
-    contextMenuPosition.value = {
-      screen: screenPos,
-      world: worldPos
-    };
-    contextMenuVisible.value = true;
-  }
-}
-
-// Wheel zoom functionality
-function onWheel(event) {
-  event.preventDefault();
-  
-  const rect = event.currentTarget.getBoundingClientRect();
-  const centerX = event.clientX - rect.left;
-  const centerY = event.clientY - rect.top;
-  
-  const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
-  const newZoom = viewport.value.zoom * zoomFactor;
-  
-  setZoom(newZoom, centerX, centerY);
-}
-
-// Convert screen position to world position
+// Convert screen position (editor-local) to world position using canvas offset
 function screenToWorldPosition(screenPos) {
-  return screenToWorld(screenPos.x, screenPos.y);
+  const clientX = canvasOffset.value.x + screenPos.x
+  const clientY = canvasOffset.value.y + screenPos.y
+  return screenToWorld(clientX, clientY)
 }
 
 // Reset viewport to default
 function resetViewport() {
-  viewport.value.x = 0;
-  viewport.value.y = 0;
-  viewport.value.zoom = 1.0;
+  viewport.value.x = 0
+  viewport.value.y = 0
+  viewport.value.zoom = 1.0
 }
 
 function closeContextMenu() {
-  contextMenuVisible.value = false;
+  contextMenuVisible.value = false
 }
 
 function openNodeBrowser(position) {
-  nodeBrowserPosition.value = position;
-  nodeBrowserVisible.value = true;
-  closeContextMenu();
+  nodeBrowserPosition.value = position
+  nodeBrowserVisible.value = true
+  closeContextMenu()
 }
 
 function closeNodeBrowser() {
-  nodeBrowserVisible.value = false;
+  nodeBrowserVisible.value = false
 }
 
 function onNodeContextMenu(data) {
-  console.log('Node context menu requested:', data);
-  nodeContextMenuNode.value = data.node;
-  // Keep screen coordinates for menu positioning so it appears in viewport
-  nodeContextMenuPosition.value = data.position; // This should already be screen coordinates
-  nodeContextMenuVisible.value = true;
-  // Close other menus
-  contextMenuVisible.value = false;
-  nodeBrowserVisible.value = false;
+  nodeContextMenuNode.value = data.node
+  nodeContextMenuPosition.value = data.position // screen coordinates
+  nodeContextMenuVisible.value = true
+  contextMenuVisible.value = false
+  nodeBrowserVisible.value = false
 }
 
 function closeNodeContextMenu() {
-  nodeContextMenuVisible.value = false;
-  nodeContextMenuNode.value = null;
+  nodeContextMenuVisible.value = false
+  nodeContextMenuNode.value = null
 }
 
 function handleNodeContextMenuAction(actionData) {
-  const { type, node } = actionData;
-  
-  console.log('Node context menu action:', type, 'for node:', node);
-  
+  const { type, node } = actionData
   switch (type) {
     case 'delete':
-      deleteNode(node.id);
-      break;
+      deleteNode(node.id)
+      break
     case 'duplicate':
-      duplicateNode(node);
-      break;
+      // Not yet modularized here
+      break
     case 'copy':
       // TODO: Implement copy to clipboard
-      console.log('Copy functionality not yet implemented');
-      break;
+      break
     case 'edit':
-      // Open the node settings
-      selectNode(node);
-      break;
+      selectNode(node)
+      break
     case 'disconnect':
       // TODO: Implement disconnect all connections for this node
-      console.log('Disconnect functionality not yet implemented');
-      break;
+      break
+    case 'add-entry-point':
+      addEntryPoint(node.id)
+      break
+    case 'remove-entry-point':
+      removeEntryPoint(node.id)
+      break
+    case 'execute-from-here':
+      executeFromEntryPoint(node.id).catch(() => {})
+      break
     default:
-      console.log('Unknown node context menu action:', type);
+      break
   }
 }
 
 function handleContextMenuAction(actionData) {
-  const { type } = actionData;
-  // Handle both old format (direct position) and new format (screen/world)
-  const worldPosition = contextMenuPosition.value.world || contextMenuPosition.value;
-  
+  const { type } = actionData
+  const worldPosition = contextMenuPosition.value.world || contextMenuPosition.value
   switch (type) {
-    case 'addNode':
-      addNode(worldPosition);
-      break;
-    case 'addActionNode':
-      addActionNode(worldPosition);
-      break;
-    case 'addSystemNode':
-      addSystemNode('print', worldPosition);
-      break;
+    case 'addNode': {
+      const newNode = addNode(worldPosition)
+      if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode)
+      break
+    }
+    case 'addActionNode': {
+      const newNode = addActionNode(worldPosition)
+      if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode)
+      break
+    }
+    case 'addSystemNode': {
+      const newNode = addSystemNode('print', worldPosition)
+      if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode)
+      break
+    }
     case 'showNodeDropdown':
-      // Open the node browser modal at the world position
-      openNodeBrowser(worldPosition);
-      break;
+      openNodeBrowser(worldPosition)
+      break
     default:
-      console.log('Unknown context menu action:', type);
+      break
   }
 }
 
 // Event handlers for node creation
-function onNodeDragStart(data) {
-  console.log('Node drag started:', data);
+function onNodeDragStart(_data) {
+  // placeholder for palette drag start
 }
 
 function onNodeSelect(node) {
-  console.log('Node selected from palette:', node);
-  // Create the node when selected from palette at a default world position
-  const position = screenToWorldPosition({ x: 200, y: 200 });
-  addNodeFromDefinition(node.id, position);
+  const position = screenToWorldPosition({ x: 200, y: 200 })
+  const newNode = addNodeFromDefinition(node.id, position)
+  if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode)
 }
 
 function onNodeBrowserSelect(data) {
-  console.log('Node selected from browser:', data);
-  // Create the node at the specified world position
-  addNodeFromDefinition(data.nodeId, data.position);
+  const newNode = addNodeFromDefinition(data.nodeId, data.position)
+  if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode)
 }
 
-// Drag and drop functionality
-function onDragEnter(event) {
-  event.preventDefault();
-  isDragOver.value = true;
+// Create a simple test graph for execution testing
+function createTestGraph() {
+  nodes.value = []
+  connections.value = []
+  const startNode = addNodeFromDefinition('on_start', 100, 100)
+  const printNode1 = addNodeFromDefinition('print', 350, 100)
+  const emitEventNode = addNodeFromDefinition('emit_event', 600, 100)
+  const eventListenerNode = addNodeFromDefinition('on_event', 350, 250)
+  const printNode2 = addNodeFromDefinition('print', 600, 250)
+  if (printNode1.inputs) {
+    const valueInput = printNode1.inputs.find(input => input.name === 'value' || input.name === 'text')
+    if (valueInput) valueInput.defaultValue = 'Starting execution...'
+  }
+  if (emitEventNode.inputs) {
+    const eventNameInput = emitEventNode.inputs.find(input => input.name === 'eventName')
+    const dataInput = emitEventNode.inputs.find(input => input.name === 'data')
+    if (eventNameInput) eventNameInput.defaultValue = 'TestEvent'
+    if (dataInput) dataInput.defaultValue = { message: 'Hello from event!' }
+  }
+  if (eventListenerNode.inputs) {
+    const eventNameInput = eventListenerNode.inputs.find(input => input.name === 'eventName')
+    if (eventNameInput) eventNameInput.defaultValue = 'TestEvent'
+  }
+  if (printNode2.inputs) {
+    const valueInput = printNode2.inputs.find(input => input.name === 'value' || input.name === 'text')
+    if (valueInput) valueInput.defaultValue = 'Event received!'
+  }
+  addEntryPoint(startNode.id)
 }
 
-function onDragOver(event) {
-  event.preventDefault();
-  // Optional: Add visual feedback here
-}
-
-function onDragLeave(event) {
-  // Only set to false if we're leaving the main drop zone
-  if (!event.currentTarget.contains(event.relatedTarget)) {
-    isDragOver.value = false;
+// Context menu from canvas
+function onContextMenu(event) {
+  const target = event.target
+  const nodeElement = target.closest('[data-node-id]')
+  if (!nodeElement) {
+    event.preventDefault()
+    const rect = event.currentTarget.getBoundingClientRect()
+    const screenPos = { x: event.clientX - rect.left, y: event.clientY - rect.top }
+    const worldPos = screenToWorld(event.clientX, event.clientY)
+    contextMenuPosition.value = { screen: screenPos, world: worldPos }
+    contextMenuVisible.value = true
   }
 }
 
+// Handle drop from canvas
 function onDrop(event) {
-  event.preventDefault();
-  isDragOver.value = false;
-  
+  event.preventDefault()
   try {
-    const data = JSON.parse(event.dataTransfer.getData('application/json'));
-    
+    const data = JSON.parse(event.dataTransfer.getData('application/json'))
     if (data.type === 'node-palette-item') {
-      // Get the drop position relative to the editor area and convert to world coordinates
-      const rect = event.currentTarget.getBoundingClientRect();
-      const screenPos = {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
-      };
-      const worldPos = screenToWorld(screenPos.x, screenPos.y);
-      
-      console.log('Dropping node:', data.nodeDefId, 'at world position:', worldPos);
-      
-      // Create the node at the drop position in world coordinates
-      addNodeFromDefinition(data.nodeDefId, worldPos);
+      const worldPos = screenToWorld(event.clientX, event.clientY)
+      const newNode = addNodeFromDefinition(data.nodeDefId, worldPos)
+      if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode)
     }
   } catch (error) {
-    console.error('Error handling drop:', error);
+    console.error('Error handling drop:', error)
   }
 }
 
+// When a connection drag ends on empty space, pendingConnectionRequest will be set.
+// Open the context menu at that position to let user pick a node to connect.
+watch(pendingConnectionRequest, async (pending) => {
+  if (!pending) return;
+  // Convert world position to screen-local position for the canvas context menu
+  const world = pending.position;
+  // screenToWorld inverse: x*zoom + viewport.x + canvasOffset.x
+  const screen = {
+    x: world.x * viewport.value.zoom + viewport.value.x,
+    y: world.y * viewport.value.zoom + viewport.value.y,
+  };
+  contextMenuPosition.value = { screen, world };
+  await nextTick();
+  contextMenuVisible.value = true;
+});
+
+// After any context action or add via browser/drop, attachPendingConnectionToNode handles clearing.
+
+// Expose API used by tests
+defineExpose({ selectNode, selectedNodeId })
 </script>
 
 <style>
-/* Canvas content styling */
-.canvas-content {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform-origin: 0 0;
-}
-
-/* Add your styles here */
+/* Optional background helpers */
 .bg-checkerboard {
   background-color: #222;
   background-image: linear-gradient(45deg, #444 25%, transparent 25%),
@@ -416,48 +295,17 @@ function onDrop(event) {
 .bg-grid {
   background-color: #444444;
   background-image:
-    /* Large black grid lines */
-      linear-gradient(0deg, #000 2px, transparent 2px),
-      linear-gradient(90deg, #000 2px, transparent 2px),
-        /* Small light gray grid lines */
-      linear-gradient(0deg, #222 1px, transparent 1px),
-      linear-gradient(90deg, #222 1px, transparent 1px);
-
+    linear-gradient(0deg, #000 2px, transparent 2px),
+    linear-gradient(90deg, #000 2px, transparent 2px),
+    linear-gradient(0deg, #222 1px, transparent 1px),
+    linear-gradient(90deg, #222 1px, transparent 1px);
   background-size:
-      80px 80px, 80px 80px,
-      20px 20px, 20px 20px,
-      80px 80px, 80px 80px;
+    80px 80px, 80px 80px,
+    20px 20px, 20px 20px,
+    80px 80px, 80px 80px;
   background-position:
-      0 0, 0 0,
-      0 0, 0 0,
-      0 0, 0 0;
-}
-
-/* Drag and drop styling */
-.drag-over {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-  border: 2px dashed rgba(59, 130, 246, 0.5);
-  transition: all 0.2s ease-in-out;
-}
-
-.drag-over::before {
-  content: "Drop node here";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(59, 130, 246, 0.8);
-  font-size: 1.5rem;
-  font-weight: bold;
-  pointer-events: none;
-  z-index: 1000;
-}
-
-/* Prevent text selection during panning */
-.canvas-content {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+    0 0, 0 0,
+    0 0, 0 0,
+    0 0, 0 0;
 }
 </style>

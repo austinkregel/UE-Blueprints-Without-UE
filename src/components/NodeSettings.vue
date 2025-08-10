@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed top-0 right-0 h-screen w-[540px] bg-zinc-900 text-white shadow-2xl z-[1000] flex flex-col items-stretch animate-slideIn">
+  <div class="fixed top-0 right-0 h-screen w-[440px] bg-zinc-900 text-white shadow-2xl z-[1000] flex flex-col items-stretch animate-slideIn">
     <div class="p-6 flex-1 flex flex-col overflow-y-auto">
       <h3 class="text-lg font-bold mb-4">Node {{ node.id }} Settings</h3>
       <label class="block font-semibold mb-1">Inputs:</label>

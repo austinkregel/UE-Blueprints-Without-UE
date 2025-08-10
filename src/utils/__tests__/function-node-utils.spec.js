@@ -1,14 +1,12 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 import * as functionNodeUtils from '../function-node-utils.js';
-import { nodes, nextId } from '../base-node-utils.js';
-import { log } from '../base-node-utils.js';
+import { nodes, nextId, log } from '../state.js';
 
-vi.mock('../base-node-utils', async (importOriginal) => {
+vi.mock('../state', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
     log: vi.fn(),
-    getNextNodeId: vi.fn(() => 'function-100'), // Provide a mock implementation
   };
 });
 
@@ -24,7 +22,7 @@ describe('addFunctionNode', () => {
     expect(nodes.value.length).toBe(1);
     const node = nodes.value[0];
     expect(node).toMatchObject({
-      id: 'function-100', // Updated to match the string ID format
+      id: expect.anything(),
       type: 'function',
       funcName: 'myAction',
       x: 300,

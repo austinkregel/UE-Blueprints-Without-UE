@@ -1,4 +1,5 @@
-import {nodes, ioPositions, draggingConnection, log, getIOPosition} from './base-node-utils.js';
+import {nodes, ioPositions, draggingConnection, log} from './state.js';
+import { getIOPosition } from './io-positions.js';
 import { getNextNodeId } from './id-utils.js';
 import { connections, addConnection } from './connection-manager.js';
 import {nextTick} from "vue";
@@ -92,12 +93,14 @@ export function connectNodes({ from, to, areTypesCompatible }) {
         } else {
             addConnection({ from: to, to: from });
         }
+        // Start next drag from the target input just connected
+        const startPos = getIOPosition(to.nodeId, 'input', to.input) || { x: 0, y: 0 };
         draggingConnection.value = {
             from: to,
             to: null,
             type: 'output',
-            start: getIOPosition(to.nodeId, fromIsOutput ? fromType : toType, fromIsOutput ? to.input : from.input) || { x: 0, y: 0 },
-            mouse: getIOPosition(to.nodeId, fromIsOutput ? fromType : toType, fromIsOutput ? to.input : from.input) || { x: 0, y: 0 }
+            start: startPos,
+            mouse: startPos
         };
         return;
     }
@@ -121,12 +124,13 @@ export function connectNodes({ from, to, areTypesCompatible }) {
             addConnection({ from: to, to: { nodeId: castNodeId, input: 'in' } });
             addConnection({ from: { nodeId: castNodeId, output: 'out' }, to: from });
         }
+        const startPos = getIOPosition(to.nodeId, fromIsOutput ? 'input' : 'output', fromIsOutput ? to.input : from.input) || { x: 0, y: 0 };
         draggingConnection.value = {
             from: to,
             to: null,
             type: 'output',
-            start: getIOPosition(to.nodeId, fromIsOutput ? 'input' : 'output', fromIsOutput ? to.input : from.input) || { x: 0, y: 0 },
-            mouse: getIOPosition(to.nodeId, fromIsOutput ? 'input' : 'output', fromIsOutput ? to.input : from.input) || { x: 0, y: 0 }
+            start: startPos,
+            mouse: startPos
         };
         log('Connection established with cast node:', { from, to, castNode });
         return;

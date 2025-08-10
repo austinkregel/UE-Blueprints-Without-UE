@@ -47,6 +47,33 @@
       
       <div class="border-t border-zinc-600 my-2"></div>
       
+      <!-- Execution Actions -->
+      <div class="px-3 py-1 text-xs font-semibold text-blue-400 uppercase">Execution</div>
+      
+      <button 
+        v-if="canBeEntryPoint"
+        @click="handleAction(isEntryPoint ? 'remove-entry-point' : 'add-entry-point')"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+      >
+        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" />
+        </svg>
+        {{ isEntryPoint ? 'Remove Entry Point' : 'Set as Entry Point' }}
+      </button>
+      
+      <button 
+        v-if="canBeEntryPoint && isEntryPoint"
+        @click="handleAction('execute-from-here')"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-green-300 text-sm flex items-center"
+      >
+        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 8h6M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+        </svg>
+        Execute from Here
+      </button>
+      
+      <div class="border-t border-zinc-600 my-2"></div>
+      
       <!-- Dangerous Actions -->
       <div class="px-3 py-1 text-xs font-semibold text-red-400 uppercase">Danger Zone</div>
       
@@ -74,7 +101,8 @@
 </template>
 
 <script setup>
-import { watch } from 'vue';
+import { watch, computed } from 'vue';
+import { isEntryPoint as checkIsEntryPoint } from '../utils/graph-executor.js';
 
 const props = defineProps({
   visible: Boolean,
@@ -89,6 +117,22 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['action', 'close']);
+
+// Computed properties
+const canBeEntryPoint = computed(() => {
+  if (!props.node) return false;
+  
+  // Check if node can be an entry point (has exec outputs or is a function/system node)
+  const hasExecOutput = props.node.outputs?.some(output => output.type === 'exec');
+  const isFunction = props.node.type === 'function';
+  const isSystem = props.node.type === 'system';
+  
+  return hasExecOutput || isFunction || isSystem;
+});
+
+const isEntryPoint = computed(() => {
+  return props.node ? checkIsEntryPoint(props.node.id) : false;
+});
 
 function handleAction(actionType) {
   emit('action', {

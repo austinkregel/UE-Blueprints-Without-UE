@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { nodes } from '../base-node-utils.js';
+import { nodes } from '../state.js';
 import { connections, addConnection, removeConnection } from '../connection-manager.js';
 
 function makeNode(id, inputs, outputs) {

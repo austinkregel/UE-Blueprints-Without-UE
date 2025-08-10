@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import {nodes, ioPositions, nextId, log} from './base-node-utils.js';
+import {nodes, ioPositions, nextId, log} from './state.js';
 
 export const connections = ref([]);
 
@@ -30,12 +30,26 @@ export function addConnection({ from, to }) {
   const fromNode = nodes.value.find(n => n.id === from.nodeId);
   const toNode = nodes.value.find(n => n.id === to.nodeId);
   if (!fromNode || !toNode) return;
-  const fromType = fromNode.outputs?.find(o => (o.name || o) === from.output)?.type;
-  const toType = toNode.inputs?.find(i => (i.name || i) === to.input)?.type;
+  const fromOut = fromNode.outputs?.find(o => (o.name || o) === from.output);
+  const toIn = toNode.inputs?.find(i => (i.name || i) === to.input);
+  const fromType = fromOut?.type;
+  const toType = toIn?.type;
   if (!fromType || !toType) return;
-  // Only allow compatible types (or add cast node logic here)
+
+  const isExec = (t) => String(t || '').toLowerCase() === 'exec';
+  // Allow exec-to-exec regardless of names (Then 0, True, etc.)
+  if (isExec(fromType) && isExec(toType)) {
+    connections.value.push({ from, to });
+    return;
+  }
+  // Disallow mixing exec with data
+  if (isExec(fromType) !== isExec(toType)) {
+    log('Incompatible types (exec/data mismatch)', { fromType, toType, from, to });
+    return;
+  }
+  // For data, types must match (casting handled elsewhere)
   if (fromType !== toType) {
-    log('Incompatible types', { fromType, toType, from, to });
+    log('Incompatible data types', { fromType, toType, from, to });
     return;
   }
   connections.value.push({ from, to });
