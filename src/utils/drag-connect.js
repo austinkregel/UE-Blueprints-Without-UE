@@ -32,6 +32,11 @@ export function onConnectionDragEnd(e) {
   const worldPos = screenToWorld(e.clientX, e.clientY);
   let nearestIO = null;
   let nearestDist = 24;
+  // Helper to preserve string IDs when not purely numeric
+  const parseNodeId = (id) => {
+    const s = String(id);
+    return /^\d+$/.test(s) ? Number(s) : s;
+  };
   for (const nodeId in ioPositions.value) {
     for (const side of ['inputs', 'outputs']) {
       const ios = ioPositions.value[nodeId][side] || {};
@@ -42,7 +47,7 @@ export function onConnectionDragEnd(e) {
         const dist = Math.hypot(dx, dy);
         if (dist < nearestDist) {
           nearestDist = dist;
-          nearestIO = { nodeId: Number(nodeId), side, ioName };
+          nearestIO = { nodeId: parseNodeId(nodeId), side, ioName };
         }
       }
     }

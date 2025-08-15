@@ -229,6 +229,18 @@ export const NODE_CATEGORIES = {
     color: 'gray',
     icon: 'system',
     description: 'System operations and utilities'
+  },
+  CONSTANT: {
+    name: 'Constants',
+    color: 'slate',
+    icon: 'constant',
+    description: 'Literal values (string, number, boolean)'
+  },
+  LARAVEL: {
+    name: 'Laravel',
+    color: 'indigo',
+    icon: 'laravel',
+    description: 'Laravel framework primitives: routing, models, auth, cache, events, jobs, views, responses'
   }
 };
 
@@ -253,12 +265,15 @@ export const NODE_DEFINITIONS = {
       name: 'For Loop',
       category: 'CONTROL',
       inputs: [
+        { name: 'Exec', type: 'exec' },
         { name: 'start', type: 'int' },
         { name: 'end', type: 'int' },
         { name: 'step', type: 'int', defaultValue: 1 }
       ],
       outputs: [
-        { name: 'index', type: 'int' }
+        { name: 'Loop Body', type: 'exec' },
+        { name: 'index', type: 'int' },
+        { name: 'Completed', type: 'exec' }
       ],
       description: 'For loop with start, end, and step values'
     },
@@ -266,20 +281,27 @@ export const NODE_DEFINITIONS = {
       name: 'While Loop',
       category: 'CONTROL',
       inputs: [
+        { name: 'Exec', type: 'exec' },
         { name: 'condition', type: 'bool' }
       ],
-      outputs: [],
+      outputs: [
+        { name: 'Loop Body', type: 'exec' },
+        { name: 'Completed', type: 'exec' }
+      ],
       description: 'While loop with condition'
     },
     'foreach': {
       name: 'Foreach Loop',
       category: 'CONTROL',
       inputs: [
+        { name: 'Exec', type: 'exec' },
         { name: 'array', type: 'array' }
       ],
       outputs: [
+        { name: 'Loop Body', type: 'exec' },
         { name: 'key', type: 'mixed' },
-        { name: 'value', type: 'mixed' }
+        { name: 'value', type: 'mixed' },
+        { name: 'Completed', type: 'exec' }
       ],
       description: 'Foreach loop over array elements'
     },
@@ -462,6 +484,72 @@ export const NODE_DEFINITIONS = {
         { name: 'Completed', type: 'exec' }
       ],
       description: 'Execute loop body while condition is true'
+    },
+
+    // Additional UE-like control flow nodes
+    'for_loop_with_break': {
+      name: 'For Loop (With Break)',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'First Index', type: 'int', defaultValue: 0 },
+        { name: 'Last Index', type: 'int', defaultValue: 10 },
+        { name: 'Break', type: 'exec' }
+      ],
+      outputs: [
+        { name: 'Loop Body', type: 'exec' },
+        { name: 'Index', type: 'int' },
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Loop over an index range with early break support'
+    },
+    'for_each_loop_with_break': {
+      name: 'For Each Loop (With Break)',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Array', type: 'array' },
+        { name: 'Break', type: 'exec' }
+      ],
+      outputs: [
+        { name: 'Loop Body', type: 'exec' },
+        { name: 'Array Element', type: 'mixed' },
+        { name: 'Array Index', type: 'int' },
+        { name: 'Completed', type: 'exec' }
+      ],
+      description: 'Iterate over elements with early break support'
+    },
+    'switch_on_int': {
+      name: 'Switch on Int',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Selection', type: 'int' }
+      ],
+      outputs: [
+        { name: 'Default', type: 'exec' },
+        { name: 'Case 0', type: 'exec' },
+        { name: 'Case 1', type: 'exec' },
+        { name: 'Case 2', type: 'exec' }
+      ],
+      description: 'Route execution based on integer selection',
+      dynamicOutputs: true
+    },
+    'switch_on_string': {
+      name: 'Switch on String',
+      category: 'CONTROL',
+      inputs: [
+        { name: 'Exec', type: 'exec' },
+        { name: 'Selection', type: 'string' }
+      ],
+      outputs: [
+        { name: 'Default', type: 'exec' },
+        { name: 'Case 0', type: 'exec' },
+        { name: 'Case 1', type: 'exec' },
+        { name: 'Case 2', type: 'exec' }
+      ],
+      description: 'Route execution based on string selection',
+      dynamicOutputs: true
     }
   },
 
@@ -584,6 +672,81 @@ export const NODE_DEFINITIONS = {
         { name: 'result', type: 'float' }
       ],
       description: 'Get maximum of two values'
+    },
+
+    // Additional math utilities
+    'clamp_float': {
+      name: 'Clamp (Float)',
+      category: 'MATH',
+      inputs: [
+        { name: 'value', type: 'float' },
+        { name: 'min', type: 'float' },
+        { name: 'max', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'float' }
+      ],
+      description: 'Clamp a float value between min and max'
+    },
+    'clamp_int': {
+      name: 'Clamp (Int)',
+      category: 'MATH',
+      inputs: [
+        { name: 'value', type: 'int' },
+        { name: 'min', type: 'int' },
+        { name: 'max', type: 'int' }
+      ],
+      outputs: [
+        { name: 'result', type: 'int' }
+      ],
+      description: 'Clamp an integer value between min and max'
+    },
+    'lerp': {
+      name: 'Lerp',
+      category: 'MATH',
+      inputs: [
+        { name: 'a', type: 'float' },
+        { name: 'b', type: 'float' },
+        { name: 'alpha', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'float' }
+      ],
+      description: 'Linearly interpolate between a and b by alpha'
+    },
+    'fmod': {
+      name: 'FMod',
+      category: 'MATH',
+      inputs: [
+        { name: 'a', type: 'float' },
+        { name: 'b', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'float' }
+      ],
+      description: 'Floating point remainder of a/b'
+    },
+    'trunc': {
+      name: 'Truncate',
+      category: 'MATH',
+      inputs: [
+        { name: 'value', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'int' }
+      ],
+      description: 'Truncate float toward zero'
+    },
+    'sign': {
+      name: 'Sign',
+      category: 'MATH',
+      inputs: [
+        { name: 'value', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'int' }
+      ],
+      description: 'Return -1, 0, or 1 depending on the sign of value'
     }
   },
 
@@ -671,6 +834,83 @@ export const NODE_DEFINITIONS = {
         { name: 'result', type: 'bool' }
       ],
       description: 'Logical NOT operation'
+    },
+
+    // Additional comparisons and logic
+    'greater_equal': {
+      name: 'Greater Or Equal',
+      category: 'COMPARISON',
+      inputs: [
+        { name: 'a', type: 'float' },
+        { name: 'b', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'bool' }
+      ],
+      description: 'Check if a is greater than or equal to b'
+    },
+    'less_equal': {
+      name: 'Less Or Equal',
+      category: 'COMPARISON',
+      inputs: [
+        { name: 'a', type: 'float' },
+        { name: 'b', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'bool' }
+      ],
+      description: 'Check if a is less than or equal to b'
+    },
+    'nearly_equal': {
+      name: 'Nearly Equal (Float)',
+      category: 'COMPARISON',
+      inputs: [
+        { name: 'a', type: 'float' },
+        { name: 'b', type: 'float' },
+        { name: 'tolerance', type: 'float', optional: true, defaultValue: 0.0001 }
+      ],
+      outputs: [
+        { name: 'result', type: 'bool' }
+      ],
+      description: 'Check if two floats are approximately equal within tolerance'
+    },
+    'xor': {
+      name: 'Logical XOR',
+      category: 'COMPARISON',
+      inputs: [
+        { name: 'a', type: 'bool' },
+        { name: 'b', type: 'bool' }
+      ],
+      outputs: [
+        { name: 'result', type: 'bool' }
+      ],
+      description: 'Logical exclusive OR'
+    },
+    'between_inclusive': {
+      name: 'Between (Inclusive)',
+      category: 'COMPARISON',
+      inputs: [
+        { name: 'value', type: 'float' },
+        { name: 'min', type: 'float' },
+        { name: 'max', type: 'float' }
+      ],
+      outputs: [
+        { name: 'result', type: 'bool' }
+      ],
+      description: 'Check if value is between min and max (inclusive)'
+    },
+    'select': {
+      name: 'Select (Ternary)',
+      category: 'COMPARISON',
+      inputs: [
+        { name: 'pick A', type: 'bool' },
+        { name: 'A', type: 'mixed' },
+        { name: 'B', type: 'mixed' }
+      ],
+      outputs: [
+        { name: 'result', type: 'mixed' }
+      ],
+      description: 'Return A if pick is true, otherwise B'
     }
   },
 
@@ -1681,7 +1921,7 @@ export const NODE_DEFINITIONS = {
         { name: 'Exec', type: 'exec' }
       ],
       description: 'Debug print variable information'
-    },
+  },
     'exit': {
       name: 'Exit',
       category: 'SYSTEM',
@@ -1770,6 +2010,201 @@ export const NODE_DEFINITIONS = {
       ],
       description: 'Entry point - executes when graph starts'
     }
+  },
+
+  // ===== CONSTANTS / LITERALS =====
+  CONSTANT: {
+    'literal_string': {
+      name: 'String',
+      category: 'CONSTANT',
+      inputs: [],
+      outputs: [ { name: 'value', type: 'string' } ],
+      description: 'A literal string value'
+    },
+    'literal_int': {
+      name: 'Integer',
+      category: 'CONSTANT',
+      inputs: [],
+      outputs: [ { name: 'value', type: 'int' } ],
+      description: 'A literal integer value'
+    },
+    'literal_float': {
+      name: 'Float',
+      category: 'CONSTANT',
+      inputs: [],
+      outputs: [ { name: 'value', type: 'float' } ],
+      description: 'A literal float value'
+    },
+    'literal_bool': {
+      name: 'Boolean',
+      category: 'CONSTANT',
+      inputs: [],
+      outputs: [ { name: 'value', type: 'bool' } ],
+      description: 'A literal boolean value'
+    }
+  },
+
+  // ===== LARAVEL PRIMITIVES =====
+  LARAVEL: {
+    // Routing
+    'route': {
+      name: 'Route',
+      category: 'LARAVEL',
+      inputs: [
+        { name: 'method', type: 'string' },
+        { name: 'path', type: 'string' },
+        { name: 'handler', type: 'callable' }
+      ],
+      outputs: [
+        { name: 'Registered', type: 'bool' }
+      ],
+      description: 'Register a route with method, path, and handler'
+    },
+
+    // Request & Validation
+    'request_input': {
+      name: 'Request Input',
+      category: 'LARAVEL',
+      inputs: [ { name: 'key', type: 'string' }, { name: 'default', type: 'mixed', optional: true } ],
+      outputs: [ { name: 'value', type: 'mixed' } ],
+      description: 'Get input from the current request'
+    },
+    'validate': {
+      name: 'Validate',
+      category: 'LARAVEL',
+      inputs: [ { name: 'data', type: 'object' }, { name: 'rules', type: 'object' } ],
+      outputs: [ { name: 'valid', type: 'bool' }, { name: 'validated', type: 'object' }, { name: 'errors', type: 'object' } ],
+      description: 'Validate data against rules'
+    },
+
+    // Eloquent (generic)
+    'model_find': {
+      name: 'Model Find',
+      category: 'LARAVEL',
+      inputs: [ { name: 'model', type: 'string' }, { name: 'id', type: 'int' } ],
+      outputs: [ { name: 'model', type: 'object' }, { name: 'found', type: 'bool' } ],
+      description: 'Find a model by primary key'
+    },
+    'model_where': {
+      name: 'Model Where',
+      category: 'LARAVEL',
+      inputs: [ { name: 'model', type: 'string' }, { name: 'field', type: 'string' }, { name: 'op', type: 'string', optional: true }, { name: 'value', type: 'mixed' } ],
+      outputs: [ { name: 'query', type: 'object' } ],
+      description: 'Build a query with a where clause'
+    },
+    'model_get': {
+      name: 'Model Get',
+      category: 'LARAVEL',
+      inputs: [ { name: 'query', type: 'object' } ],
+      outputs: [ { name: 'results', type: 'array' } ],
+      description: 'Execute query and get results'
+    },
+    'model_create': {
+      name: 'Model Create',
+      category: 'LARAVEL',
+      inputs: [ { name: 'model', type: 'string' }, { name: 'attributes', type: 'object' } ],
+      outputs: [ { name: 'model', type: 'object' }, { name: 'created', type: 'bool' } ],
+      description: 'Create a new model with attributes'
+    },
+    'model_update': {
+      name: 'Model Update',
+      category: 'LARAVEL',
+      inputs: [ { name: 'model', type: 'object' }, { name: 'attributes', type: 'object' } ],
+      outputs: [ { name: 'model', type: 'object' }, { name: 'updated', type: 'bool' } ],
+      description: 'Update a model with attributes'
+    },
+    'model_delete': {
+      name: 'Model Delete',
+      category: 'LARAVEL',
+      inputs: [ { name: 'model', type: 'object' } ],
+      outputs: [ { name: 'deleted', type: 'bool' } ],
+      description: 'Delete a model instance'
+    },
+    'relation_load': {
+      name: 'Load Relation',
+      category: 'LARAVEL',
+      inputs: [ { name: 'model', type: 'object' }, { name: 'relation', type: 'string' } ],
+      outputs: [ { name: 'model', type: 'object' } ],
+      description: 'Eager-load a relation on a model'
+    },
+
+    // Auth & Gates
+    'auth_user': {
+      name: 'Auth User',
+      category: 'LARAVEL',
+      inputs: [],
+      outputs: [ { name: 'user', type: 'object' }, { name: 'authenticated', type: 'bool' } ],
+      description: 'Get the currently authenticated user'
+    },
+    'gate_allows': {
+      name: 'Gate Allows',
+      category: 'LARAVEL',
+      inputs: [ { name: 'ability', type: 'string' }, { name: 'arguments', type: 'array', optional: true } ],
+      outputs: [ { name: 'allowed', type: 'bool' } ],
+      description: 'Check an authorization ability via Gate'
+    },
+
+    // Cache
+    'cache_get': {
+      name: 'Cache Get',
+      category: 'LARAVEL',
+      inputs: [ { name: 'key', type: 'string' }, { name: 'default', type: 'mixed', optional: true } ],
+      outputs: [ { name: 'value', type: 'mixed' }, { name: 'hit', type: 'bool' } ],
+      description: 'Retrieve a value from cache'
+    },
+    'cache_put': {
+      name: 'Cache Put',
+      category: 'LARAVEL',
+      inputs: [ { name: 'key', type: 'string' }, { name: 'value', type: 'mixed' }, { name: 'seconds', type: 'int' } ],
+      outputs: [ { name: 'success', type: 'bool' } ],
+      description: 'Store a value in cache for given seconds'
+    },
+
+    // Events & Jobs
+    'event_dispatch': {
+      name: 'Dispatch Event',
+      category: 'LARAVEL',
+      inputs: [ { name: 'event', type: 'string' }, { name: 'payload', type: 'object', optional: true } ],
+      outputs: [],
+      description: 'Dispatch a domain event'
+    },
+    'job_dispatch': {
+      name: 'Dispatch Job',
+      category: 'LARAVEL',
+      inputs: [ { name: 'job', type: 'string' }, { name: 'payload', type: 'object', optional: true } ],
+      outputs: [ { name: 'queued', type: 'bool' } ],
+      description: 'Dispatch a queued job'
+    },
+
+    // Views & Responses
+    'view_make': {
+      name: 'Make View',
+      category: 'LARAVEL',
+      inputs: [ { name: 'view', type: 'string' }, { name: 'data', type: 'object', optional: true } ],
+      outputs: [ { name: 'html', type: 'string' } ],
+      description: 'Render a Blade view into HTML'
+    },
+    'response_json': {
+      name: 'JSON Response',
+      category: 'LARAVEL',
+      inputs: [ { name: 'data', type: 'mixed' }, { name: 'status', type: 'int', optional: true } ],
+      outputs: [ { name: 'response', type: 'object' } ],
+      description: 'Return a JSON HTTP response'
+    },
+    'mail_send': {
+      name: 'Send Mail',
+      category: 'LARAVEL',
+      inputs: [ { name: 'to', type: 'string' }, { name: 'subject', type: 'string' }, { name: 'body', type: 'string' } ],
+      outputs: [ { name: 'sent', type: 'bool' } ],
+      description: 'Send an email'
+    },
+    'notify_send': {
+      name: 'Send Notification',
+      category: 'LARAVEL',
+      inputs: [ { name: 'notifiable', type: 'object' }, { name: 'notification', type: 'string' }, { name: 'data', type: 'object', optional: true } ],
+      outputs: [ { name: 'sent', type: 'bool' } ],
+      description: 'Send a notification to a notifiable entity'
+    }
   }
 };
 
@@ -1819,7 +2254,7 @@ export function areTypesCompatible(fromType, toType) {
  * Get all node definitions for a category
  */
 export function getNodesByCategory(category) {
-  const categoryKey = category.toUpperCase();
+  const categoryKey = category?.toUpperCase() ?? '';
   return NODE_DEFINITIONS[categoryKey] || {};
 }
 
@@ -1839,7 +2274,7 @@ export function getNodeDefinition(nodeId) {
  * Get color for a node category
  */
 export function getCategoryColor(category) {
-  const categoryInfo = NODE_CATEGORIES[category.toUpperCase()];
+  const categoryInfo = NODE_CATEGORIES[category?.toUpperCase()] ?? null;
   return categoryInfo ? categoryInfo.color : 'gray';
 }
 
@@ -1851,9 +2286,14 @@ export function getAllNodeDefinitions() {
   for (const [categoryKey, nodes] of Object.entries(NODE_DEFINITIONS)) {
     for (const [nodeId, nodeDef] of Object.entries(nodes)) {
       allNodes[nodeId] = {
-        ...nodeDef,
-        id: nodeId,
-        categoryKey
+  id: nodeId,
+  name: nodeDef?.name ?? nodeId,
+  category: nodeDef?.category ?? categoryKey,
+  description: nodeDef?.description ?? '',
+  inputs: nodeDef?.inputs ?? [],
+  outputs: nodeDef?.outputs ?? [],
+  dynamicOutputs: nodeDef?.dynamicOutputs ?? false,
+  categoryKey
       };
     }
   }

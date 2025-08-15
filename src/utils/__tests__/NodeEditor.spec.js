@@ -11,7 +11,9 @@ describe('App click/drag interface', () => {
   it('allows node selection and dragging with debugMode off', async () => {
     const wrapper = mount(App);
     // Assume first node exists
-    const node = wrapper.vm.nodes[0];
+      wrapper.vm.nodes = [{ id: 'node1', x: 100, y: 100, title: 'Node 1', inputs: [], outputs: [] }];
+      await wrapper.vm.$nextTick();
+      const node = wrapper.vm.nodes[0];
     const initialX = node.x;
     const initialY = node.y;
     // Simulate mousedown on node
@@ -31,7 +33,8 @@ describe('App click/drag interface', () => {
   it('allows node selection and dragging with debugMode on (SVG overlays present)', async () => {
     const wrapper = mount(App);
     wrapper.vm.debugMode = true;
-    await wrapper.vm.$nextTick();
+      wrapper.vm.nodes = [{ id: 'node1', x: 100, y: 100, title: 'Node 1', inputs: [], outputs: [] }];
+      await wrapper.vm.$nextTick();
     const node = wrapper.vm.nodes[0];
     const initialX = node.x;
     const initialY = node.y;
@@ -52,7 +55,8 @@ describe('App click/drag interface', () => {
   it('SVG debug overlays have pointer-events set to none', async () => {
     const wrapper = mount(App);
     wrapper.vm.debugMode = true;
-    await wrapper.vm.$nextTick();
+      wrapper.vm.nodes = [{ id: 'node1', x: 100, y: 100, title: 'Node 1', inputs: [], outputs: [] }];
+      await wrapper.vm.$nextTick();
     // Check SVG debug markers - look for the connections SVG specifically
     const svg = wrapper.find('svg.connections');
     expect(svg.attributes('class')).toContain('pointer-events-none');
@@ -65,7 +69,9 @@ describe('App click/drag interface', () => {
 
   it('emits move event with correct payload when node is dragged', async () => {
     const wrapper = mount(App);
-    const node = wrapper.vm.nodes[0];
+      wrapper.vm.nodes = [{ id: 'node1', x: 100, y: 100, title: 'Node 1', inputs: [], outputs: [] }];
+      await wrapper.vm.$nextTick();
+      const node = wrapper.vm.nodes[0];
     const nodeWrapper = wrapper.find(`[data-node-id='${node.id}']`);
     const targetX = node.x + 30;
     const targetY = node.y + 40;
@@ -80,6 +86,8 @@ describe('App click/drag interface', () => {
 
   it('does not move node if mouseup occurs without mousemove', async () => {
     const wrapper = mount(App);
+    wrapper.vm.nodes = [{ id: 'node1', x: 100, y: 100, title: 'Node 1', inputs: [], outputs: [] }];
+    await wrapper.vm.$nextTick();
     const node = wrapper.vm.nodes[0];
     const initialX = node.x;
     const initialY = node.y;
@@ -99,7 +107,9 @@ describe('App click/drag interface', () => {
         }
       }
     });
-    const node = wrapper.vm.nodes[0];
+      wrapper.vm.nodes = [{ id: 'node1', x: 100, y: 100, title: 'Node 1', inputs: [], outputs: [] }];
+      await wrapper.vm.$nextTick();
+      const node = wrapper.vm.nodes[0];
     // Directly call selectNode to simulate event
     wrapper.vm.selectNode({ id: node.id });
     await wrapper.vm.$nextTick();

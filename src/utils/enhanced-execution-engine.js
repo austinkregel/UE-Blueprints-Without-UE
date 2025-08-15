@@ -105,6 +105,9 @@ registerExecutionStrategy('function', async (node, context, inputs) => {
 
 registerExecutionStrategy('variable', async (node, context, inputs) => {
   if (node.varAction === 'get') {
+    if (node.isLiteral) {
+      return { value: node.value };
+    }
     return { value: context.getVariable(node.varName) };
   } else if (node.varAction === 'set') {
     context.setVariable(node.varName, inputs.value, node.varType);
@@ -117,7 +120,7 @@ registerExecutionStrategy('system', async (node, context, inputs) => {
   
   switch (node.systemName) {
     case 'print':
-      console.log('Print:', inputs.message || inputs.value || '');
+  console.log('Print:', inputs.value ?? inputs.message ?? '');
       break;
     case 'delay':
       await new Promise(resolve => 
@@ -129,6 +132,11 @@ registerExecutionStrategy('system', async (node, context, inputs) => {
   }
   
   return outputs;
+});
+
+// Constants/literals: just output their stored value
+registerExecutionStrategy('constant', async (node, context, inputs) => {
+  return { value: node.value };
 });
 
 /**

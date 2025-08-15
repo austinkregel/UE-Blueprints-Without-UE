@@ -68,6 +68,11 @@ export function onEditorMouseDown(e) {
     
     let closestIO = null;
     let minDist = 32; // threshold in pixels (in world space)
+    // Helper to preserve string IDs when not purely numeric
+    const parseNodeId = (id) => {
+        const s = String(id);
+        return /^\d+$/.test(s) ? Number(s) : s;
+    };
     for (const nodeId in ioPositions.value) {
         for (const side of ['inputs', 'outputs']) {
             const ios = ioPositions.value[nodeId][side] || {};
@@ -78,7 +83,7 @@ export function onEditorMouseDown(e) {
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < minDist) {
                     minDist = dist;
-                    closestIO = { nodeId: Number(nodeId), side, ioName, pos };
+                    closestIO = { nodeId: parseNodeId(nodeId), side, ioName, pos };
                 }
             }
         }

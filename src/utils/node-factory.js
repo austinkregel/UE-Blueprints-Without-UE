@@ -40,9 +40,10 @@ export function createNodeFromDefinition(nodeDefId, x = 100, y = 100, overrides 
  * @param {string} action - 'get' or 'set'
  * @param {number} x - X position
  * @param {number} y - Y position
+ * @param {Object} overrides - Optional property overrides (e.g., refs)
  * @returns {Object} - The created variable node
  */
-export function createVariableNode(varName, varType, action = 'get', x = 100, y = 100) {
+export function createVariableNode(varName, varType, action = 'get', x = 100, y = 100, overrides = {}) {
   const nodeId = getNextNodeId('variable');
   
   const node = {
@@ -55,7 +56,8 @@ export function createVariableNode(varName, varType, action = 'get', x = 100, y 
     y,
     inputs: action === 'set' ? [{ name: 'value', type: varType }] : [],
     outputs: action === 'get' ? [{ name: 'value', type: varType }] : [],
-    category: 'VARIABLE'
+    category: 'VARIABLE',
+    ...overrides
   };
 
   return node;
@@ -68,9 +70,10 @@ export function createVariableNode(varName, varType, action = 'get', x = 100, y 
  * @param {Array} outputs - Output parameters
  * @param {number} x - X position
  * @param {number} y - Y position
+ * @param {Object} overrides - Optional property overrides (e.g., refs)
  * @returns {Object} - The created function node
  */
-export function createFunctionNode(funcName, inputs = [], outputs = [], x = 100, y = 100) {
+export function createFunctionNode(funcName, inputs = [], outputs = [], x = 100, y = 100, overrides = {}) {
   const nodeId = getNextNodeId('function');
   
   const node = {
@@ -81,10 +84,35 @@ export function createFunctionNode(funcName, inputs = [], outputs = [], x = 100,
     y,
     inputs: JSON.parse(JSON.stringify(inputs)),
     outputs: JSON.parse(JSON.stringify(outputs)),
-    category: 'FUNCTION'
+    category: 'FUNCTION',
+    ...overrides
   };
 
   return node;
+}
+
+/**
+ * Create a constant (literal) node
+ */
+export function createLiteralNode(kind = 'string', value, x = 100, y = 100) {
+  const nodeId = getNextNodeId('variable');
+  const printable = kind === 'string' ? JSON.stringify(value ?? '')
+    : kind === 'bool' ? String(!!value)
+    : String(value);
+  return {
+    id: nodeId,
+    type: 'variable', // render as compact, no header
+    varName: printable, // show the literal value in the label
+    varType: kind,
+    varAction: 'get',
+    x,
+    y,
+    inputs: [],
+    outputs: [{ name: printable, type: kind }], // keep IO map consistent with variable rendering
+    category: 'CONSTANT',
+    isLiteral: true,
+    value
+  };
 }
 
 /**

@@ -9,7 +9,7 @@
     @node-context-menu="$emit('node-context-menu', $event)"
   >
     <template #header>
-      System: {{ node.systemOp || 'Operation' }}
+  {{ node.name || node.systemName || node.nodeDefId || 'System' }}
     </template>
   </NodeBase>
 </template>
@@ -22,8 +22,8 @@ const emit = defineEmits([
 ]);
 
 const { node, connections } = defineProps({
-  node: Object,
-  connections: Array,
+  node: { type: Object, required: true },
+  connections: { type: Array, default: () => [] },
 });
 </script>
 

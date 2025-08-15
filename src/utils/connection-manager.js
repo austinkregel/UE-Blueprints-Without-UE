@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import {nodes, ioPositions, nextId, log} from './state.js';
+import {nodes, log} from './state.js';
 
 export const connections = ref([]);
 
@@ -66,3 +66,21 @@ export function clearConnections() {
     log('All connections cleared');
 }
 
+// Remove connections whose endpoints reference nodes or pins that no longer exist
+export function pruneDanglingConnections() {
+  const nodeById = new Map((nodes.value || []).map(n => [n.id, n]));
+  const before = connections.value.length;
+  connections.value = (connections.value || []).filter(conn => {
+    const fromNode = nodeById.get(conn?.from?.nodeId);
+    const toNode = nodeById.get(conn?.to?.nodeId);
+    if (!fromNode || !toNode) return false;
+    // Validate pins
+    const outName = conn.from?.output;
+    const inName = conn.to?.input;
+    const hasOut = (fromNode.outputs || []).some(o => (o.name || o) === outName);
+    const hasIn = (toNode.inputs || []).some(i => (i.name || i) === inName);
+    return hasOut && hasIn;
+  });
+  const removed = before - connections.value.length;
+  if (removed > 0) log(`Pruned ${removed} dangling connection(s)`);
+}

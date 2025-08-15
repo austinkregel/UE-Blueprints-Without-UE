@@ -1,5 +1,5 @@
 import { nodes } from './state.js';
-import { createNodeFromDefinition } from './node-factory.js';
+import { createNodeFromDefinition, createVariableNode } from './node-factory.js';
 import { getNodeDefinition } from './language-definition.js';
 import { getNextNodeId } from './id-utils.js';
 
@@ -69,6 +69,13 @@ export function addStringNode(operation = 'concat', position = { x: 200, y: 200 
 }
 export function addArrayNode(operation = 'array_push', position = { x: 200, y: 200 }) {
   return addNodeFromDefinition(operation, position);
+}
+
+// Create a variable node and add it to the graph
+export function addVariableNode(varName, varType = 'mixed', action = 'get', position = { x: 300, y: 200 }) {
+  const node = createVariableNode(varName, varType, action, position.x, position.y);
+  nodes.value.push(node);
+  return node;
 }
 
 export function addNodePattern(patternType, startPosition = { x: 200, y: 200 }) {

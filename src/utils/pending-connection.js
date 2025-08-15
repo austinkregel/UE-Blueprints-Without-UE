@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { nodes } from './state.js';
 import { connectNodes } from './connection-utils.js';
+import { isExecIO, isSameType } from './type-utils.js';
 
 export const pendingConnectionRequest = ref(null); // { drag, position }
 export function clearPendingConnectionRequest() { pendingConnectionRequest.value = null; }
@@ -12,7 +13,7 @@ export function attachPendingConnectionToNode(newNodeOrId) {
   if (!newNode) return false;
 
   const drag = pending.drag;
-  const isExec = (x) => x && (x.type === 'exec' || x === 'exec' || (x.name || x) === 'exec' || x.type === 'Exec' || x === 'Exec' || (x.name || x) === 'Exec');
+  const isExec = (x) => isExecIO(x);
 
   if ((drag.type === 'output' || drag.type === 'exec') && drag.from) {
     const fromNode = nodes.value.find(n => n.id === drag.from.nodeId);
@@ -20,7 +21,7 @@ export function attachPendingConnectionToNode(newNodeOrId) {
     const fromType = fromOut?.type;
     const candidate = (newNode.inputs || []).find(input => {
       if (isExec(input) !== isExec(fromOut)) return false;
-      return (input.type || null) === (fromType || null);
+  return isSameType((input.type || null), (fromType || null));
     });
     if (candidate) {
       connectNodes({ from: { ...drag.from }, to: { nodeId: newNode.id, input: (candidate.name || candidate) } });
@@ -34,7 +35,7 @@ export function attachPendingConnectionToNode(newNodeOrId) {
     const toType = toIn?.type;
     const candidate = (newNode.outputs || []).find(output => {
       if (isExec(output) !== isExec(toIn)) return false;
-      return (output.type || null) === (toType || null);
+  return isSameType((output.type || null), (toType || null));
     });
     if (candidate) {
       connectNodes({ from: { nodeId: newNode.id, output: (candidate.name || candidate) }, to: { ...drag.to } });

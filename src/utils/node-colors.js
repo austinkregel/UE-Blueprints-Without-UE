@@ -20,6 +20,7 @@ export function getNodeColor(nodeType, nodeId = null) {
     'function': 'blue',     
     'variable': 'purple',   
     'system': 'gray',       
+  'constant': 'slate',
     'control': 'yellow',    
     'math': 'green',        
     'string': 'pink',       

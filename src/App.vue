@@ -18,26 +18,36 @@
         @open-entry-points="showEntryPointManager = true"
         @open-events="showEventManager = true"
         @add-node-from-dropdown="(nodeId) => addNodeFromDefinition(nodeId, screenToWorldPosition({ x: 200, y: 200 }))"
+        @open-ast-tools="showAstTools = !showAstTools"
+        @open-project="openProject"
       />
     </div>
 
-    <!-- Main Content: canvas | right log | right palette -->
+    <!-- Main Content: project explorer | canvas | right log | right palette | AST Tools -->
     <div class="flex-1 min-h-0 flex overflow-hidden">
+      <!-- Project Explorer (left) -->
+      <ProjectExplorer :tree="projectTree" @open-project="openProject" @file-dblclick="onFileDblClick" />
+
       <!-- Canvas Area (no overlapping controls) -->
       <NodeCanvas
         class="flex-1"
         :debug-mode="debugMode"
         @context-menu="onContextMenu"
         @drop-node="onDrop"
+        @node-context-menu="onNodeContextMenu"
       />
 
       <!-- Execution Log Panel (right, non-overlapping) -->
       <ExecutionLog :logs="executionLog" @clear="clearExecutionResults" />
 
       <!-- Right Palette Sidebar -->
-      <div v-if="showNodePalette" class="w-64 shrink-0 border-l border-zinc-700 bg-zinc-900/80 overflow-y-auto">
-        <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" class="h-full" />
+      <div v-if="showNodePalette" class="w-86 shrink-0 border-l border-zinc-700 bg-zinc-900/80 overflow-y-auto max-h-screen flex flex-col">
+        <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" />
+        <VariablesPanel :variables="currentVariables" />
       </div>
+
+      <!-- AST Tools Sidebar -->
+      <AstTools v-if="showAstTools" :code-text="astCodeText" :auto-parse="true" @push-node="pushNodeFromAst" @push-connection="pushConnectionFromAst" @import-complete="onAstImportComplete" />
     </div>
 
     <!-- Floating Menus/Modals outside canvas -->
@@ -50,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, defineExpose } from 'vue'
+import { ref, watch, nextTick, defineExpose, computed } from 'vue'
 import NodePalette from './components/NodePalette.vue'
 import ContextMenu from './components/ContextMenu.vue'
 import NodeBrowser from './components/NodeBrowser.vue'
@@ -60,21 +70,34 @@ import EventManager from './components/EventManager.vue'
 import TopToolbar from './components/layout/TopToolbar.vue'
 import ExecutionLog from './components/canvas/ExecutionLog.vue'
 import NodeCanvas from './components/canvas/NodeCanvas.vue'
+import AstTools from './components/panels/AstTools.vue'
+// New panels
+import ProjectExplorer from './components/panels/ProjectExplorer.vue'
+import VariablesPanel from './components/panels/VariablesPanel.vue'
+
 import { nodes, debugMode } from './utils/state.js'
 import { addNode, deleteNode } from './utils/nodes-core.js'
 import { addNodeFromDefinition } from './utils/node-creation.js'
 import { selectNode, selectedNodeId } from './utils/node-selection.js'
-import { pendingConnectionRequest, clearPendingConnectionRequest, attachPendingConnectionToNode } from './utils/pending-connection.js'
+import { pendingConnectionRequest, attachPendingConnectionToNode } from './utils/pending-connection.js'
 import { addActionNode } from './utils/action-node-utils.js'
 import { addSystemNode } from './utils/system-node-utils.js'
-import { connections } from './utils/connection-manager.js'
-import { viewport, screenToWorld, canvasOffset } from './utils/viewport-utils.js'
+import { connections, pruneDanglingConnections } from './utils/connection-manager.js'
+import { viewport, screenToWorld, canvasOffset, worldToScreen } from './utils/viewport-utils.js'
 import { executeGraph, stopExecution, clearExecutionResults, isExecuting, executionLog, executionSummary, addEntryPoint, removeEntryPoint, executeFromEntryPoint } from './utils/graph-executor.js'
+// New utils for project + php import
+import { pickDirectory, readDirectoryTree, readText } from './utils/file-tree.js'
+import { scanPhpProject, startPhpScanStream } from './utils/php-project-indexer.js'
+import { setPhpProject, setPhpProgress, phpProjectIndex } from './utils/php-project-state.js'
+import { importPhpIntoEditor } from './utils/php-to-nodes.js'
 
 // UI State
 const showNodePalette = ref(true)
 const showEntryPointManager = ref(false)
 const showEventManager = ref(false)
+const showAstTools = ref(false)
+// Provide code to AST tools on demand
+const astCodeText = ref('')
 const contextMenuVisible = ref(false)
 const contextMenuPosition = ref({ x: 0, y: 0 })
 const nodeBrowserVisible = ref(false)
@@ -82,6 +105,44 @@ const nodeBrowserPosition = ref({ x: 0, y: 0 })
 const nodeContextMenuVisible = ref(false)
 const nodeContextMenuPosition = ref({ x: 0, y: 0 })
 const nodeContextMenuNode = ref(null)
+
+// New project/variables state
+const projectTree = ref(null)
+const currentVariables = computed(() => {
+  const seen = new Set()
+  const list = []
+  for (const n of nodes.value) {
+    if (n.type === 'variable' && n.varName) {
+      const name = n.varName
+      const type = n.varType || 'mixed'
+      const key = `${name}|${type}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        list.push({ name, type })
+      }
+    }
+  }
+  return list
+})
+
+// Helpers for AST tools import
+function pushNodeFromAst(node) {
+  nodes.value.push(node)
+}
+function pushConnectionFromAst(conn) {
+  connections.value.push(conn)
+}
+function onAstImportComplete({ nodes: n, connections: c }) {
+  console.log(`[AST Import] Added ${n} nodes and ${c} connections`)
+  // Try to center the viewport around the last imported node if available
+  const last = nodes.value[nodes.value.length - 1]
+  if (last) {
+    viewport.value.x = -last.x + 300
+    viewport.value.y = -last.y + 200
+  }
+  // Clean up any orphan connections created by import or previous edits
+  pruneDanglingConnections()
+}
 
 // Convert screen position (editor-local) to world position using canvas offset
 function screenToWorldPosition(screenPos) {
@@ -235,8 +296,8 @@ function onContextMenu(event) {
   const nodeElement = target.closest('[data-node-id]')
   if (!nodeElement) {
     event.preventDefault()
-    const rect = event.currentTarget.getBoundingClientRect()
-    const screenPos = { x: event.clientX - rect.left, y: event.clientY - rect.top }
+    // Use client coordinates directly for fixed-position menus
+    const screenPos = { x: event.clientX, y: event.clientY }
     const worldPos = screenToWorld(event.clientX, event.clientY)
     contextMenuPosition.value = { screen: screenPos, world: worldPos }
     contextMenuVisible.value = true
@@ -262,17 +323,80 @@ function onDrop(event) {
 // Open the context menu at that position to let user pick a node to connect.
 watch(pendingConnectionRequest, async (pending) => {
   if (!pending) return;
-  // Convert world position to screen-local position for the canvas context menu
   const world = pending.position;
-  // screenToWorld inverse: x*zoom + viewport.x + canvasOffset.x
-  const screen = {
-    x: world.x * viewport.value.zoom + viewport.value.x,
-    y: world.y * viewport.value.zoom + viewport.value.y,
-  };
+  // Use worldToScreen so canvasOffset and viewport are handled
+  const screen = worldToScreen(world.x, world.y);
   contextMenuPosition.value = { screen, world };
   await nextTick();
   contextMenuVisible.value = true;
 });
+
+// New: open project flow
+async function openProject() {
+  const dir = await pickDirectory()
+  if (!dir) return
+  try {
+    projectTree.value = await readDirectoryTree(dir)
+  } catch (e) {
+    console.error('Failed to read directory tree', e)
+  }
+  // Begin streaming scan progress from Rust
+  let stopStream = null
+  try {
+    stopStream = await startPhpScanStream(dir, (ev) => {
+      if (!ev || !ev.phase) return
+      if (ev.phase === 'start') {
+        setPhpProgress({ processed: 0, total: ev.total || 0, filePath: '' })
+      } else if (ev.phase === 'file') {
+        setPhpProgress({ processed: ev.processed || 0, total: ev.total || 0, filePath: ev.path || '' })
+      } else if (ev.phase === 'error') {
+        console.warn('[PHP Scan error]', ev.message)
+      } else if (ev.phase === 'done') {
+        setPhpProgress({ processed: ev.processed || 0, total: ev.total || 0, filePath: '' })
+        if (typeof stopStream === 'function') try { stopStream() } catch {}
+      }
+    })
+  } catch (e) {
+    console.warn('Failed to start streaming scan', e)
+  }
+  // Run full scan to build index in background
+  scanPhpProject(dir, { onProgress: (p) => setPhpProgress(p) })
+    .then(({ index, warnings }) => {
+      if (warnings?.length) console.warn('[PHP Scan warnings]', warnings)
+      setPhpProject(dir, index)
+      // ensure we stop stream if still active
+      if (typeof stopStream === 'function') try { stopStream() } catch {}
+    })
+    .catch(err => console.error('PHP scan failed', err))
+}
+
+// New: handle file double-click -> import PHP into graph and collect variables
+async function onFileDblClick(filePath) {
+  try {
+    const src = await readText(filePath)
+    if (typeof src !== 'string') return
+    // Clear current graph
+    nodes.value = []
+    connections.value = []
+    const fileInfo = phpProjectIndex.value?.files?.[filePath] || null
+    const { warnings, error } = await importPhpIntoEditor(src, {
+      start: { x: 100, y: 100 },
+      spacing: { x: 260, y: 140 },
+      projectIndex: phpProjectIndex.value || null,
+      filePath,
+      fileInfo,
+      pushNode: (n) => nodes.value.push(n),
+      pushConnection: (c) => connections.value.push(c)
+    })
+    if (error) console.warn('[PHP Import error]', error)
+    if (warnings?.length) console.warn('[PHP Import warnings]', warnings)
+    // Also load AST for this file
+    astCodeText.value = src
+    showAstTools.value = true
+  } catch (e) {
+    console.error('Failed to open file', e)
+  }
+}
 
 // After any context action or add via browser/drop, attachPendingConnectionToNode handles clearing.
 
@@ -304,7 +428,6 @@ defineExpose({ selectNode, selectedNodeId })
     20px 20px, 20px 20px,
     80px 80px, 80px 80px;
   background-position:
-    0 0, 0 0,
     0 0, 0 0,
     0 0, 0 0;
 }

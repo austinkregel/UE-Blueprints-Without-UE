@@ -81,11 +81,16 @@ const nodePalette = ref({});
 
 onMounted(() => {
   nodePalette.value = getNodePalette();
-  document.addEventListener('click', handleClickOutside);
+  // In tests/SSR, document may not exist or may be torn down; guard usage
+  if (typeof window !== 'undefined' && window.document) {
+    window.document.addEventListener('click', handleClickOutside);
+  }
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  if (typeof window !== 'undefined' && window.document) {
+    window.document.removeEventListener('click', handleClickOutside);
+  }
 });
 
 const filteredCategories = computed(() => {

@@ -42,24 +42,23 @@
       </div>
     </div>
 
-    <!-- Node Settings Modal -->
-    <NodeSettings v-if="selectedNodeId !== null" :node="nodes.find(n => n.id === selectedNodeId)" @close="closeSettings" @update-io="updateNodeIO" />
+    <!-- Node Settings Modal removed; settings are shown in the right sidebar panel -->
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import NodeSettings from '../NodeSettings.vue'
+// Removed NodeSettings import
 import { isActionFlow, renderDraggingConnection, getConnectionColor } from '../../utils/connection-visuals.js'
-import { draggingConnection, selectedNodeId, nodes } from '../../utils/state.js'
-import { closeSettings, selectNode } from '../../utils/node-selection.js'
+import { draggingConnection, nodes } from '../../utils/state.js'
+import { selectNode } from '../../utils/node-selection.js'
 import { getNodeComponent } from '../../utils/get-node-component.js'
 import { startConnectionDrag } from '../../utils/drag-connect.js'
-import { moveNode, updateNodeIO } from '../../utils/nodes-core.js'
+import { moveNode } from '../../utils/nodes-core.js'
 import { registerIO, renderConnectionPath, getConnectionPointsArray } from '../../utils/io-utils.js'
 import { connections, addConnection, removeConnection } from '../../utils/connection-manager.js'
 import { onEditorMouseDown } from '../../utils/editor-utils.js'
-import { viewport, getViewportTransform, setZoom, screenToWorld, setCanvasOffset } from '../../utils/viewport-utils.js'
+import { viewport, getViewportTransform, setZoom, setCanvasOffset } from '../../utils/viewport-utils.js'
 
 const props = defineProps({
   debugMode: { type: Boolean, default: false }
@@ -78,10 +77,22 @@ function updateCanvasOffset() {
 onMounted(() => {
   updateCanvasOffset();
   window.addEventListener('resize', updateCanvasOffset);
+  // Observe container size/position changes (e.g., sidebars toggling)
+  if (typeof ResizeObserver !== 'undefined' && editorAreaRef.value) {
+    const ro = new ResizeObserver(() => updateCanvasOffset());
+    ro.observe(editorAreaRef.value);
+    // store on instance for cleanup
+    editorAreaRef.value.__ro = ro;
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateCanvasOffset);
+  const el = editorAreaRef.value;
+  if (el && el.__ro) {
+    try { el.__ro.disconnect(); } catch {}
+    el.__ro = null;
+  }
 })
 
 function onContextMenu(event) {

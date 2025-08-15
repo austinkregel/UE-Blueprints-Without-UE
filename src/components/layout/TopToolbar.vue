@@ -26,6 +26,11 @@
 
     <button @click="$emit('open-events')" class="bg-teal-700 hover:bg-teal-800 text-white rounded px-3 py-1.5 text-sm">Events</button>
 
+    <button @click="$emit('open-ast-tools')" class="bg-indigo-700 hover:bg-indigo-800 text-white rounded px-3 py-1.5 text-sm">AST</button>
+
+    <!-- New: Open Project -->
+    <button @click="$emit('open-project')" class="bg-emerald-700 hover:bg-emerald-800 text-white rounded px-3 py-1.5 text-sm">Open Project</button>
+
     <div class="text-xs text-zinc-300 ml-auto flex items-center gap-3">
       <span>Right-click + drag to pan | Mouse wheel to zoom</span>
       <span v-if="debugMode">X: {{ Math.round(viewport.x) }}, Y: {{ Math.round(viewport.y) }}, Zoom: {{ viewport.zoom.toFixed(2) }}</span>
@@ -59,7 +64,10 @@ const emit = defineEmits([
   'create-test-graph',
   'open-entry-points',
   'open-events',
-  'add-node-from-dropdown'
+  'add-node-from-dropdown',
+  'open-ast-tools',
+  // new
+  'open-project'
 ]);
 
 const NodeDropdown = defineAsyncComponent(() => import('../NodeDropdown.vue'));

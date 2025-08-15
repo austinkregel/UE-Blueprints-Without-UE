@@ -26,12 +26,12 @@
       <div v-if="props.node.type === 'variable'" class="flex items-end justify-end w-full">
         <div
           class="io output text-sm flex items-center cursor-pointer bg-zinc-700/50 hover:bg-zinc-600/50"
-          :data-io-name="props.node.varName"
-          @mousedown.stop.prevent="handleIOStart('output', { name: props.node.varName, type: props.node.varType || 'mixed' }, $event)"
-          @contextmenu="onIOContextMenu('output', { name: props.node.varName, type: props.node.varType || 'mixed' }, $event)"
+          :data-io-name="props.node.outputs?.[0]?.name || props.node.varName"
+          @mousedown.stop.prevent="handleIOStart('output', { name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' }, $event)"
+          @contextmenu="onIOContextMenu('output', { name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' }, $event)"
         >
           <Type 
-            :name="props.node.varName" 
+            :name="props.node.outputs?.[0]?.name || props.node.varName" 
             :type="props.node.varType || 'mixed'" 
             class="io-label font-medium"
           />

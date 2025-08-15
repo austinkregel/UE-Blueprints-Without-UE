@@ -187,10 +187,20 @@ function handleOverlayClick() {
 
 // Handle escape key
 watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
-    document.addEventListener('keydown', handleKeyDown);
-  } else {
-    document.removeEventListener('keydown', handleKeyDown);
+  if (typeof window !== 'undefined' && window.document) {
+    if (newVisible) {
+      window.document.addEventListener('keydown', handleKeyDown);
+    } else {
+      window.document.removeEventListener('keydown', handleKeyDown);
+    }
+  }
+});
+
+// Safety net: ensure listener is removed on unmount
+import { onUnmounted } from 'vue';
+onUnmounted(() => {
+  if (typeof window !== 'undefined' && window.document) {
+    window.document.removeEventListener('keydown', handleKeyDown);
   }
 });
 

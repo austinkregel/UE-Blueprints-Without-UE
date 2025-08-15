@@ -1,9 +1,11 @@
 import {nodes, ioPositions, draggingConnection, log} from './state.js';
 import { getIOPosition } from './io-positions.js';
 import { getNextNodeId } from './id-utils.js';
+import { createCastNode } from './node-factory.js';
 import { connections, addConnection } from './connection-manager.js';
 import {nextTick} from "vue";
 import {getConnectionPointsArray} from "./io-utils.js";
+import { isSameType, canCast } from './type-utils.js';
 function isDuplicateConnection(from, to) {
     return connections.value.some(conn =>
         conn.from?.nodeId === from?.nodeId && conn.from?.output === from?.output &&
@@ -29,16 +31,8 @@ function getIOType(node, ioName, ioType) {
 }
 
 export function connectNodes({ from, to, areTypesCompatible }) {
-    // Provide a default areTypesCompatible if not supplied
-    const defaultAreTypesCompatible = (fromType, toType) => {
-        // Default: allow casting between int <-> float, int <-> string, float <-> string
-        const numericTypes = ['int', 'float'];
-        if (fromType === toType) return false; // Already handled above
-        if (numericTypes.includes(fromType) && numericTypes.includes(toType)) return true;
-        if ((numericTypes.includes(fromType) && toType === 'string') || (numericTypes.includes(toType) && fromType === 'string')) return true;
-        // Extend with more rules as needed
-        return false;
-    };
+    // Default compatibility uses centralized canCast
+    const defaultAreTypesCompatible = (fromType, toType) => canCast(fromType, toType);
     areTypesCompatible = areTypesCompatible || defaultAreTypesCompatible;
 
     if (!from?.nodeId || !to?.nodeId) {
@@ -87,7 +81,7 @@ export function connectNodes({ from, to, areTypesCompatible }) {
         return;
     }
 
-    if (fromType === toType) {
+    if (isSameType(fromType, toType)) {
         if (fromIsOutput) {
             addConnection({ from, to });
         } else {
@@ -105,18 +99,13 @@ export function connectNodes({ from, to, areTypesCompatible }) {
         return;
     }
     if (typeof areTypesCompatible !== 'undefined' && areTypesCompatible(fromType, toType)) {
-        const castNodeId = getNextNodeId('cast');
-        const castNode = {
-            id: castNodeId,
-            type: 'system',
-            systemName: 'cast',
-            systemOp: `Cast ${fromType}→${toType}`,
-            x: (fromNode.x + toNode.x) / 2,
-            y: (fromNode.y + toNode.y) / 2,
-            inputs: [{ name: 'in', type: fromType }],
-            outputs: [{ name: 'out', type: toType }],
-        };
-        nodes.value.push(castNode);
+    const midX = (fromNode.x + toNode.x) / 2;
+    const midY = (fromNode.y + toNode.y) / 2;
+    const castNode = createCastNode(fromType, toType, midX, midY);
+    // mark for discovery in some tests/utilities
+    castNode.systemName = 'cast';
+    const castNodeId = castNode.id;
+    nodes.value.push(castNode);
         if (fromIsOutput) {
             addConnection({ from, to: { nodeId: castNodeId, input: 'in' } });
             addConnection({ from: { nodeId: castNodeId, output: 'out' }, to });

@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from '@tailwindcss/vite'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -8,8 +9,32 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [
       vue(),
-      tailwindcss(),
+      tailwindcss({
+          darkMode : 'system'
+      }),
+      nodePolyfills({
+        // include polyfills for global objects
+        protocolImports: true,
+        globals: {
+          process: true,
+          buffer: true
+        }
+      }),
   ],
+  define: {
+    'process.env': {},
+    'process.browser': true,
+  },
+  // Ensure dynamically imported deps like 'php-parser' are pre-bundled by Vite
+  optimizeDeps: {
+    include: ['php-parser', 'process', 'buffer']
+  },
+  resolve: {
+    alias: {
+      process: 'process/browser',
+      buffer: 'buffer'
+    }
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
