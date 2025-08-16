@@ -1,42 +1,42 @@
 <template>
   <div 
     v-if="visible"
-    class="context-menu fixed bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl z-50 min-w-48"
+    class="context-menu fixed bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-xl z-50 min-w-48"
     :style="{ top: position.y + 'px', left: position.x + 'px' }"
     @click.stop
   >
     <div class="py-2">
       <!-- Quick Actions -->
-      <div class="px-3 py-1 text-xs font-semibold text-zinc-400 uppercase">Quick Actions</div>
-      <button 
+      <div class="px-3 py-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">Quick Actions</div>
+      <button
         @click="handleAction('addNode')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
       >
         <span class="w-2 h-2 bg-cyan-500 rounded-full mr-3"></span>
         Quick Node
       </button>
       <button 
         @click="handleAction('addActionNode')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
       >
         <span class="w-2 h-2 bg-yellow-500 rounded-full mr-3"></span>
         Action Node
       </button>
       <button 
         @click="handleAction('addSystemNode')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
       >
         <span class="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
         System Node
       </button>
       
-      <div class="border-t border-zinc-600 my-2"></div>
-      
+      <div class="border-t border-zinc-200 dark:border-zinc-600 my-2"></div>
+
       <!-- Advanced -->
-      <div class="px-3 py-1 text-xs font-semibold text-zinc-400 uppercase">Advanced</div>
-      <button 
+      <div class="px-3 py-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">Advanced</div>
+      <button
         @click="handleAction('showNodeDropdown')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
       >
         <span class="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
         Browse All Nodes...

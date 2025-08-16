@@ -66,6 +66,25 @@
         </div>
       </div>
 
+      <!-- Code context for imported code nodes -->
+      <div v-if="node?.refs" class="mb-4">
+        <h4 class="font-semibold mb-2">Code Context</h4>
+        <div class="text-xs text-zinc-300 grid grid-cols-1 gap-1">
+          <div><span class="text-zinc-500">File:</span> {{ node.refs.filePath || '—' }}</div>
+          <div v-if="node.refs.language"><span class="text-zinc-500">Language:</span> {{ node.refs.language }}</div>
+          <div v-if="node.refs.fqn"><span class="text-zinc-500">FQN:</span> {{ node.refs.fqn }}</div>
+          <div v-if="Array.isArray(node.refs.usage)">
+            <span class="text-zinc-500">Usage:</span> {{ node.refs.usage.length }} place(s)
+          </div>
+        </div>
+        <ul v-if="Array.isArray(node.refs.usage) && node.refs.usage.length" class="mt-2 max-h-28 overflow-auto text-xs text-zinc-400 border border-zinc-700 rounded">
+          <li v-for="(u, i) in node.refs.usage.slice(0, 8)" :key="i" class="px-2 py-1 border-b border-zinc-800 last:border-b-0">
+            <div class="truncate">{{ u.filePath }}</div>
+            <div v-if="u.range" class="text-zinc-500">@ {{ formatRange(u.range) }}</div>
+          </li>
+        </ul>
+      </div>
+
       <label class="block font-semibold mb-1">Inputs:</label>
       <ul class="flex flex-col">
         <li v-for="input in filteredInputs" :key="input.name + '-' + input.type" class="mb-2 flex items-center gap-2">
@@ -194,5 +213,12 @@ function save() {
   }
   emit('update-node', updates);
   emit('close');
+}
+
+function formatRange(r) {
+  try {
+    const s = r.start || {}; const e = r.end || {};
+    return `${(s.row ?? '?')}:${(s.col ?? '?')} - ${(e.row ?? '?')}:${(e.col ?? '?')}`;
+  } catch { return ''; }
 }
 </script>

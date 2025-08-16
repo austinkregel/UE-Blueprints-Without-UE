@@ -1,19 +1,19 @@
 <template>
-  <div class="w-[28rem] shrink-0 border-l border-zinc-700/60 bg-zinc-950/80 backdrop-blur flex flex-col">
+  <div class="w-[28rem] shrink-0 border-l border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-950/80 backdrop-blur flex flex-col">
     <!-- Header -->
-    <div class="p-2 border-b border-zinc-700/60 flex items-center gap-2">
+    <div class="p-2 border-b border-zinc-200 dark:border-zinc-700 flex items-center gap-2">
       <!-- Language selector -->
       <Listbox v-model="language" as="div" class="relative">
-        <ListboxButton class="inline-flex items-center gap-2 rounded px-2 py-1 text-sm bg-zinc-800/80 text-zinc-100 shadow-sm ring-1 ring-inset ring-zinc-700/60 hover:bg-zinc-800">
+        <ListboxButton class="inline-flex items-center gap-2 rounded px-2 py-1 text-sm bg-white dark:bg-zinc-800/80 text-zinc-900 dark:text-zinc-100 shadow-sm ring-1 ring-inset ring-zinc-200 dark:ring-zinc-700/60 hover:bg-zinc-50 dark:hover:bg-zinc-800">
           <span class="size-2 rounded-full" :class="langDotClass(language)"></span>
           <span class="min-w-16 text-left">{{ langLabel(language) }}</span>
-          <svg class="size-4 text-zinc-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+          <svg class="size-4 text-zinc-500 dark:text-zinc-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
         </ListboxButton>
-        <ListboxOptions class="absolute z-10 mt-1 w-40 rounded bg-zinc-900/95 ring-1 ring-zinc-700/60 shadow-lg focus:outline-none">
+        <ListboxOptions class="absolute z-10 mt-1 w-40 rounded bg-white dark:bg-zinc-900/95 ring-1 ring-zinc-200 dark:ring-zinc-700/60 shadow-lg focus:outline-none">
           <ListboxOption v-for="opt in languageOptions" :key="opt.id" :value="opt.id" as="template" v-slot="{ active, selected }">
-            <li :class="['px-2 py-1.5 text-sm flex items-center gap-2 cursor-default', active ? 'bg-zinc-800/80' : '']">
+            <li :class="['px-2 py-1.5 text-sm flex items-center gap-2 cursor-default', active ? 'bg-zinc-50 dark:bg-zinc-800/80' : '']">
               <span class="size-2 rounded-full" :class="langDotClass(opt.id)"></span>
-              <span class="flex-1" :class="selected ? 'text-white' : 'text-zinc-200'">{{ opt.label }}</span>
+              <span class="flex-1" :class="selected ? 'text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-200'">{{ opt.label }}</span>
             </li>
           </ListboxOption>
         </ListboxOptions>
@@ -25,26 +25,26 @@
       <button @click="toElixir" :disabled="!canGenerate" class="rounded px-2 py-1 text-sm text-white disabled:opacity-40 disabled:cursor-not-allowed bg-fuchsia-600 hover:bg-fuchsia-500">→ Elixir</button>
 
       <button @click="pickAndScan" :disabled="language !== 'php'" class="ml-auto bg-teal-700 hover:bg-teal-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded px-2 py-1 text-sm">Scan Project…</button>
-      <span class="text-xs text-zinc-400">{{ summary }}</span>
+      <span class="text-xs text-zinc-600 dark:text-zinc-400">{{ summary }}</span>
     </div>
 
     <TabGroup as="div" class="flex-1 min-h-0 flex flex-col">
-      <TabList class="px-2 py-1 border-b border-zinc-700/60 flex items-center gap-2">
+      <TabList class="px-2 py-1 border-b border-zinc-200 dark:border-zinc-700 flex items-center gap-2">
         <Tab as="template" v-slot="{ selected }">
-          <button :class="['px-2 py-1 rounded text-sm', selected ? 'bg-zinc-800 text-white' : 'text-zinc-300 hover:text-white hover:bg-zinc-800/60']">Source</button>
+          <button :class="['px-2 py-1 rounded text-sm', selected ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60']">Source</button>
         </Tab>
         <Tab as="template" v-slot="{ selected }">
-          <button :class="['px-2 py-1 rounded text-sm', selected ? 'bg-zinc-800 text-white' : 'text-zinc-300 hover:text-white hover:bg-zinc-800/60']">Results</button>
+          <button :class="['px-2 py-1 rounded text-sm', selected ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60']">Results</button>
         </Tab>
       </TabList>
       <TabPanels class="flex-1 min-h-0">
         <!-- Source panel -->
         <TabPanel class="flex-1 min-h-0">
-          <textarea v-model="code" class="w-full h-full bg-zinc-900 text-zinc-100 p-2 text-xs font-mono resize-none outline-none" :placeholder="`Paste source (${langLabel(language)})`"></textarea>
+          <textarea v-model="code" class="w-full h-full bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 p-2 text-xs font-mono resize-none outline-none" :placeholder="`Paste source (${langLabel(language)})`"></textarea>
         </TabPanel>
         <!-- Results panel -->
-        <TabPanel class="flex-1 min-h-0 grid grid-cols-2 gap-px bg-zinc-800/40">
-          <div class="p-2 overflow-auto text-xs text-zinc-300 bg-zinc-900">
+        <TabPanel class="flex-1 min-h-0 grid grid-cols-2 gap-px bg-zinc-100 dark:bg-zinc-800/40">
+          <div class="p-2 overflow-auto text-xs text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900">
             <div class="font-semibold mb-2">Parsed Output</div>
             <template v-if="language === 'php' && ir">
               <div class="font-semibold mb-1">Live IR</div>
@@ -56,29 +56,29 @@
               <ul class="space-y-1">
                 <li v-for="(s, i) in symbols" :key="i" class="flex items-center gap-2">
                   <span class="inline-block rounded px-1 py-0.5 text-[10px] uppercase tracking-wide" :class="symbolPillClass(s.kind)">{{ s.kind }}</span>
-                  <span class="text-zinc-200">{{ s.name }}</span>
+                  <span class="text-zinc-800 dark:text-zinc-200">{{ s.name }}</span>
                 </li>
               </ul>
               <div class="mt-3 font-semibold mb-1">Raw</div>
               <pre class="whitespace-pre-wrap">{{ prettyNorm }}</pre>
             </template>
-            <div v-if="warnings.length" class="text-amber-400 mt-2">Warnings:
+            <div v-if="warnings.length" class="text-amber-600 dark:text-amber-400 mt-2">Warnings:
               <ul class="list-disc ml-5">
                 <li v-for="(w,i) in warnings" :key="i">{{ w }}</li>
               </ul>
             </div>
             <div class="mt-3">
               <div class="font-semibold mb-1">Project Index (PHP)</div>
-              <div class="text-zinc-400">Root: {{ projectRoot || '—' }}</div>
-              <div class="text-zinc-400">Classes: {{ stats.classes }}, Interfaces: {{ stats.interfaces }}, Functions: {{ stats.functions }}</div>
-              <div v-if="progress.total" class="text-zinc-500 mt-1">Scanning: {{ progress.processed }}/{{ progress.total }} {{ progress.filePath ? '(' + progress.filePath + ')' : '' }}</div>
+              <div class="text-zinc-600 dark:text-zinc-400">Root: {{ projectRoot || '—' }}</div>
+              <div class="text-zinc-600 dark:text-zinc-400">Classes: {{ stats.classes }}, Interfaces: {{ stats.interfaces }}, Functions: {{ stats.functions }}</div>
+              <div v-if="progress.total" class="text-zinc-500 dark:text-zinc-500 mt-1">Scanning: {{ progress.processed }}/{{ progress.total }} {{ progress.filePath ? '(' + progress.filePath + ')' : '' }}</div>
             </div>
           </div>
-          <div class="p-2 overflow-auto text-xs text-zinc-300 bg-zinc-900">
+          <div class="p-2 overflow-auto text-xs text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900">
             <div class="font-semibold mb-2">Generated Code</div>
             <div class="flex items-center gap-2 mb-2">
-              <label class="text-zinc-400 text-xs">Format:</label>
-              <select v-model="outLang" class="bg-zinc-800 text-xs px-2 py-1 rounded disabled:opacity-40" :disabled="!canGenerate">
+              <label class="text-zinc-600 dark:text-zinc-400 text-xs">Format:</label>
+              <select v-model="outLang" class="bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs px-2 py-1 rounded disabled:opacity-40" :disabled="!canGenerate">
                 <option value="python">Python</option>
                 <option value="elixir">Elixir</option>
               </select>

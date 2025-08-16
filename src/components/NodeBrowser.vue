@@ -1,19 +1,19 @@
 <template>
   <div 
     v-if="visible"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     @click="handleOverlayClick"
   >
     <div 
-      class="bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl w-96 max-h-[80vh] flex flex-col"
+      class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-xl w-96 max-h-[80vh] flex flex-col"
       @click.stop
     >
       <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-zinc-600">
-        <h3 class="text-white font-semibold">Browse All Nodes</h3>
-        <button 
+      <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-600">
+        <h3 class="text-zinc-900 dark:text-white font-semibold">Browse All Nodes</h3>
+        <button
           @click="$emit('close')"
-          class="text-zinc-400 hover:text-white"
+          class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -22,20 +22,20 @@
       </div>
       
       <!-- Search -->
-      <div class="p-4 border-b border-zinc-600">
+      <div class="p-4 border-b border-zinc-200 dark:border-zinc-600">
         <input
           v-model="searchQuery"
           placeholder="Search nodes..."
-          class="w-full bg-zinc-700 text-white border border-zinc-600 rounded px-3 py-2 text-sm"
+          class="w-full bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-2 text-sm"
           ref="searchInput"
         />
       </div>
       
       <!-- Node List -->
       <div class="flex-1 overflow-y-auto">
-        <div v-for="category in filteredCategories" :key="category.key" class="border-b border-zinc-700 last:border-b-0">
+        <div v-for="category in filteredCategories" :key="category.key" class="border-b border-zinc-200 dark:border-zinc-700 last:border-b-0">
           <div
-            class="flex items-center justify-between p-3 cursor-pointer hover:bg-zinc-700 text-sm font-medium text-zinc-300"
+            class="flex items-center justify-between p-3 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-300"
             @click="toggleCategory(category.key)"
           >
             <div class="flex items-center gap-2">
@@ -56,18 +56,18 @@
             </div>
           </div>
           
-          <div v-if="expandedCategories[category.key]" class="bg-zinc-850">
+          <div v-if="expandedCategories[category.key]" class="bg-zinc-50 dark:bg-zinc-900/40">
             <div
               v-for="node in category.nodes"
               :key="node.id"
-              class="flex flex-col gap-1 p-3 pl-6 cursor-pointer hover:bg-zinc-700 border-l-2 border-transparent hover:border-blue-500"
+              class="flex flex-col gap-1 p-3 pl-6 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 border-l-2 border-transparent hover:border-blue-500"
               @click="handleNodeSelect(node)"
             >
               <div class="flex items-center justify-between">
-                <span class="text-white text-sm font-medium">{{ node.name }}</span>
+                <span class="text-zinc-900 dark:text-white text-sm font-medium">{{ node.name }}</span>
                 <div class="w-2 h-2 rounded-full" :class="`bg-${category.color}-400`"></div>
               </div>
-              <p class="text-zinc-400 text-xs">{{ node.description }}</p>
+              <p class="text-zinc-600 dark:text-zinc-400 text-xs">{{ node.description }}</p>
               <div class="flex justify-between text-xs text-zinc-500">
                 <span>{{ node.inputs?.length || 0 }} inputs</span>
                 <span>{{ node.outputs?.length || 0 }} outputs</span>
@@ -77,13 +77,13 @@
         </div>
         
         <!-- No results -->
-        <div v-if="filteredCategories.length === 0" class="p-4 text-center text-zinc-400">
+        <div v-if="filteredCategories.length === 0" class="p-4 text-center text-zinc-500 dark:text-zinc-400">
           No nodes found matching "{{ searchQuery }}"
         </div>
       </div>
       
       <!-- Footer -->
-      <div class="p-4 border-t border-zinc-600 text-xs text-zinc-400">
+      <div class="p-4 border-t border-zinc-200 dark:border-zinc-600 text-xs text-zinc-500 dark:text-zinc-400">
         Click on a node to add it at the right-click position
       </div>
     </div>
@@ -240,6 +240,7 @@ function handleKeyDown(event) {
   animation: modalFadeIn 0.2s ease-out;
 }
 
+/* Keep slide-in on dark container; light background still looks fine */
 .bg-zinc-800 {
   animation: modalSlideIn 0.2s ease-out;
 }

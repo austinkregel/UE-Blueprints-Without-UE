@@ -1,6 +1,7 @@
 pub mod php;
 pub mod javascript;
 pub mod rust_lang;
+pub mod generic;
 
 use serde::Serialize;
 use std::collections::HashMap;
@@ -12,11 +13,32 @@ pub struct Position { pub row: u32, pub col: u32 }
 pub struct Range { pub start: Position, pub end: Position }
 
 #[derive(Debug, Clone, Serialize, Default)]
+pub struct ParamItem {
+  pub name: String,
+  #[serde(skip_serializing_if = "Option::is_none")] pub ty: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct SymbolItem {
   pub name: String,
-  pub kind: String, // class|interface|trait|function|namespace|other
-  pub fqn: Option<String>,
-  pub range: Option<Range>,
+  pub kind: String, // class|interface|trait|function|namespace|enum|impl|const|other
+  #[serde(skip_serializing_if = "Option::is_none")] pub fqn: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")] pub range: Option<Range>,
+  // Heuristic extras (optional, backward-compatible)
+  #[serde(skip_serializing_if = "Option::is_none")] pub visibility: Option<String>, // public|protected|private|export|pub|package
+  #[serde(skip_serializing_if = "Option::is_none")] pub is_entry_point: Option<bool>,
+  #[serde(skip_serializing_if = "Option::is_none")] pub is_method: Option<bool>,
+  #[serde(skip_serializing_if = "Option::is_none")] pub owner_type: Option<String>, // class/struct/trait name if method
+  #[serde(skip_serializing_if = "Option::is_none")] pub params: Option<Vec<ParamItem>>,
+  #[serde(skip_serializing_if = "Option::is_none")] pub return_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct ReferenceItem {
+  pub kind: String, // call|method_call|new|use
+  pub name: String, // callee or member name
+  #[serde(skip_serializing_if = "Option::is_none")] pub qualifier: Option<String>, // object/type qualifier text if present
+  #[serde(skip_serializing_if = "Option::is_none")] pub range: Option<Range>,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -24,6 +46,7 @@ pub struct NormalizedFile {
   #[serde(rename = "filePath")] pub file_path: String,
   pub language: String,
   pub symbols: Vec<SymbolItem>,
+  #[serde(skip_serializing_if = "Option::is_none")] pub references: Option<Vec<ReferenceItem>>,
   pub warnings: Vec<String>,
 }
 
@@ -188,5 +211,52 @@ mod tests {
     assert_eq!(php_funcs, vec!["foo".to_string()]);
     assert_eq!(js_funcs, vec!["foo".to_string()]);
     assert_eq!(rs_funcs, vec!["foo".to_string()]);
+  }
+
+  #[test]
+  fn heuristic_function_details_rust() {
+    let adapter = RustAdapter::new();
+    let src = r#"
+      pub fn foo(x: i32, y: &str) -> i64 { 0 }
+    "#;
+    let nf = parse_with_adapter(adapter.as_ref(), "test.rs", src).expect("parse ok");
+    let f = nf.symbols.iter().find(|s| s.kind == "function" && s.name == "foo").expect("foo found");
+    assert_eq!(f.is_method, Some(false));
+    assert_eq!(f.visibility.as_deref(), Some("public"));
+    assert_eq!(f.is_entry_point, Some(true));
+    let params = f.params.as_ref().expect("params");
+    assert_eq!(params.len(), 2);
+    assert!(f.return_type.as_ref().map(|t| t.contains("i64")).unwrap_or(false));
+  }
+
+  #[test]
+  fn heuristic_visibility_js_export() {
+    let adapter = JavascriptAdapter::new();
+    let src = r#"
+      export function foo() {}
+    "#;
+    let nf = parse_with_adapter(adapter.as_ref(), "test.js", src).expect("parse ok");
+    let f = nf.symbols.iter().find(|s| s.kind == "function" && s.name == "foo").expect("foo found");
+    assert_eq!(f.visibility.as_deref(), Some("export"));
+    assert_eq!(f.is_entry_point, Some(true));
+  }
+
+  #[test]
+  fn heuristic_method_vs_function_php() {
+    let adapter = PhpAdapter::new();
+    let src = r#"<?php
+      class C { public function m(int $a): string {} }
+      function f() {}
+    "#;
+    let nf = parse_with_adapter(adapter.as_ref(), "test.php", src).expect("parse ok");
+    let m = nf.symbols.iter().find(|s| s.kind == "function" && s.name == "m").expect("m found");
+    assert_eq!(m.is_method, Some(true));
+    assert_eq!(m.visibility.as_deref(), Some("public"));
+    assert!(m.params.as_ref().map(|p| !p.is_empty()).unwrap_or(false));
+    assert!(m.return_type.as_ref().map(|t| t.contains("string")).unwrap_or(false));
+
+    let f = nf.symbols.iter().find(|s| s.kind == "function" && s.name == "f").expect("f found");
+    assert_eq!(f.is_method, Some(false));
+    assert_eq!(f.is_entry_point, Some(true));
   }
 }

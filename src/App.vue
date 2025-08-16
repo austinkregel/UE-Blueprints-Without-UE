@@ -1,7 +1,7 @@
 <template>
-  <div class="w-full h-full bg-zinc-900 text-white font-sans flex flex-col">
+  <div class="w-full h-full bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 font-sans flex flex-col">
     <!-- Top Toolbar (no overlap) -->
-    <div class="shrink-0 border-b border-zinc-700 bg-zinc-800/80 backdrop-blur">
+    <div class="shrink-0 border-b border-zinc-200 bg-white/80 dark:border-zinc-700 dark:bg-zinc-800/80 backdrop-blur">
       <TopToolbar
         :show-node-palette="showNodePalette"
         :debug-mode="debugMode"
@@ -16,7 +16,6 @@
         @clear-results="clearExecutionResults"
         @create-test-graph="createTestGraph"
         @open-entry-points="showEntryPointManager = true"
-        @open-events="showEventManager = true"
         @add-node-from-dropdown="(nodeId) => addNodeFromDefinition(nodeId, screenToWorldPosition({ x: 200, y: 200 }))"
         @open-ast-tools="showAstTools = !showAstTools"
         @open-project="openProject"
@@ -41,7 +40,7 @@
       <ExecutionLog :logs="executionLog" @clear="clearExecutionResults" />
 
       <!-- Right Palette Sidebar -->
-      <div v-if="showNodePalette" class="w-86 shrink-0 border-l border-zinc-700 bg-zinc-900/80 overflow-y-auto max-h-screen flex flex-col">
+      <div v-if="showNodePalette" class="w-86 shrink-0 border-l border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/80 overflow-y-auto max-h-screen flex flex-col">
         <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" />
         <VariablesPanel :variables="currentVariables" />
       </div>
@@ -55,7 +54,6 @@
     <NodeBrowser :visible="nodeBrowserVisible" :position="nodeBrowserPosition" @node-select="onNodeBrowserSelect" @close="closeNodeBrowser" />
     <NodeContextMenu :visible="nodeContextMenuVisible" :position="nodeContextMenuPosition" :node="nodeContextMenuNode" @action="handleNodeContextMenuAction" @close="closeNodeContextMenu" />
     <EntryPointManager :visible="showEntryPointManager" @close="showEntryPointManager = false" />
-    <EventManager :visible="showEventManager" @close="showEventManager = false" />
   </div>
 </template>
 
@@ -66,7 +64,6 @@ import ContextMenu from './components/ContextMenu.vue'
 import NodeBrowser from './components/NodeBrowser.vue'
 import NodeContextMenu from './components/NodeContextMenu.vue'
 import EntryPointManager from './components/EntryPointManager.vue'
-import EventManager from './components/EventManager.vue'
 import TopToolbar from './components/layout/TopToolbar.vue'
 import ExecutionLog from './components/canvas/ExecutionLog.vue'
 import NodeCanvas from './components/canvas/NodeCanvas.vue'
@@ -94,7 +91,6 @@ import { importPhpIntoEditor } from './utils/php-to-nodes.js'
 // UI State
 const showNodePalette = ref(true)
 const showEntryPointManager = ref(false)
-const showEventManager = ref(false)
 const showAstTools = ref(false)
 // Provide code to AST tools on demand
 const astCodeText = ref('')

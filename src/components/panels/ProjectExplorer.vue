@@ -1,12 +1,12 @@
 <template>
-  <div class="w-72 shrink-0 border-r border-zinc-700 bg-zinc-900/80 overflow-y-auto">
-    <div class="px-3 py-2 border-b border-zinc-700 flex items-center gap-2">
-      <span class="text-sm font-semibold">Project</span>
-      <button class="ml-auto text-xs px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-800" @click="$emit('open-project')">Open…</button>
+  <div class="w-72 shrink-0 border-r border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/80 overflow-y-auto">
+    <div class="px-3 py-2 border-b border-zinc-200 dark:border-zinc-700 flex items-center gap-2 bg-zinc-50 dark:bg-transparent">
+      <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">Project</span>
+      <button class="ml-auto text-xs px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-700 dark:hover:bg-emerald-800" @click="$emit('open-project')">Open…</button>
     </div>
     <div class="p-2">
       <TreeNode v-if="tree" :node="tree" :depth="0" @open-file="onOpenFile" />
-      <div v-else class="text-xs text-zinc-400 px-2 py-4">No project loaded.</div>
+      <div v-else class="text-xs text-zinc-400 dark:text-zinc-500 px-2 py-4">No project loaded.</div>
     </div>
   </div>
 </template>

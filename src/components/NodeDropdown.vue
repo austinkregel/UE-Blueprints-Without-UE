@@ -2,7 +2,7 @@
   <div class="relative" ref="dropdownRef">
     <button
       @click="toggleDropdown"
-      class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded px-4 py-2 text-base border border-zinc-600"
+      class="flex items-center gap-2 bg-white hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white rounded px-4 py-2 text-base border border-zinc-300 dark:border-zinc-600"
     >
       <span>{{ title }}</span>
       <svg
@@ -18,20 +18,20 @@
     
     <div
       v-if="isOpen"
-      class="absolute top-full left-0 mt-1 w-64 bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg z-50 overflow-hidden"
+      class="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-lg z-50 overflow-hidden"
     >
       <div class="p-2">
         <input
           v-model="searchQuery"
           placeholder="Search nodes..."
-          class="w-full bg-zinc-700 text-white border border-zinc-600 rounded px-3 py-1 text-sm"
+          class="w-full bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-1 text-sm"
         />
       </div>
       
       <div class="max-h-80 overflow-y-auto">
-        <div v-for="category in filteredCategories" :key="category.key" class="border-b border-zinc-700 last:border-b-0">
+        <div v-for="category in filteredCategories" :key="category.key" class="border-b border-zinc-200 dark:border-zinc-700 last:border-b-0">
           <div
-            class="flex items-center justify-between p-2 cursor-pointer hover:bg-zinc-700 text-sm font-medium text-zinc-300"
+            class="flex items-center justify-between p-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-300"
             @click="toggleCategory(category.key)"
           >
             <div class="flex items-center gap-2">
@@ -41,16 +41,16 @@
             <span class="text-xs text-zinc-500">{{ category.count }}</span>
           </div>
           
-          <div v-if="expandedCategories[category.key]" class="bg-zinc-850">
+          <div v-if="expandedCategories[category.key]" class="bg-zinc-50 dark:bg-zinc-850">
             <div
               v-for="node in category.nodes"
               :key="node.id"
-              class="flex items-center justify-between p-2 pl-6 cursor-pointer hover:bg-zinc-700 text-sm"
+              class="flex items-center justify-between p-2 pl-6 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 text-sm"
               @click="$emit('node-select', node)"
             >
               <div>
-                <div class="text-white font-medium">{{ node.name }}</div>
-                <div class="text-xs text-zinc-400 truncate">{{ node.description }}</div>
+                <div class="text-zinc-900 dark:text-white font-medium">{{ node.name }}</div>
+                <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate">{{ node.description }}</div>
               </div>
               <div class="text-xs text-zinc-500">
                 {{ node.inputs?.length || 0 }}→{{ node.outputs?.length || 0 }}

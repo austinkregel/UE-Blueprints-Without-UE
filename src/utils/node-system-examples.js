@@ -18,7 +18,6 @@ import {
 
 import {
   addSystemNode,
-  addEventNode,
   addCommonSystemNode,
   addNodeGroup,
   getAvailableSystemNodes,
@@ -34,7 +33,6 @@ console.log('Total nodes available:', Object.keys(library.nodes).length);
 // Example 2: Get specific categories of nodes
 console.log('\n=== Starter Nodes ===');
 const starterNodes = getStarterNodes();
-console.log('Event nodes:', Object.keys(starterNodes.events));
 console.log('Basic math:', Object.keys(starterNodes.basic));
 console.log('Flow control:', Object.keys(starterNodes.flow));
 
@@ -65,13 +63,6 @@ const addNode = createNodeFromDefinition('add', {
   y: 100
 });
 console.log('Add node:', addNode);
-
-// Create an event node
-const startEvent = createNodeFromDefinition('on_start', {
-  x: 50,
-  y: 50
-});
-console.log('Start event node:', startEvent);
 
 // Create a game engine node
 const spawnNode = createNodeFromDefinition('spawn_actor', {
@@ -112,26 +103,6 @@ function createMathWorkflow() {
   return nodes;
 }
 
-// Game event workflow
-function createGameEventWorkflow() {
-  const nodes = [];
-  
-  // Start with an event
-  const keyPress = createNodeFromDefinition('on_key_press', { x: 100, y: 100 });
-  
-  // Add sequence control
-  const sequence = createNodeFromDefinition('sequence', { x: 300, y: 100 });
-  
-  // Add game actions
-  const spawnActor = createNodeFromDefinition('spawn_actor', { x: 500, y: 80 });
-  const playSound = createNodeFromDefinition('play_sound', { x: 500, y: 160 });
-  
-  nodes.push(keyPress, sequence, spawnActor, playSound);
-  
-  console.log('Game event workflow nodes created:', nodes.length);
-  return nodes;
-}
-
 // File processing workflow
 function createFileProcessingWorkflow() {
   const nodes = [];
@@ -150,7 +121,6 @@ function createFileProcessingWorkflow() {
 
 // Run the examples
 const mathWorkflow = createMathWorkflow();
-const gameWorkflow = createGameEventWorkflow();
 const fileWorkflow = createFileProcessingWorkflow();
 
 // Example 8: Export commonly used node sets for easy access

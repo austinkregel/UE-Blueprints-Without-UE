@@ -2255,13 +2255,19 @@ export function areTypesCompatible(fromType, toType) {
  */
 export function getNodesByCategory(category) {
   const categoryKey = category?.toUpperCase() ?? '';
-  return NODE_DEFINITIONS[categoryKey] || {};
+  const base = NODE_DEFINITIONS[categoryKey] || {};
+  const extras = EXTRA_NODE_DEFINITIONS[categoryKey] || {};
+  return { ...base, ...extras };
 }
 
 /**
  * Get node definition by id
  */
 export function getNodeDefinition(nodeId) {
+  // Search extras first to allow overrides
+  for (const category of Object.values(EXTRA_NODE_DEFINITIONS)) {
+    if (category[nodeId]) return category[nodeId];
+  }
   for (const category of Object.values(NODE_DEFINITIONS)) {
     if (category[nodeId]) {
       return category[nodeId];
@@ -2283,21 +2289,37 @@ export function getCategoryColor(category) {
  */
 export function getAllNodeDefinitions() {
   const allNodes = {};
+  const merged = {};
   for (const [categoryKey, nodes] of Object.entries(NODE_DEFINITIONS)) {
+    merged[categoryKey] = { ...(merged[categoryKey] || {}), ...nodes };
+  }
+  for (const [categoryKey, nodes] of Object.entries(EXTRA_NODE_DEFINITIONS)) {
+    merged[categoryKey] = { ...(merged[categoryKey] || {}), ...nodes };
+  }
+  for (const [categoryKey, nodes] of Object.entries(merged)) {
     for (const [nodeId, nodeDef] of Object.entries(nodes)) {
       allNodes[nodeId] = {
-  id: nodeId,
-  name: nodeDef?.name ?? nodeId,
-  category: nodeDef?.category ?? categoryKey,
-  description: nodeDef?.description ?? '',
-  inputs: nodeDef?.inputs ?? [],
-  outputs: nodeDef?.outputs ?? [],
-  dynamicOutputs: nodeDef?.dynamicOutputs ?? false,
-  categoryKey
+        id: nodeId,
+        name: nodeDef?.name ?? nodeId,
+        category: nodeDef?.category ?? categoryKey,
+        description: nodeDef?.description ?? '',
+        inputs: nodeDef?.inputs ?? [],
+        outputs: nodeDef?.outputs ?? [],
+        dynamicOutputs: nodeDef?.dynamicOutputs ?? false,
+        categoryKey
       };
     }
   }
   return allNodes;
+}
+
+// Support for external JSON specs
+const EXTRA_NODE_DEFINITIONS = {};
+export function registerExtraNodeDefinitions(extra = {}) {
+  for (const [categoryKey, nodes] of Object.entries(extra || {})) {
+    EXTRA_NODE_DEFINITIONS[categoryKey] = { ...(EXTRA_NODE_DEFINITIONS[categoryKey] || {}), ...(nodes || {}) };
+  }
+  try { if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') { window.dispatchEvent(new CustomEvent('language-definitions-updated')); } } catch {}
 }
 
 /**

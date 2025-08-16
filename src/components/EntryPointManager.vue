@@ -1,10 +1,10 @@
 <template>
-  <div v-if="visible" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-zinc-800 rounded-lg shadow-xl w-96 max-h-96 flex flex-col">
+  <div v-if="visible" class="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-xl w-96 max-h-96 flex flex-col border border-zinc-200 dark:border-zinc-700">
       <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-zinc-700">
-        <h3 class="text-lg font-semibold text-white">Entry Points</h3>
-        <button @click="$emit('close')" class="text-zinc-400 hover:text-white">
+      <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700">
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Entry Points</h3>
+        <button @click="$emit('close')" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-white">
           ×
         </button>
       </div>
@@ -13,7 +13,7 @@
       <div class="flex-1 overflow-y-auto p-4">
         <!-- Current Entry Points -->
         <div class="mb-4">
-          <h4 class="text-sm font-medium text-zinc-300 mb-2">Configured Entry Points</h4>
+          <h4 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Configured Entry Points</h4>
           <div v-if="entryPoints.length === 0" class="text-zinc-500 text-sm">
             No entry points configured. Select nodes below to add them.
           </div>
@@ -21,13 +21,13 @@
             <div 
               v-for="nodeId in entryPoints" 
               :key="nodeId"
-              class="flex items-center justify-between bg-zinc-700 p-2 rounded"
+              class="flex items-center justify-between bg-zinc-100 dark:bg-zinc-700 p-2 rounded border border-zinc-200 dark:border-zinc-600"
             >
               <div class="flex-1">
-                <div class="text-white text-sm font-medium">
+                <div class="text-zinc-900 dark:text-white text-sm font-medium">
                   {{ getNodeDisplayName(nodeId) }}
                 </div>
-                <div class="text-zinc-400 text-xs">
+                <div class="text-zinc-500 dark:text-zinc-400 text-xs">
                   ID: {{ nodeId }}
                 </div>
               </div>
@@ -52,25 +52,25 @@
         
         <!-- Available Nodes -->
         <div>
-          <h4 class="text-sm font-medium text-zinc-300 mb-2">Available Nodes</h4>
+          <h4 class="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Available Nodes</h4>
           <div class="space-y-1 max-h-40 overflow-y-auto">
             <div 
               v-for="node in availableNodes" 
               :key="node.id"
-              class="flex items-center justify-between bg-zinc-900 p-2 rounded hover:bg-zinc-700 transition-colors"
+              class="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
             >
               <div class="flex-1">
-                <div class="text-white text-sm">
+                <div class="text-zinc-900 dark:text-white text-sm">
                   {{ node.nodeDefId || node.type || 'Unknown' }}
                 </div>
-                <div class="text-zinc-400 text-xs">
+                <div class="text-zinc-500 dark:text-zinc-400 text-xs">
                   ID: {{ node.id }}
                 </div>
               </div>
               <button 
                 @click="addEntryPoint(node.id)"
                 :disabled="isEntryPoint(node.id)"
-                class="bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-600 disabled:cursor-not-allowed text-white px-2 py-1 rounded text-xs"
+                class="bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-300 dark:disabled:bg-zinc-600 disabled:cursor-not-allowed text-white px-2 py-1 rounded text-xs"
               >
                 {{ isEntryPoint(node.id) ? 'Added' : 'Add' }}
               </button>
@@ -80,8 +80,8 @@
       </div>
       
       <!-- Footer -->
-      <div class="p-4 border-t border-zinc-700 flex gap-2">
-        <button 
+      <div class="p-4 border-t border-zinc-200 dark:border-zinc-700 flex gap-2">
+        <button
           @click="clearAllEntryPoints"
           class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm"
           :disabled="entryPoints.length === 0"

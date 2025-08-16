@@ -2,8 +2,7 @@ import { nodes } from './state.js';
 import { getNextNodeId } from './id-utils.js';
 import { 
   getSystemNodes, 
-  getEventNodes, 
-  searchNodeLibrary 
+  searchNodeLibrary
 } from './node-library.js';
 import { createNodeFromDefinition } from './node-factory.js';
 
@@ -22,30 +21,10 @@ export function addSystemNode(nodeDefId = 'print', position = { x: 500, y: 300 }
 }
 
 /**
- * Add an event node
- */
-export function addEventNode(nodeDefId = 'on_start', position = { x: 100, y: 100 }) {
-  const newNode = createNodeFromDefinition(nodeDefId, position.x, position.y, {
-    id: getNextNodeId('event'),
-    type: 'event'
-  });
-  
-  nodes.value.push(newNode);
-  return newNode;
-}
-
-/**
  * Get all available system node types
  */
 export function getAvailableSystemNodes() {
   return getSystemNodes();
-}
-
-/**
- * Get all available event node types
- */
-export function getAvailableEventNodes() {
-  return getEventNodes();
 }
 
 /**

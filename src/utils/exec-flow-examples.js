@@ -28,9 +28,9 @@ export function createSequentialExecutionExample() {
   
   const nodes = [];
   
-  // Start with an event
-  const startEvent = addSystemNode('on_start', { x: 100, y: 100 });
-  
+  // Start node
+  const startNode = addSystemNode('on_start', { x: 100, y: 100 });
+
   // Add a sequence node to execute multiple actions in order
   const sequence = addSequenceNode({ x: 300, y: 100 });
   
@@ -39,10 +39,10 @@ export function createSequentialExecutionExample() {
   const action2 = addDelayNode({ x: 500, y: 100 });
   const action3 = addSystemNode('print', { x: 500, y: 150 });
   
-  nodes.push(startEvent, sequence, action1, action2, action3);
-  
+  nodes.push(startNode, sequence, action1, action2, action3);
+
   // Connect the flow
-  // startEvent.Exec -> sequence.Exec
+  // startNode.Exec -> sequence.Exec
   // sequence.Then0 -> action1.Exec
   // sequence.Then1 -> action2.Exec  
   // sequence.Then2 -> action3.Exec
@@ -59,9 +59,9 @@ export function createConditionalFlowExample() {
   
   const nodes = [];
   
-  // Start event
-  const keyPress = addSystemNode('on_key_press', { x: 100, y: 100 });
-  
+  // Start node
+  const startNode = addSystemNode('on_key_press', { x: 100, y: 100 });
+
   // Branch based on condition
   const branch = addBranchNode({ x: 300, y: 100 });
   
@@ -75,8 +75,8 @@ export function createConditionalFlowExample() {
   // Do once to prevent repeated execution
   const doOnce = addDoOnceNode({ x: 700, y: 100 });
   
-  nodes.push(keyPress, branch, gate, trueAction, falseAction, doOnce);
-  
+  nodes.push(startNode, branch, gate, trueAction, falseAction, doOnce);
+
   console.log('Conditional flow pattern created with', nodes.length, 'nodes');
   console.log('Flow: KeyPress → Branch → Gate/Print → SpawnActor/DoOnce');
   

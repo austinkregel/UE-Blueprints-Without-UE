@@ -1,23 +1,23 @@
 <template>
   <div 
     v-if="visible"
-    class="context-menu fixed bg-zinc-800 border border-zinc-600 rounded-lg shadow-xl z-50 min-w-48"
+The     class="context-menu fixed bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-xl z-50 min-w-48"
     :style="{ top: position.y + 'px', left: position.x + 'px' }"
     @click.stop
   >
     <div class="py-2">
       <!-- Node Info Header -->
-      <div class="px-3 py-2 border-b border-zinc-600">
-        <div class="text-white text-sm font-semibold">{{ node?.name || `Node ${node?.id}` }}</div>
-        <div class="text-zinc-400 text-xs">{{ node?.nodeDefId || node?.type }}</div>
+      <div class="px-3 py-2 border-b border-zinc-200 dark:border-zinc-600">
+        <div class="text-zinc-900 dark:text-white text-sm font-semibold">{{ node?.name || `Node ${node?.id}` }}</div>
+        <div class="text-zinc-500 dark:text-zinc-400 text-xs">{{ node?.nodeDefId || node?.type }}</div>
       </div>
       
       <!-- Node Actions -->
-      <div class="px-3 py-1 text-xs font-semibold text-zinc-400 uppercase">Actions</div>
-      
+      <div class="px-3 py-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">Actions</div>
+
       <button 
         @click="handleAction('duplicate')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
       >
         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -27,7 +27,7 @@
       
       <button 
         @click="handleAction('copy')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
       >
         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -37,7 +37,7 @@
       
       <button 
         @click="handleAction('edit')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
       >
         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -45,15 +45,15 @@
         Edit Properties
       </button>
       
-      <div class="border-t border-zinc-600 my-2"></div>
-      
+      <div class="border-t border-zinc-200 dark:border-zinc-600 my-2"></div>
+
       <!-- Execution Actions -->
-      <div class="px-3 py-1 text-xs font-semibold text-blue-400 uppercase">Execution</div>
-      
+      <div class="px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase">Execution</div>
+
       <button 
         v-if="canBeEntryPoint"
         @click="handleAction(isEntryPoint ? 'remove-entry-point' : 'add-entry-point')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-white text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-blue-700 dark:text-white text-sm flex items-center"
       >
         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" />
@@ -64,7 +64,7 @@
       <button 
         v-if="canBeEntryPoint && isEntryPoint"
         @click="handleAction('execute-from-here')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-green-300 text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-green-700 dark:text-green-300 text-sm flex items-center"
       >
         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 8h6M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
@@ -72,14 +72,14 @@
         Execute from Here
       </button>
       
-      <div class="border-t border-zinc-600 my-2"></div>
-      
+      <div class="border-t border-zinc-200 dark:border-zinc-600 my-2"></div>
+
       <!-- Dangerous Actions -->
-      <div class="px-3 py-1 text-xs font-semibold text-red-400 uppercase">Danger Zone</div>
-      
+      <div class="px-3 py-1 text-xs font-semibold text-red-600 dark:text-red-400 uppercase">Danger Zone</div>
+
       <button 
         @click="handleAction('disconnect')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-700 text-orange-300 text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-orange-700 dark:text-orange-300 text-sm flex items-center"
       >
         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -89,7 +89,7 @@
       
       <button 
         @click="handleAction('delete')"
-        class="w-full text-left px-3 py-2 hover:bg-red-700 text-red-300 text-sm flex items-center"
+        class="w-full text-left px-3 py-2 hover:bg-red-100 dark:hover:bg-red-700 text-red-700 dark:text-red-300 text-sm flex items-center"
       >
         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

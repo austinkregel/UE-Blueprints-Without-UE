@@ -31,13 +31,13 @@
     <!-- New: Open Project -->
     <button @click="$emit('open-project')" class="bg-emerald-700 hover:bg-emerald-800 text-white rounded px-3 py-1.5 text-sm">Open Project</button>
 
-    <div class="text-xs text-zinc-300 ml-auto flex items-center gap-3">
+    <div class="text-xs text-zinc-600 dark:text-zinc-300 ml-auto flex items-center gap-3">
       <span>Right-click + drag to pan | Mouse wheel to zoom</span>
       <span v-if="debugMode">X: {{ Math.round(viewport.x) }}, Y: {{ Math.round(viewport.y) }}, Zoom: {{ viewport.zoom.toFixed(2) }}</span>
       <span v-if="executionSummary?.isComplete || isExecuting" class="text-xs">
-        <span class="text-green-400" v-if="executionSummary?.isComplete && executionSummary?.errors === 0">✅ {{ executionSummary.executedNodes }}/{{ executionSummary.totalNodes }}</span>
-        <span class="text-yellow-400" v-else-if="executionSummary?.isComplete && executionSummary?.errors > 0">⚠️ {{ executionSummary.executedNodes }}/{{ executionSummary.totalNodes }} ({{ executionSummary.errors }} errors)</span>
-        <span class="text-blue-400" v-else-if="isExecuting">🔄 {{ executionSummary?.executedNodes }} done</span>
+        <span class="text-green-600 dark:text-green-400" v-if="executionSummary?.isComplete && executionSummary?.errors === 0">✅ {{ executionSummary.executedNodes }}/{{ executionSummary.totalNodes }}</span>
+        <span class="text-yellow-600 dark:text-yellow-400" v-else-if="executionSummary?.isComplete && executionSummary?.errors > 0">⚠️ {{ executionSummary.executedNodes }}/{{ executionSummary.totalNodes }} ({{ executionSummary.errors }} errors)</span>
+        <span class="text-blue-600 dark:text-blue-400" v-else-if="isExecuting">🔄 {{ executionSummary?.executedNodes }} done</span>
       </span>
     </div>
   </div>
