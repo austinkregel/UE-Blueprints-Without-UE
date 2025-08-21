@@ -1,5 +1,5 @@
 <script setup>
-const { input } = defineProps();
+const {input} = defineProps();
 </script>
 
 <template>

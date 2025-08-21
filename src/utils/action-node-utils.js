@@ -1,7 +1,7 @@
-import {nodes, log} from './state.js';
-import { getNextNodeId } from './id-utils.js';
+import {log, nodes} from './state.js';
+import {getNextNodeId} from './id-utils.js';
 
-export function addActionNode(position = { x: 400, y: 200 }) {
+export function addActionNode(position = {x: 400, y: 200}) {
     const newNode = {
         id: getNextNodeId('action'),
         type: 'function',

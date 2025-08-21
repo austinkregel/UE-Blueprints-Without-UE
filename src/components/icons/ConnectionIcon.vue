@@ -1,21 +1,26 @@
 <template>
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-  >
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <!-- Connection circle with type-based color -->
-    <circle cx="12" cy="12" r="8" :stroke="connectionColor" :fill="connection ? connectionColor : 'transparent'" :fill-opacity="connection ? '0.7' : '0'" stroke-width="2"/>
+    <circle
+        :fill="connection ? connectionColor : 'transparent'"
+        :fill-opacity="connection ? '0.7' : '0'"
+        :stroke="connectionColor"
+        cx="12"
+        cy="12"
+        r="8"
+        stroke-width="2"
+    />
   </svg>
 </template>
 
 <script setup>
-import { defineProps, computed } from 'vue';
-import { getTypeColorHex } from '../../utils/language-definition.js';
+import {computed, defineProps} from 'vue';
+import {getTypeColorHex} from '../../utils/language-definition.js';
 
 const props = defineProps({
   active: {
     type: Boolean,
-    default: false,
+    default: false
   },
   connection: {
     type: Object,
@@ -30,9 +35,8 @@ const props = defineProps({
 const connection = computed(() => props.connection || null);
 
 const connectionColor = computed(() => {
-    // Use the IO type color for unconnected pins
-    return getTypeColorHex(props.ioType);
-
+  // Use the IO type color for unconnected pins
+  return getTypeColorHex(props.ioType);
 });
 </script>
 

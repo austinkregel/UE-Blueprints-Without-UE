@@ -1,0 +1,187 @@
+{
+    "filePath": "input.php",
+    "language": "php",
+    "symbols": [
+        {
+            "name": "__val",
+            "kind": "function",
+            "range": {
+                "start": {
+                    "row": 7,
+                    "col": 0
+                },
+                "end": {
+                    "row": 10,
+                    "col": 1
+                }
+            },
+            "is_entry_point": true,
+            "is_method": false,
+            "params": [
+                {
+                    "name": "$CTX"
+                },
+                {
+                    "name": "$nodeId"
+                },
+                {
+                    "name": "$outName"
+                }
+            ]
+        },
+        {
+            "name": "$CTX",
+            "kind": "impl",
+            "fqn": "$CTX",
+            "range": {
+                "start": {
+                    "row": 7,
+                    "col": 15
+                },
+                "end": {
+                    "row": 7,
+                    "col": 20
+                }
+            }
+        },
+        {
+            "name": "$nodeId",
+            "kind": "impl",
+            "fqn": "$nodeId",
+            "range": {
+                "start": {
+                    "row": 7,
+                    "col": 22
+                },
+                "end": {
+                    "row": 7,
+                    "col": 29
+                }
+            }
+        },
+        {
+            "name": "$outName",
+            "kind": "impl",
+            "fqn": "$outName",
+            "range": {
+                "start": {
+                    "row": 7,
+                    "col": 31
+                },
+                "end": {
+                    "row": 7,
+                    "col": 39
+                }
+            }
+        },
+        {
+            "name": "isset",
+            "kind": "function",
+            "range": {
+                "start": {
+                    "row": 8,
+                    "col": 9
+                },
+                "end": {
+                    "row": 8,
+                    "col": 32
+                }
+            },
+            "is_entry_point": true,
+            "is_method": false
+        },
+        {
+            "name": "isset",
+            "kind": "function",
+            "range": {
+                "start": {
+                    "row": 8,
+                    "col": 37
+                },
+                "end": {
+                    "row": 8,
+                    "col": 55
+                }
+            },
+            "is_entry_point": true,
+            "is_method": false
+        },
+        {
+            "name": "run_graph",
+            "kind": "function",
+            "range": {
+                "start": {
+                    "row": 18,
+                    "col": 0
+                },
+                "end": {
+                    "row": 20,
+                    "col": 1
+                }
+            },
+            "is_entry_point": true,
+            "is_method": false
+        },
+        {
+            "name": "run_graph",
+            "kind": "function",
+            "range": {
+                "start": {
+                    "row": 23,
+                    "col": 0
+                },
+                "end": {
+                    "row": 23,
+                    "col": 11
+                }
+            },
+            "is_entry_point": true,
+            "is_method": false
+        }
+    ],
+    "references": [
+        {
+            "kind": "call",
+            "name": "isset",
+            "range": {
+                "start": {
+                    "row": 8,
+                    "col": 9
+                },
+                "end": {
+                    "row": 8,
+                    "col": 32
+                }
+            }
+        },
+        {
+            "kind": "call",
+            "name": "isset",
+            "range": {
+                "start": {
+                    "row": 8,
+                    "col": 37
+                },
+                "end": {
+                    "row": 8,
+                    "col": 55
+                }
+            }
+        },
+        {
+            "kind": "call",
+            "name": "run_graph",
+            "range": {
+                "start": {
+                    "row": 23,
+                    "col": 0
+                },
+                "end": {
+                    "row": 23,
+                    "col": 11
+                }
+            }
+        }
+    ],
+    "warnings": []
+}

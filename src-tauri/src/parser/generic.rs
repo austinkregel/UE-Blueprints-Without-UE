@@ -44,7 +44,13 @@ fn node_name(src: &str, node: tree_sitter::Node) -> Option<String> {
   for f in ["declarator", "variable", "variable_name", "pattern", "identifier"] {
     if let Some(n) = node.child_by_field_name(f) { return Some(text_of(src, n)); }
   }
-  let mut i = 0; while i < node.child_count() { if let Some(ch) = node.child(i) { if ch.kind().ends_with("identifier") || ch.kind() == "name" { return Some(text_of(src, ch)); } } i += 1; }
+  let mut i = 0; while i < node.child_count() {
+    if let Some(ch) = node.child(i) {
+      let ck = ch.kind();
+      if ck.ends_with("identifier") || ck == "name" || ck.ends_with("name") { return Some(text_of(src, ch)); }
+    }
+    i += 1;
+  }
   None
 }
 
@@ -116,6 +122,14 @@ fn detect_visibility(src: &str, node: tree_sitter::Node) -> (Option<String>, Opt
         if tl.contains("protected") { return (Some("protected".to_string()), Some(false)); }
         if tl.contains("private") { return (Some("private".to_string()), Some(false)); }
         if tl.contains("export") { return (Some("export".to_string()), Some(true)); }
+        // Also inspect nested children (e.g., Rust's visibility_modifier -> 'pub' / 'pub(crate)')
+        let mut j = 0; while j < ch.child_count() {
+          if let Some(gch) = ch.child(j) {
+            let gk = gch.kind().to_lowercase();
+            if gk == "pub" { return (Some("public".to_string()), Some(true)); }
+          }
+          j += 1;
+        }
       }
     }
     i += 1;

@@ -1,18 +1,18 @@
 <template>
   <div
-    class="node-glass absolute inline-block min-w-[220px] max-w-[420px] text-white font-sans text-sm select-none cursor-grab border-2"
-    :class="[colorClasses.border, colorClasses.shadow, executionStatusClass]"
-    :style="{ left: node.x + 'px', top: node.y + 'px' }"
-    :data-node-id="node.id"
-    ref="nodeRef"
-    @mousedown.stop="handleMouseDown"
-    @click.stop="handleClick"
-    @contextmenu.stop.prevent="handleNodeContextMenu"
+      ref="nodeRef"
+      :class="[colorClasses.border, colorClasses.shadow, executionStatusClass]"
+      :data-node-id="node.id"
+      :style="{ left: node.x + 'px', top: node.y + 'px' }"
+      class="node-glass absolute inline-block max-w-[420px] min-w-[220px] cursor-grab border-2 font-sans text-sm text-white select-none"
+      @mousedown.stop="handleMouseDown"
+      @click.stop="handleClick"
+      @contextmenu.stop.prevent="handleNodeContextMenu"
   >
-    <div 
-      v-if="shouldShowHeader"
-      class="px-3 py-1.5 rounded-t-lg font-bold bg-gradient-to-r relative z-10 flex items-center justify-between"
-      :class="colorClasses.header"
+    <div
+        v-if="shouldShowHeader"
+        :class="colorClasses.header"
+        class="relative z-10 flex items-center justify-between rounded-t-lg bg-gradient-to-r px-3 py-1.5 font-bold"
     >
       <slot name="header">{{ getDefaultHeaderText() }}</slot>
       <div v-if="executionStatus.executed" class="ml-2 text-xs">
@@ -21,63 +21,75 @@
       </div>
     </div>
     <slot></slot>
-    <div class="flex justify-between p-2 flex-wrap relative z-10">
+    <div class="relative z-10 flex flex-wrap justify-between p-2">
       <!-- Variable nodes: Special compact layout -->
-      <div v-if="props.node.type === 'variable'" class="flex items-end justify-end w-full">
+      <div v-if="props.node.type === 'variable'" class="flex w-full items-end justify-end">
         <div
-          class="io output text-sm flex items-center cursor-pointer bg-zinc-700/50 hover:bg-zinc-600/50"
-          :data-io-name="props.node.outputs?.[0]?.name || props.node.varName"
-          @mousedown.stop.prevent="handleIOStart('output', { name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' }, $event)"
-          @contextmenu="onIOContextMenu('output', { name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' }, $event)"
+            :data-io-name="props.node.outputs?.[0]?.name || props.node.varName"
+            class="io output flex cursor-pointer items-center bg-zinc-700/50 text-sm hover:bg-zinc-600/50"
+            @contextmenu="
+                        onIOContextMenu(
+                            'output',
+                            { name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' },
+                            $event
+                        )
+                    "
+            @mousedown.stop.prevent="
+                        handleIOStart(
+                            'output',
+                            { name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' },
+                            $event
+                        )
+                    "
         >
-          <Type 
-            :name="props.node.outputs?.[0]?.name || props.node.varName" 
-            :type="props.node.varType || 'mixed'" 
-            class="io-label font-medium"
+          <Type
+              :name="props.node.outputs?.[0]?.name || props.node.varName"
+              :type="props.node.varType || 'mixed'"
+              class="io-label font-medium"
           />
-          <ExecutionIcon v-if="props.node.varType === 'exec'" class="w-4 h-4 ml-2" :active="!!getOutputConnection(props.node.varName)" />
-          <ConnectionIcon v-else class="w-4 h-4 ml-2" :connection="getOutputConnection(props.node.varName)" :io-type="props.node.varType || 'mixed'" />
+          <ExecutionIcon v-if="props.node.varType === 'exec'" :active="!!getOutputConnection(props.node.varName)"
+                         class="ml-2 h-4 w-4"/>
+          <ConnectionIcon
+              v-else
+              :connection="getOutputConnection(props.node.varName)"
+              :io-type="props.node.varType || 'mixed'"
+              class="ml-2 h-4 w-4"
+          />
         </div>
       </div>
-      
+
       <!-- Regular nodes: Standard input/output layout -->
       <template v-else>
-        <div class="flex flex-col gap-1 inputs">
+        <div class="inputs flex flex-col gap-1">
           <div
-            v-for="input in node.inputs"
-            :key="input.name || input"
-            class="io input px-1.5 py-0.5 text-xs flex items-center cursor-pointer"
-            :data-io-name="input.name || input"
-            @mousedown.stop.prevent="handleIOStart('input', input, $event)"
-            @contextmenu="onIOContextMenu('input', input, $event)"
+              v-for="input in node.inputs"
+              :key="input.name || input"
+              :data-io-name="input.name || input"
+              class="io input flex cursor-pointer items-center px-1.5 py-0.5 text-xs"
+              @contextmenu="onIOContextMenu('input', input, $event)"
+              @mousedown.stop.prevent="handleIOStart('input', input, $event)"
           >
-            <ExecutionIcon v-if="input.type === 'exec'" class="w-4 h-4 mr-1" :active="!!getInputConnection(input)" />
-            <ConnectionIcon v-else class="w-4 h-4 mr-1" :connection="getInputConnection(input)" :io-type="input.type || 'mixed'" />
-            <Type 
-              :name="input.name" 
-              :type="input.type" 
-              class="io-label"
-            />
+            <ExecutionIcon v-if="input.type === 'exec'" :active="!!getInputConnection(input)" class="mr-1 h-4 w-4"/>
+            <ConnectionIcon v-else :connection="getInputConnection(input)" :io-type="input.type || 'mixed'"
+                            class="mr-1 h-4 w-4"/>
+            <Type :name="input.name" :type="input.type" class="io-label"/>
           </div>
           <slot name="inputs"></slot>
         </div>
-        
-        <div class="flex flex-col gap-1 outputs">
+
+        <div class="outputs flex flex-col gap-1">
           <div
-            v-for="output in node.outputs"
-            :key="output.name || output"
-            class="io output px-1.5 py-0.5 text-xs flex items-center cursor-pointer justify-end"
-            :data-io-name="output.name || output"
-            @mousedown.stop.prevent="handleIOStart('output', output, $event)"
-            @contextmenu="onIOContextMenu('output', output, $event)"
+              v-for="output in node.outputs"
+              :key="output.name || output"
+              :data-io-name="output.name || output"
+              class="io output flex cursor-pointer items-center justify-end px-1.5 py-0.5 text-xs"
+              @contextmenu="onIOContextMenu('output', output, $event)"
+              @mousedown.stop.prevent="handleIOStart('output', output, $event)"
           >
-            <Type 
-              :name="output.name" 
-              :type="output.type" 
-              class="io-label"
-            />
-            <ExecutionIcon v-if="output.type === 'exec'" class="w-4 h-4 ml-1" :active="!!getOutputConnection(output)" />
-            <ConnectionIcon v-else class="w-4 h-4 ml-1" :connection="getOutputConnection(output)" :io-type="output.type || 'mixed'" />
+            <Type :name="output.name" :type="output.type" class="io-label"/>
+            <ExecutionIcon v-if="output.type === 'exec'" :active="!!getOutputConnection(output)" class="ml-1 h-4 w-4"/>
+            <ConnectionIcon v-else :connection="getOutputConnection(output)" :io-type="output.type || 'mixed'"
+                            class="ml-1 h-4 w-4"/>
           </div>
           <slot name="outputs"></slot>
         </div>
@@ -87,30 +99,25 @@
 </template>
 
 <script setup>
-import {onMounted, nextTick, computed, watch, ref} from 'vue';
-import {construction} from "../../utils/node-interaction.js";
-import { startConnectionDrag } from "../../utils/drag-connect.js";
-import ExecutionIcon from "../icons/ExecutionIcon.vue";
-import { getRectXBasedOnType, getRectYBasedOnType } from "../../utils/io-utils.js";
-import { screenToWorld, viewport } from "../../utils/viewport-utils.js";
-import ConnectionIcon from "../icons/ConnectionIcon.vue";
-import { getNodeColor } from "../../utils/node-colors.js";
-import Type from "../Type.vue";
-import { getNodeExecutionStatus } from "../../utils/graph-executor.js";
-const emit = defineEmits([
-  'move', 'connect', 'register-io', 'select', 'start-connection-drag', 'delete-connection', 'node-context-menu'
-]);
-const props = defineProps({ 
-  node: Object, 
+import {computed, nextTick, onMounted, ref, watch} from 'vue';
+import {construction} from '../../utils/node-interaction.js';
+import {startConnectionDrag} from '../../utils/drag-connect.js';
+import ExecutionIcon from '../icons/ExecutionIcon.vue';
+import {getRectXBasedOnType, getRectYBasedOnType} from '../../utils/io-utils.js';
+import {screenToWorld, viewport} from '../../utils/viewport-utils.js';
+import ConnectionIcon from '../icons/ConnectionIcon.vue';
+import {getNodeColor} from '../../utils/node-colors.js';
+import Type from '../Type.vue';
+import {getNodeExecutionStatus} from '../../utils/graph-executor.js';
+
+const emit = defineEmits(['move', 'connect', 'register-io', 'select', 'start-connection-drag', 'delete-connection', 'node-context-menu']);
+const props = defineProps({
+  node: Object,
   connections: Array
 });
 
 const nodeRef = ref();
-const {
-  registerAllIO,
-  startDrag,
-  onIOContextMenu
-} = construction(emit, props, nodeRef);
+const {registerAllIO, startDrag, onIOContextMenu} = construction(emit, props, nodeRef);
 
 onMounted(() => {
   nextTick(() => {
@@ -119,31 +126,35 @@ onMounted(() => {
 });
 
 watch(
-  () => [props.node],
-  () => {
-    nextTick(registerAllIO);
-  },
-  { deep: true }
+    () => [props.node],
+    () => {
+      nextTick(registerAllIO);
+    },
+    {deep: true}
 );
 
 // Get connection for a specific input
 const getInputConnection = (inputName) => {
   if (!props.connections) return null;
-  return props.connections.find(conn => 
-    conn.to && 
-    conn.to.nodeId === props.node.id && 
-    (conn.to.input === inputName || conn.to.input === (inputName.name || inputName))
-  ) || null;
+  return (
+      props.connections.find(
+          (conn) =>
+              conn.to && conn.to.nodeId === props.node.id && (conn.to.input === inputName || conn.to.input === (inputName.name || inputName))
+      ) || null
+  );
 };
 
 // Get connection for a specific output
 const getOutputConnection = (outputName) => {
   if (!props.connections) return null;
-  return props.connections.find(conn => 
-    conn.from && 
-    conn.from.nodeId === props.node.id && 
-    (conn.from.output === outputName || conn.from.output === (outputName.name || outputName))
-  ) || null;
+  return (
+      props.connections.find(
+          (conn) =>
+              conn.from &&
+              conn.from.nodeId === props.node.id &&
+              (conn.from.output === outputName || conn.from.output === (outputName.name || outputName))
+      ) || null
+  );
 };
 
 // Get execution status for visual indicators
@@ -153,7 +164,7 @@ const executionStatus = computed(() => getNodeExecutionStatus(props.node.id));
 const colorClasses = computed(() => {
   // Get the color for this specific node using our coloring system
   const nodeColor = getNodeColor(props.node.type, props.node.nodeDefId);
-  
+
   const colorMap = {
     blue: {
       header: 'from-blue-500 to-blue-700',
@@ -201,52 +212,21 @@ const colorClasses = computed(() => {
       shadow: 'shadow-gray-500/20'
     }
   };
-  
+
   return colorMap[nodeColor] || colorMap.blue;
 });
 
 // Execution status styling
 const executionStatusClass = computed(() => {
   if (!executionStatus.value.executed) return '';
-  
+
   if (executionStatus.value.success === false) {
     return 'border-red-500 shadow-red-500/30';
   } else if (executionStatus.value.executed) {
     return 'border-green-500 shadow-green-500/30';
   }
-  
-  return '';
-});
 
-// Determine if this node type should have execution pins
-const hasExecutionPins = computed(() => {
-  // Variable nodes never have execution pins
-  if (props.node.type === 'variable') {
-    return false;
-  }
-  
-  // Check if the node definition explicitly includes exec pins
-  if (props.node.nodeDefId) {
-    const hasExecInput = props.node.inputs?.some(input => input.type === 'exec');
-    const hasExecOutput = props.node.outputs?.some(output => output.type === 'exec');
-    return hasExecInput || hasExecOutput;
-  }
-  
-  // For legacy nodes without nodeDefId, use type-based logic
-  if (props.node.type === 'function') {
-    // Functions typically need exec pins
-    return true;
-  }
-  
-  if (props.node.type === 'system') {
-    // System operations typically need exec pins
-    return true;
-  }
-  
-  // For other types, check if they have any exec inputs/outputs defined
-  const hasExecInput = props.node.inputs?.some(input => input.type === 'exec');
-  const hasExecOutput = props.node.outputs?.some(output => output.type === 'exec');
-  return hasExecInput || hasExecOutput;
+  return '';
 });
 
 // Determine if this node should show a header
@@ -255,7 +235,7 @@ const shouldShowHeader = computed(() => {
   if (props.node.type === 'variable') {
     return false;
   }
-  
+
   // All other node types show headers
   return true;
 });
@@ -265,19 +245,19 @@ const getDefaultHeaderText = () => {
   if (props.node.name) {
     return props.node.name;
   }
-  
+
   if (props.node.nodeDefId) {
     return props.node.nodeDefId;
   }
-  
+
   if (props.node.type === 'function') {
     return props.node.funcName || 'Function';
   }
-  
+
   if (props.node.type === 'system') {
     return props.node.systemName || 'System';
   }
-  
+
   return `Node ${props.node.id}`;
 };
 
@@ -287,7 +267,7 @@ function handleIOStart(type, io, event) {
   const rect = el.getBoundingClientRect();
   const screenX = getRectXBasedOnType(type, rect);
   const screenY = getRectYBasedOnType(type, rect);
-  
+
   // Convert to world coordinates
   const worldPos = screenToWorld(screenX, screenY);
 
@@ -335,20 +315,20 @@ function handleMouseMove(event) {
     // Calculate mouse movement in screen space, then convert to world space
     const screenDeltaX = event.clientX - dragStartX;
     const screenDeltaY = event.clientY - dragStartY;
-    
+
     // Convert screen delta to world delta by dividing by zoom
     const worldDeltaX = screenDeltaX / viewport.value.zoom;
     const worldDeltaY = screenDeltaY / viewport.value.zoom;
-    
-    emit('move', { 
-      id: props.node.id, 
-      x: nodeStartX + worldDeltaX, 
-      y: nodeStartY + worldDeltaY 
+
+    emit('move', {
+      id: props.node.id,
+      x: nodeStartX + worldDeltaX,
+      y: nodeStartY + worldDeltaY
     });
   }
 }
 
-function handleMouseUp(event) {
+function handleMouseUp() {
   window.removeEventListener('mousemove', handleMouseMove);
   window.removeEventListener('mouseup', handleMouseUp);
   if (!isDragging.value) {
@@ -358,7 +338,7 @@ function handleMouseUp(event) {
   dragStarted = false;
 }
 
-function handleClick(event) {
+function handleClick() {
   // No-op: selection is handled in mouseup
 }
 
@@ -376,16 +356,19 @@ function handleNodeContextMenu(event) {
 
 <style scoped>
 .node-glass {
-  background: linear-gradient(135deg, rgba(40,40,50,0.5) 60%, rgba(80,80,120,0.3) 100%);
+  background: linear-gradient(135deg, rgba(40, 40, 50, 0.5) 60%, rgba(80, 80, 120, 0.3) 100%);
   border-radius: 18px;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.25), 0 1.5px 6px 0 rgba(0,255,255,0.08);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.25),
+  0 1.5px 6px 0 rgba(0, 255, 255, 0.08);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition: box-shadow 0.2s,
+  border-color 0.2s;
 }
 
 .node-glass:active {
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.35), 0 1.5px 6px 0 rgba(0,255,255,0.18);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.35),
+  0 1.5px 6px 0 rgba(0, 255, 255, 0.18);
 }
 
 .valid-target {

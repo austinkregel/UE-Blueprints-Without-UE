@@ -1,0 +1,8 @@
+.vscode/
+.idea/
+dist/
+coverage/
+node_modules/
+public/
+src-tauri/target/
+src-tauri/gen/

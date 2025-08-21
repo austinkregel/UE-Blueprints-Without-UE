@@ -259,4 +259,42 @@ mod tests {
     assert_eq!(f.is_method, Some(false));
     assert_eq!(f.is_entry_point, Some(true));
   }
+
+  #[test]
+  fn heuristic_visibility_rust_pub_crate() {
+    let adapter = RustAdapter::new();
+    let src = r#"
+      pub(crate) fn foo() {}
+    "#;
+    let nf = parse_with_adapter(adapter.as_ref(), "test.rs", src).expect("parse ok");
+    let f = nf.symbols.iter().find(|s| s.kind == "function" && s.name == "foo").expect("foo found");
+    assert_eq!(f.visibility.as_deref(), Some("public"));
+    assert_eq!(f.is_entry_point, Some(true));
+  }
+
+  #[test]
+  fn php_unbracketed_namespace_class() {
+    let adapter = PhpAdapter::new();
+    let src = r#"<?php
+namespace App\Models;
+class User {}
+"#;
+    let nf = parse_with_adapter(adapter.as_ref(), "test.php", src).expect("parse ok");
+    assert_eq!(nf.language, "php");
+    let user = nf.symbols.iter().find(|s| s.kind == "class" && s.name == "User").expect("User class found");
+    assert_eq!(user.fqn.as_deref(), Some("App\\Models\\User"));
+  }
+
+  #[test]
+  fn php_declare_and_namespace_class() {
+    let adapter = PhpAdapter::new();
+    let src = r#"<?php
+declare(strict_types=1);
+namespace App;
+class Foo {}
+"#;
+    let nf = parse_with_adapter(adapter.as_ref(), "test.php", src).expect("parse ok");
+    let foo = nf.symbols.iter().find(|s| s.kind == "class" && s.name == "Foo").expect("Foo class found");
+    assert_eq!(foo.fqn.as_deref(), Some("App\\Foo"));
+  }
 }

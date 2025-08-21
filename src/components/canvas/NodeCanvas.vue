@@ -1,43 +1,95 @@
 <template>
-  <div 
-    ref="editorAreaRef"
-    class="flex-1 relative"
-    :class="{ 'drag-over': isDragOver }"
-    @mousedown="onEditorMouseDown"
-    @wheel="onWheel"
-    @drop="onDrop"
-    @dragover.prevent="onDragOver"
-    @dragenter.prevent="onDragEnter"
-    @dragleave="onDragLeave"
-    @contextmenu="onContextMenu"
+  <div
+      ref="editorAreaRef"
+      :class="{ 'drag-over': isDragOver }"
+      class="relative z-0 flex-1"
+      @contextmenu="onContextMenu"
+      @dragleave="onDragLeave"
+      @drop="onDrop"
+      @mousedown="onEditorMouseDown"
+      @wheel="onWheel"
+      @dragover.prevent="onDragOver"
+      @dragenter.prevent="onDragEnter"
   >
     <!-- Infinite Canvas Container -->
-    <div class="absolute inset-0 overflow-hidden">
-      <div class="canvas-content" :style="{ transform: getViewportTransform() }">
+    <div class="absolute inset-0 z-0 overflow-hidden">
+      <div :style="{ transform: getViewportTransform() }" class="canvas-content">
         <!-- Connections under nodes -->
-        <svg class="absolute pointer-events-none z-0 connections" style="left: -5000px; top: -5000px; width: 10000px; height: 10000px;" viewBox="-5000 -5000 10000 10000" preserveAspectRatio="none">
+        <svg
+            class="connections pointer-events-none absolute z-0"
+            preserveAspectRatio="none"
+            style="left: -5000px; top: -5000px; width: 10000px; height: 10000px"
+            viewBox="-5000 -5000 10000 10000"
+        >
           <g v-if="debugMode">
-            <circle v-for="node in nodes" :key="'center-' + node.id" :cx="node.x" :cy="node.y" r="8" fill="red" pointer-events="none" />
-            <text v-for="node in nodes" :key="'center-label-' + node.id" :x="node.x + 12" :y="node.y - 12" font-size="14" fill="red" pointer-events="none">{{`Node ${node.id} (${node.x},${node.y})`}}</text>
+            <circle v-for="node in nodes" :key="'center-' + node.id" :cx="node.x" :cy="node.y" fill="red" pointer-events="none"
+                    r="8"/>
+            <text
+                v-for="node in nodes"
+                :key="'center-label-' + node.id"
+                :x="node.x + 12"
+                :y="node.y - 12"
+                fill="red"
+                font-size="14"
+                pointer-events="none"
+            >
+              {{ `Node ${node.id} (${node.x},${node.y})` }}
+            </text>
             <template v-if="draggingConnection && draggingConnection.dragPos">
-              <circle :cx="draggingConnection.dragPos.x" :cy="draggingConnection.dragPos.y" r="7" fill="orange" pointer-events="none" />
-              <text :x="draggingConnection.dragPos.x + 12" :y="draggingConnection.dragPos.y - 12" font-size="13" fill="orange" pointer-events="none">{{`Drag (${draggingConnection.dragPos.x},${draggingConnection.dragPos.y})`}}</text>
+              <circle :cx="draggingConnection.dragPos.x" :cy="draggingConnection.dragPos.y" fill="orange" pointer-events="none"
+                      r="7"/>
+              <text
+                  :x="draggingConnection.dragPos.x + 12"
+                  :y="draggingConnection.dragPos.y - 12"
+                  fill="orange"
+                  font-size="13"
+                  pointer-events="none"
+              >
+                {{ `Drag (${draggingConnection.dragPos.x},${draggingConnection.dragPos.y})` }}
+              </text>
             </template>
           </g>
-          <g v-for="conn in connections" :key="`${conn.from.nodeId}:${conn.from.output}->${conn.to.nodeId}:${conn.to.input}`">
-            <path v-if="getConnectionPointsArray(conn)" :d="renderConnectionPath(getConnectionPointsArray(conn))" :stroke="getConnectionColor(conn)" :stroke-width="isActionFlow(conn) ? 5 : 3" fill="none" />
+          <g v-for="conn in connections"
+             :key="`${conn.from.nodeId}:${conn.from.output}->${conn.to.nodeId}:${conn.to.input}`">
+            <path
+                v-if="getConnectionPointsArray(conn)"
+                :d="renderConnectionPath(getConnectionPointsArray(conn))"
+                :stroke="getConnectionColor(conn)"
+                :stroke-width="isActionFlow(conn) ? 5 : 3"
+                fill="none"
+            />
           </g>
           <defs>
-            <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L10,5 L0,10 z" fill="#ff0" />
+            <marker id="arrow" markerHeight="10" markerUnits="strokeWidth" markerWidth="10" orient="auto" refX="10"
+                    refY="5">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ff0"/>
             </marker>
           </defs>
-          <path v-if="renderDraggingConnection()" :d="renderDraggingConnection()" :stroke="draggingConnection.value && isActionFlow(draggingConnection.value) ? '#ff0' : '#0ff'" :stroke-width="draggingConnection.value && isActionFlow(draggingConnection.value) ? 5 : 3" :marker-end="draggingConnection.value && isActionFlow(draggingConnection.value) ? 'url(#arrow)' : null" fill="none" pointer-events="none" />
+          <path
+              v-if="renderDraggingConnection()"
+              :d="renderDraggingConnection()"
+              :marker-end="draggingConnection.value && isActionFlow(draggingConnection.value) ? 'url(#arrow)' : null"
+              :stroke="draggingConnection.value && isActionFlow(draggingConnection.value) ? '#ff0' : '#0ff'"
+              :stroke-width="draggingConnection.value && isActionFlow(draggingConnection.value) ? 5 : 3"
+              fill="none"
+              pointer-events="none"
+          />
         </svg>
 
         <!-- Nodes above connections -->
         <div v-for="node in nodes" :key="node.id" class="relative z-10">
-          <component :is="getNodeComponent(node)" :node="node" :connections="connections" @move="moveNode" @connect="addConnection" @register-io="registerIO" @select="selectNode" @start-connection-drag="startConnectionDrag" @delete-connection="removeConnection" @node-context-menu="onNodeContextMenu" />
+          <component
+              :is="getNodeComponent(node)"
+              :connections="connections"
+              :node="node"
+              @connect="addConnection"
+              @move="moveNode"
+              @select="selectNode"
+              @register-io="registerIO"
+              @start-connection-drag="startConnectionDrag"
+              @delete-connection="removeConnection"
+              @node-context-menu="onNodeContextMenu"
+          />
         </div>
       </div>
     </div>
@@ -47,27 +99,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import {onBeforeUnmount, onMounted, ref} from 'vue';
 // Removed NodeSettings import
-import { isActionFlow, renderDraggingConnection, getConnectionColor } from '../../utils/connection-visuals.js'
-import { draggingConnection, nodes } from '../../utils/state.js'
-import { selectNode } from '../../utils/node-selection.js'
-import { getNodeComponent } from '../../utils/get-node-component.js'
-import { startConnectionDrag } from '../../utils/drag-connect.js'
-import { moveNode } from '../../utils/nodes-core.js'
-import { registerIO, renderConnectionPath, getConnectionPointsArray } from '../../utils/io-utils.js'
-import { connections, addConnection, removeConnection } from '../../utils/connection-manager.js'
-import { onEditorMouseDown } from '../../utils/editor-utils.js'
-import { viewport, getViewportTransform, setZoom, setCanvasOffset } from '../../utils/viewport-utils.js'
+import {getConnectionColor, isActionFlow, renderDraggingConnection} from '../../utils/connection-visuals.js';
+import {draggingConnection, nodes} from '../../utils/state.js';
+import {selectNode} from '../../utils/node-selection.js';
+import {getNodeComponent} from '../../utils/get-node-component.js';
+import {startConnectionDrag} from '../../utils/drag-connect.js';
+import {moveNode} from '../../utils/nodes-core.js';
+import {getConnectionPointsArray, registerIO, renderConnectionPath} from '../../utils/io-utils.js';
+import {addConnection, connections, removeConnection} from '../../utils/connection-manager.js';
+import {onEditorMouseDown} from '../../utils/editor-utils.js';
+import {getViewportTransform, setCanvasOffset, setZoom, viewport} from '../../utils/viewport-utils.js';
 
 const props = defineProps({
-  debugMode: { type: Boolean, default: false }
-})
+  debugMode: {type: Boolean, default: false}
+});
 
-const emit = defineEmits(['context-menu', 'drop-node', 'node-context-menu'])
+const emit = defineEmits(['context-menu', 'drop-node', 'node-context-menu']);
 
-const isDragOver = ref(false)
-const editorAreaRef = ref(null)
+const isDragOver = ref(false);
+const editorAreaRef = ref(null);
 
 function updateCanvasOffset() {
   const rect = editorAreaRef.value?.getBoundingClientRect();
@@ -84,24 +136,27 @@ onMounted(() => {
     // store on instance for cleanup
     editorAreaRef.value.__ro = ro;
   }
-})
+});
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateCanvasOffset);
   const el = editorAreaRef.value;
   if (el && el.__ro) {
-    try { el.__ro.disconnect(); } catch {}
+    try {
+      el.__ro.disconnect();
+    } catch {
+    }
     el.__ro = null;
   }
-})
+});
 
 function onContextMenu(event) {
-  emit('context-menu', event)
+  emit('context-menu', event);
 }
 
 function onNodeContextMenu(payload) {
   // forward node context menu event to parent
-  emit('node-context-menu', payload)
+  emit('node-context-menu', payload);
 }
 
 function onWheel(event) {
@@ -132,7 +187,7 @@ function onDragLeave(event) {
 function onDrop(event) {
   event.preventDefault();
   isDragOver.value = false;
-  emit('drop-node', event)
+  emit('drop-node', event);
 }
 </script>
 
@@ -153,7 +208,7 @@ function onDrop(event) {
 }
 
 .drag-over::before {
-  content: "Drop node here";
+  content: 'Drop node here';
   position: absolute;
   top: 50%;
   left: 50%;

@@ -1,15 +1,12 @@
 <template>
-  <span 
-    class="inline-flex items-center px-2 py-1 rounded text-xs font-medium pointer-events-none"
-    :class="typeClasses"
-  >
-    {{ name }}
-  </span>
+    <span class="pointer-events-none inline-flex items-center rounded px-2 py-1 text-xs font-medium">
+        {{ name }}
+    </span>
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { getNodeColor } from '../utils/node-colors.js';
+import {computed} from 'vue';
+import {getNodeColor} from '../utils/node-colors.js';
 
 const props = defineProps({
   name: {
@@ -20,13 +17,6 @@ const props = defineProps({
     type: String,
     required: true
   }
-});
-
-const typeClasses = computed(() => {
-  // Use the centralized type info function
-  const color = getNodeColor(props.type);
-  
-  return [  ];
 });
 </script>
 

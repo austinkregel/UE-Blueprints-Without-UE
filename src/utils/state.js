@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import {ref} from 'vue';
 
 // Global editor state
 export const nodes = ref([]);
@@ -9,7 +9,7 @@ export const draggingConnection = ref(null); // { from: {nodeId, output}, to: {n
 export const debugMode = ref(true);
 
 export function log(...args) {
-  if (debugMode.value) {
-    console.log('[DEBUG]', ...args);
-  }
+    if (debugMode.value) {
+        console.log('[DEBUG]', ...args);
+    }
 }

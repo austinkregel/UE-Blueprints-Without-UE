@@ -1,73 +1,69 @@
 <template>
-  <div 
-    v-if="visible"
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-    @click="handleOverlayClick"
-  >
-    <div 
-      class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-xl w-96 max-h-[80vh] flex flex-col"
-      @click.stop
+  <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+       @click="handleOverlayClick">
+    <div
+        class="flex max-h-[80vh] w-96 flex-col rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800"
+        @click.stop
     >
       <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-600">
-        <h3 class="text-zinc-900 dark:text-white font-semibold">Browse All Nodes</h3>
-        <button
-          @click="$emit('close')"
-          class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      <div class="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-600">
+        <h3 class="font-semibold text-zinc-900 dark:text-white">Browse All Nodes</h3>
+        <button class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white"
+                @click="$emit('close')">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
           </svg>
         </button>
       </div>
-      
+
       <!-- Search -->
-      <div class="p-4 border-b border-zinc-200 dark:border-zinc-600">
+      <div class="border-b border-zinc-200 p-4 dark:border-zinc-600">
         <input
-          v-model="searchQuery"
-          placeholder="Search nodes..."
-          class="w-full bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-2 text-sm"
-          ref="searchInput"
+            ref="searchInput"
+            v-model="searchQuery"
+            class="w-full rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+            placeholder="Search nodes..."
         />
       </div>
-      
+
       <!-- Node List -->
       <div class="flex-1 overflow-y-auto">
-        <div v-for="category in filteredCategories" :key="category.key" class="border-b border-zinc-200 dark:border-zinc-700 last:border-b-0">
+        <div v-for="category in filteredCategories" :key="category.key"
+             class="border-b border-zinc-200 last:border-b-0 dark:border-zinc-700">
           <div
-            class="flex items-center justify-between p-3 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            @click="toggleCategory(category.key)"
+              class="flex cursor-pointer items-center justify-between p-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              @click="toggleCategory(category.key)"
           >
             <div class="flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full" :class="`bg-${category.color}-500`"></div>
+              <div :class="`bg-${category.color}-500`" class="h-2 w-2 rounded-full"></div>
               <span>{{ category.name }}</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xs text-zinc-500">{{ category.count }}</span>
               <svg
-                class="w-4 h-4 transition-transform"
-                :class="{ 'rotate-180': expandedCategories[category.key] }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                  :class="{ 'rotate-180': expandedCategories[category.key] }"
+                  class="h-4 w-4 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
               </svg>
             </div>
           </div>
-          
+
           <div v-if="expandedCategories[category.key]" class="bg-zinc-50 dark:bg-zinc-900/40">
             <div
-              v-for="node in category.nodes"
-              :key="node.id"
-              class="flex flex-col gap-1 p-3 pl-6 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 border-l-2 border-transparent hover:border-blue-500"
-              @click="handleNodeSelect(node)"
+                v-for="node in category.nodes"
+                :key="node.id"
+                class="flex cursor-pointer flex-col gap-1 border-l-2 border-transparent p-3 pl-6 hover:border-blue-500 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                @click="handleNodeSelect(node)"
             >
               <div class="flex items-center justify-between">
-                <span class="text-zinc-900 dark:text-white text-sm font-medium">{{ node.name }}</span>
-                <div class="w-2 h-2 rounded-full" :class="`bg-${category.color}-400`"></div>
+                <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ node.name }}</span>
+                <div :class="`bg-${category.color}-400`" class="h-2 w-2 rounded-full"></div>
               </div>
-              <p class="text-zinc-600 dark:text-zinc-400 text-xs">{{ node.description }}</p>
+              <p class="text-xs text-zinc-600 dark:text-zinc-400">{{ node.description }}</p>
               <div class="flex justify-between text-xs text-zinc-500">
                 <span>{{ node.inputs?.length || 0 }} inputs</span>
                 <span>{{ node.outputs?.length || 0 }} outputs</span>
@@ -75,15 +71,15 @@
             </div>
           </div>
         </div>
-        
+
         <!-- No results -->
         <div v-if="filteredCategories.length === 0" class="p-4 text-center text-zinc-500 dark:text-zinc-400">
           No nodes found matching "{{ searchQuery }}"
         </div>
       </div>
-      
+
       <!-- Footer -->
-      <div class="p-4 border-t border-zinc-200 dark:border-zinc-600 text-xs text-zinc-500 dark:text-zinc-400">
+      <div class="border-t border-zinc-200 p-4 text-xs text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">
         Click on a node to add it at the right-click position
       </div>
     </div>
@@ -91,14 +87,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
-import { getAllNodeDefinitions, NODE_CATEGORIES } from '../utils/language-definition.js';
+// Safety net: ensure listener is removed on unmount
+import {computed, nextTick, onUnmounted, ref, watch} from 'vue';
+import {getAllNodeDefinitions, NODE_CATEGORIES} from '../utils/language-definition.js';
 
 const props = defineProps({
   visible: Boolean,
   position: {
     type: Object,
-    default: () => ({ x: 0, y: 0 })
+    default: () => ({x: 0, y: 0})
   }
 });
 
@@ -109,21 +106,24 @@ const expandedCategories = ref({});
 const searchInput = ref(null);
 
 // Focus search input when modal opens
-watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
-    nextTick(() => {
-      if (searchInput.value) {
-        searchInput.value.focus();
+watch(
+    () => props.visible,
+    (newVisible) => {
+      if (newVisible) {
+        nextTick(() => {
+          if (searchInput.value) {
+            searchInput.value.focus();
+          }
+        });
       }
-    });
-  }
-});
+    }
+);
 
 // Get all available nodes organized by category
 const allNodes = computed(() => {
   const nodes = getAllNodeDefinitions();
   const categorized = {};
-  
+
   for (const [nodeId, nodeDef] of Object.entries(nodes)) {
     const categoryKey = nodeDef.categoryKey || 'OTHER';
     if (!categorized[categoryKey]) {
@@ -134,7 +134,7 @@ const allNodes = computed(() => {
       ...nodeDef
     });
   }
-  
+
   return categorized;
 });
 
@@ -142,19 +142,20 @@ const allNodes = computed(() => {
 const filteredCategories = computed(() => {
   const query = searchQuery.value.toLowerCase();
   const categories = [];
-  
+
   for (const [categoryKey, nodes] of Object.entries(allNodes.value)) {
-    const categoryInfo = NODE_CATEGORIES[categoryKey.toUpperCase()] || { 
-      name: categoryKey, 
-      color: 'gray' 
+    const categoryInfo = NODE_CATEGORIES[categoryKey.toUpperCase()] || {
+      name: categoryKey,
+      color: 'gray'
     };
-    
-    const filteredNodes = nodes.filter(node => 
-      node.name.toLowerCase().includes(query) ||
-      node.description?.toLowerCase().includes(query) ||
-      node.id.toLowerCase().includes(query)
+
+    const filteredNodes = nodes.filter(
+        (node) =>
+            node.name.toLowerCase().includes(query) ||
+            node.description?.toLowerCase().includes(query) ||
+            node.id.toLowerCase().includes(query)
     );
-    
+
     if (filteredNodes.length > 0) {
       categories.push({
         key: categoryKey,
@@ -165,7 +166,7 @@ const filteredCategories = computed(() => {
       });
     }
   }
-  
+
   return categories.sort((a, b) => a.name.localeCompare(b.name));
 });
 
@@ -186,18 +187,19 @@ function handleOverlayClick() {
 }
 
 // Handle escape key
-watch(() => props.visible, (newVisible) => {
-  if (typeof window !== 'undefined' && window.document) {
-    if (newVisible) {
-      window.document.addEventListener('keydown', handleKeyDown);
-    } else {
-      window.document.removeEventListener('keydown', handleKeyDown);
+watch(
+    () => props.visible,
+    (newVisible) => {
+      if (typeof window !== 'undefined' && window.document) {
+        if (newVisible) {
+          window.document.addEventListener('keydown', handleKeyDown);
+        } else {
+          window.document.removeEventListener('keydown', handleKeyDown);
+        }
+      }
     }
-  }
-});
+);
 
-// Safety net: ensure listener is removed on unmount
-import { onUnmounted } from 'vue';
 onUnmounted(() => {
   if (typeof window !== 'undefined' && window.document) {
     window.document.removeEventListener('keydown', handleKeyDown);

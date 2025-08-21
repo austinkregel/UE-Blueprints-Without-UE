@@ -1,4 +1,4 @@
-import { getCategoryColor, getNodeDefinition, NODE_CATEGORIES } from './language-definition.js';
+import {getCategoryColor, getNodeDefinition} from './language-definition.js';
 
 /**
  * Maps node types to their corresponding theme colors
@@ -7,41 +7,41 @@ import { getCategoryColor, getNodeDefinition, NODE_CATEGORIES } from './language
  * @returns {string} - The color name for the node type
  */
 export function getNodeColor(nodeType, nodeId = null) {
-  // First try to get color from node definition if nodeId is provided
-  if (nodeId) {
-    const nodeDef = getNodeDefinition(nodeId);
-    if (nodeDef && nodeDef.category) {
-      return getCategoryColor(nodeDef.category);
+    // First try to get color from node definition if nodeId is provided
+    if (nodeId) {
+        const nodeDef = getNodeDefinition(nodeId);
+        if (nodeDef && nodeDef.category) {
+            return getCategoryColor(nodeDef.category);
+        }
     }
-  }
-  
-  // Fallback to type-based mapping
-  const typeColorMap = {
-    'function': 'blue',     
-    'variable': 'purple',   
-    'system': 'gray',       
-  'constant': 'slate',
-    'control': 'yellow',    
-    'math': 'green',        
-    'string': 'pink',       
-    'array': 'orange',      
-    'comparison': 'green',  
-    'cast': 'cyan',         
-    'bitwise': 'purple',    
-    'exception': 'red',     
-    'memory': 'slate',      
-    'advanced_math': 'emerald',
-    'advanced_string': 'pink', 
-    'advanced_array': 'orange',
-    'object': 'violet',   
-    'functional': 'red',  
-    'io': 'blue',         
-    'time': 'amber',      
-    'network': 'cyan',    
-    'default': 'blue'     
-  };
 
-  return typeColorMap[nodeType] || typeColorMap.default;
+    // Fallback to type-based mapping
+    const typeColorMap = {
+        function: 'blue',
+        variable: 'purple',
+        system: 'gray',
+        constant: 'slate',
+        control: 'yellow',
+        math: 'green',
+        string: 'pink',
+        array: 'orange',
+        comparison: 'green',
+        cast: 'cyan',
+        bitwise: 'purple',
+        exception: 'red',
+        memory: 'slate',
+        advanced_math: 'emerald',
+        advanced_string: 'pink',
+        advanced_array: 'orange',
+        object: 'violet',
+        functional: 'red',
+        io: 'blue',
+        time: 'amber',
+        network: 'cyan',
+        default: 'blue'
+    };
+
+    return typeColorMap[nodeType] || typeColorMap.default;
 }
 
 /**
@@ -49,7 +49,7 @@ export function getNodeColor(nodeType, nodeId = null) {
  * @returns {Array<string>} - Array of available color names
  */
 export function getAvailableColors() {
-  return ['blue', 'green', 'yellow', 'purple', 'red', 'cyan', 'pink', 'orange', 'gray'];
+    return ['blue', 'green', 'yellow', 'purple', 'red', 'cyan', 'pink', 'orange', 'gray'];
 }
 
 /**
@@ -58,5 +58,5 @@ export function getAvailableColors() {
  * @returns {string} - The color for the category
  */
 export function getCategoryColorByName(category) {
-  return getCategoryColor(category);
+    return getCategoryColor(category);
 }

@@ -1,44 +1,44 @@
 <template>
-  <div 
-    v-if="visible"
-    class="context-menu fixed bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-xl z-50 min-w-48"
-    :style="{ top: position.y + 'px', left: position.x + 'px' }"
-    @click.stop
+  <div
+      v-if="visible"
+      :style="{ top: position.y + 'px', left: position.x + 'px' }"
+      class="context-menu fixed z-50 min-w-48 rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800"
+      @click.stop
   >
     <div class="py-2">
       <!-- Quick Actions -->
-      <div class="px-3 py-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">Quick Actions</div>
+      <div class="px-3 py-1 text-xs font-semibold text-zinc-500 uppercase dark:text-zinc-400">Quick Actions</div>
       <button
-        @click="handleAction('addNode')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
+          class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-zinc-700"
+          @click="handleAction('addNode')"
       >
-        <span class="w-2 h-2 bg-cyan-500 rounded-full mr-3"></span>
+        <span class="mr-3 h-2 w-2 rounded-full bg-cyan-500"></span>
         Quick Node
       </button>
-      <button 
-        @click="handleAction('addActionNode')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
+      <button
+          class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-zinc-700"
+          @click="handleAction('addActionNode')"
       >
-        <span class="w-2 h-2 bg-yellow-500 rounded-full mr-3"></span>
+        <span class="mr-3 h-2 w-2 rounded-full bg-yellow-500"></span>
         Action Node
       </button>
-      <button 
-        @click="handleAction('addSystemNode')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
+      <button
+          class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-zinc-700"
+          @click="handleAction('addSystemNode')"
       >
-        <span class="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+        <span class="mr-3 h-2 w-2 rounded-full bg-green-500"></span>
         System Node
       </button>
-      
-      <div class="border-t border-zinc-200 dark:border-zinc-600 my-2"></div>
+
+      <div class="my-2 border-t border-zinc-200 dark:border-zinc-600"></div>
 
       <!-- Advanced -->
-      <div class="px-3 py-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase">Advanced</div>
+      <div class="px-3 py-1 text-xs font-semibold text-zinc-500 uppercase dark:text-zinc-400">Advanced</div>
       <button
-        @click="handleAction('showNodeDropdown')"
-        class="w-full text-left px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white text-sm flex items-center"
+          class="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-white dark:hover:bg-zinc-700"
+          @click="handleAction('showNodeDropdown')"
       >
-        <span class="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+        <span class="mr-3 h-2 w-2 rounded-full bg-blue-500"></span>
         Browse All Nodes...
       </button>
     </div>
@@ -46,13 +46,13 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import {watch} from 'vue';
 
 const props = defineProps({
   visible: Boolean,
   position: {
     type: Object,
-    default: () => ({ x: 0, y: 0 })
+    default: () => ({x: 0, y: 0})
   }
 });
 
@@ -67,18 +67,21 @@ function handleAction(actionType) {
 }
 
 // Close when clicking outside or pressing escape
-watch(() => props.visible, (newVisible) => {
-  if (newVisible) {
-    // Add click listener to close menu when clicking outside
-    setTimeout(() => {
-      document.addEventListener('click', handleOutsideClick);
-      document.addEventListener('keydown', handleKeyDown);
-    }, 0);
-  } else {
-    document.removeEventListener('click', handleOutsideClick);
-    document.removeEventListener('keydown', handleKeyDown);
-  }
-});
+watch(
+    () => props.visible,
+    (newVisible) => {
+      if (newVisible) {
+        // Add click listener to close menu when clicking outside
+        setTimeout(() => {
+          document.addEventListener('click', handleOutsideClick);
+          document.addEventListener('keydown', handleKeyDown);
+        }, 0);
+      } else {
+        document.removeEventListener('click', handleOutsideClick);
+        document.removeEventListener('keydown', handleKeyDown);
+      }
+    }
+);
 
 function handleOutsideClick() {
   emit('close');

@@ -1,4 +1,4 @@
-## Vue + Tauri + TailwindCSS 
+## Vue + Tauri + TailwindCSS
 
 Using the latest version of tailwind, VueJS, and Tauri; this project uses an interface like Unreal Engine Blueprints, and a special format to turn nodes in a graph into actual code in any language that supports ASTs
 

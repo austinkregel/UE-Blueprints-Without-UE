@@ -1,42 +1,45 @@
 {
-  "name": "desktop-app",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "tauri": "tauri",
-    "test": "vitest",
-    "instructions:compress": "node scripts/instructions-codec.mjs compress",
-    "instructions:decompress": "node scripts/instructions-codec.mjs decompress",
-    "instructions:verify": "node scripts/instructions-codec.mjs verify .copilot-instructions.br.json .copilot-instructions.md"
-  },
-  "dependencies": {
-    "@headlessui/vue": "^1.7.23",
-    "@tailwindcss/vite": "^4.1.11",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-dialog": "^2.3.2",
-    "@tauri-apps/plugin-fs": "^2.4.1",
-    "@tauri-apps/plugin-opener": "^2",
-    "@vue/test-utils": "^2.4.6",
-    "php-parser": "^3.2.5",
-    "vue": "^3.5.13"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^2",
-    "@vitejs/plugin-vue": "^5.2.4",
-    "@vitest/coverage-istanbul": "^3.2.4",
-    "@vitest/coverage-v8": "^3.2.4",
-    "autoprefixer": "^10.4.21",
-    "buffer": "^6.0.3",
-    "jsdom": "^26.1.0",
-    "postcss": "^8.5.6",
-    "process": "^0.11.10",
-    "tailwindcss": "^4.1.11",
-    "vite": "^6.0.3",
-    "vite-plugin-node-polyfills": "^0.24.0",
-    "vitest": "^3.2.4"
-  }
+    "name": "desktop-app",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "tauri": "tauri",
+        "test": "vitest",
+        "instructions:compress": "node scripts/instructions-codec.mjs compress",
+        "instructions:decompress": "node scripts/instructions-codec.mjs decompress",
+        "instructions:verify": "node scripts/instructions-codec.mjs verify .copilot-instructions.br.json .copilot-instructions.md",
+        "php:scan": "cargo run --manifest-path src-tauri/Cargo.toml --bin php_scan --"
+    },
+    "dependencies": {
+        "@headlessui/vue": "^1.7.23",
+        "@tailwindcss/vite": "^4.1.11",
+        "@tauri-apps/api": "^2",
+        "@tauri-apps/plugin-dialog": "^2.3.2",
+        "@tauri-apps/plugin-fs": "^2.4.1",
+        "@tauri-apps/plugin-opener": "^2",
+        "@vue/test-utils": "^2.4.6",
+        "php-parser": "^3.2.5",
+        "prettier-plugin-tailwindcss": "^0.6.14",
+        "vue": "^3.5.13"
+    },
+    "devDependencies": {
+        "@tauri-apps/cli": "^2",
+        "@vitejs/plugin-vue": "^5.2.4",
+        "@vitest/coverage-istanbul": "^3.2.4",
+        "@vitest/coverage-v8": "^3.2.4",
+        "autoprefixer": "^10.4.21",
+        "buffer": "^6.0.3",
+        "jsdom": "^26.1.0",
+        "postcss": "^8.5.6",
+        "prettier": "^3.6.2",
+        "process": "^0.11.10",
+        "tailwindcss": "^4.1.11",
+        "vite": "^6.0.3",
+        "vite-plugin-node-polyfills": "^0.24.0",
+        "vitest": "^3.2.4"
+    }
 }
