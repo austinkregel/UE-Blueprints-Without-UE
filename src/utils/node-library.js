@@ -3,7 +3,7 @@
  * This file provides easy access to all predefined nodes that can be used in the visual editor
  */
 
-import {getAllNodeDefinitions, getNodesByCategory, NODE_CATEGORIES} from './language-definition.js';
+import { getAllNodeDefinitions, getNodesByCategory, NODE_CATEGORIES } from './language-definition.js';
 
 /**
  * Helper function to search nodes by name or description
@@ -266,7 +266,7 @@ export function searchNodeLibrary(searchTerm) {
  * Get recommended nodes for a given context
  */
 export function getRecommendedNodes(context = {}) {
-    const {nodeType, outputType, inputType, category} = context;
+    const { nodeType, outputType, inputType, category } = context;
 
     if (nodeType === 'starter') {
         return getStarterNodes();

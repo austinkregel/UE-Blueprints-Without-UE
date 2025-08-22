@@ -1,10 +1,10 @@
-import {beforeEach, describe, expect, it} from 'vitest';
-import {nodes} from '../state.js';
-import {clearConnections, connections} from '../connection-manager.js';
-import {connectNodes} from '../connection-utils.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { nodes } from '../state.js';
+import { clearConnections, connections } from '../connection-manager.js';
+import { connectNodes } from '../connection-utils.js';
 
 function makeNode(id, type, x, y, inputs, outputs) {
-    return {id, type, x, y, inputs, outputs};
+    return { id, type, x, y, inputs, outputs };
 }
 
 describe('connection casting behavior', () => {
@@ -15,11 +15,11 @@ describe('connection casting behavior', () => {
     });
 
     it('connects identical data types without cast', () => {
-        const a = makeNode('A', 'function', 0, 0, [], [{name: 'out', type: 'int'}]);
-        const b = makeNode('B', 'function', 200, 0, [{name: 'in', type: 'int'}], []);
+        const a = makeNode('A', 'function', 0, 0, [], [{ name: 'out', type: 'int' }]);
+        const b = makeNode('B', 'function', 200, 0, [{ name: 'in', type: 'int' }], []);
         nodes.value.push(a, b);
 
-        connectNodes({from: {nodeId: a.id, output: 'out'}, to: {nodeId: b.id, input: 'in'}});
+        connectNodes({ from: { nodeId: a.id, output: 'out' }, to: { nodeId: b.id, input: 'in' } });
 
         expect(connections.value.length).toBe(1);
         expect(connections.value[0].from.nodeId).toBe('A');
@@ -27,11 +27,11 @@ describe('connection casting behavior', () => {
     });
 
     it('auto-inserts cast for int -> float', () => {
-        const a = makeNode('A', 'function', 0, 0, [], [{name: 'out', type: 'int'}]);
-        const b = makeNode('B', 'function', 200, 0, [{name: 'in', type: 'float'}], []);
+        const a = makeNode('A', 'function', 0, 0, [], [{ name: 'out', type: 'int' }]);
+        const b = makeNode('B', 'function', 200, 0, [{ name: 'in', type: 'float' }], []);
         nodes.value.push(a, b);
 
-        connectNodes({from: {nodeId: a.id, output: 'out'}, to: {nodeId: b.id, input: 'in'}});
+        connectNodes({ from: { nodeId: a.id, output: 'out' }, to: { nodeId: b.id, input: 'in' } });
 
         // Should be two connections via cast node
         expect(connections.value.length).toBe(2);
@@ -44,31 +44,31 @@ describe('connection casting behavior', () => {
     });
 
     it('rejects exec/data mismatch', () => {
-        const a = makeNode('A', 'exec', 0, 0, [], [{name: 'Exec', type: 'exec'}]);
-        const b = makeNode('B', 'function', 200, 0, [{name: 'in', type: 'int'}], []);
+        const a = makeNode('A', 'exec', 0, 0, [], [{ name: 'Exec', type: 'exec' }]);
+        const b = makeNode('B', 'function', 200, 0, [{ name: 'in', type: 'int' }], []);
         nodes.value.push(a, b);
 
-        connectNodes({from: {nodeId: a.id, output: 'Exec'}, to: {nodeId: b.id, input: 'in'}});
+        connectNodes({ from: { nodeId: a.id, output: 'Exec' }, to: { nodeId: b.id, input: 'in' } });
 
         expect(connections.value.length).toBe(0);
     });
 
     it('allows exec to exec', () => {
-        const a = makeNode('A', 'exec', 0, 0, [], [{name: 'Then', type: 'exec'}]);
-        const b = makeNode('B', 'exec', 200, 0, [{name: 'Exec', type: 'exec'}], []);
+        const a = makeNode('A', 'exec', 0, 0, [], [{ name: 'Then', type: 'exec' }]);
+        const b = makeNode('B', 'exec', 200, 0, [{ name: 'Exec', type: 'exec' }], []);
         nodes.value.push(a, b);
 
-        connectNodes({from: {nodeId: a.id, output: 'Then'}, to: {nodeId: b.id, input: 'Exec'}});
+        connectNodes({ from: { nodeId: a.id, output: 'Then' }, to: { nodeId: b.id, input: 'Exec' } });
 
         expect(connections.value.length).toBe(1);
     });
 
     it('casts null and mixed appropriately', () => {
-        const a = makeNode('A', 'function', 0, 0, [], [{name: 'out', type: 'null'}]);
-        const b = makeNode('B', 'function', 200, 0, [{name: 'in', type: 'string'}], []);
+        const a = makeNode('A', 'function', 0, 0, [], [{ name: 'out', type: 'null' }]);
+        const b = makeNode('B', 'function', 200, 0, [{ name: 'in', type: 'string' }], []);
         nodes.value.push(a, b);
 
-        connectNodes({from: {nodeId: a.id, output: 'out'}, to: {nodeId: b.id, input: 'in'}});
+        connectNodes({ from: { nodeId: a.id, output: 'out' }, to: { nodeId: b.id, input: 'in' } });
 
         // Should insert cast node due to canCast(null -> string)
         expect(connections.value.length).toBe(2);

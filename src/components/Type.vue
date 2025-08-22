@@ -5,21 +5,21 @@
 </template>
 
 <script setup>
-import {computed} from 'vue';
-import {getNodeColor} from '../utils/node-colors.js';
+    import { computed } from 'vue';
+    import { getNodeColor } from '../utils/node-colors.js';
 
-const props = defineProps({
-  name: {
-    type: String,
-    required: true
-  },
-  type: {
-    type: String,
-    required: true
-  }
-});
+    const props = defineProps({
+        name: {
+            type: String,
+            required: true
+        },
+        type: {
+            type: String,
+            required: true
+        }
+    });
 </script>
 
 <style scoped>
-/* Additional styling if needed */
+    /* Additional styling if needed */
 </style>

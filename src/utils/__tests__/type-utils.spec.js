@@ -1,11 +1,11 @@
-import {describe, expect, it} from 'vitest';
-import {canCast, isExecIO, isSameType} from '../type-utils.js';
+import { describe, expect, it } from 'vitest';
+import { canCast, isExecIO, isSameType } from '../type-utils.js';
 
 describe('type-utils', () => {
     it('detects exec IO', () => {
-        expect(isExecIO({name: 'Exec', type: 'exec'})).toBe(true);
-        expect(isExecIO({name: 'Then', type: 'exec'})).toBe(true);
-        expect(isExecIO({name: 'value', type: 'string'})).toBe(false);
+        expect(isExecIO({ name: 'Exec', type: 'exec' })).toBe(true);
+        expect(isExecIO({ name: 'Then', type: 'exec' })).toBe(true);
+        expect(isExecIO({ name: 'value', type: 'string' })).toBe(false);
     });
 
     it('isSameType is case-insensitive', () => {

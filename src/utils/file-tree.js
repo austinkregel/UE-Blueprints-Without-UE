@@ -8,7 +8,7 @@ function isTauriAvailable() {
 
 async function getInvoke() {
     try {
-        const {invoke} = await import('@tauri-apps/api/core');
+        const { invoke } = await import('@tauri-apps/api/core');
         return invoke;
     } catch {
         return null;
@@ -21,7 +21,7 @@ export async function listDirectory(path) {
     const invoke = await getInvoke();
     if (!invoke) return [];
     try {
-        const entries = await invoke('list_dir', {path});
+        const entries = await invoke('list_dir', { path });
         // Map to UI shape
         return (entries || []).map((e) => ({
             name: e.name,
@@ -35,7 +35,7 @@ export async function listDirectory(path) {
     }
 }
 
-export async function readDirectoryTree(root, {includeHidden = false} = {}) {
+export async function readDirectoryTree(root, { includeHidden = false } = {}) {
     if (!isTauriAvailable())
         return {
             name: root?.split('/')?.pop() || 'root',
@@ -45,7 +45,7 @@ export async function readDirectoryTree(root, {includeHidden = false} = {}) {
             warnings: ['Not running in Tauri']
         };
     const children = (await listDirectory(root)).filter((e) => includeHidden || !e.name?.startsWith('.'));
-    return {name: root?.split('/')?.pop() || 'root', path: root, kind: 'dir', children};
+    return { name: root?.split('/')?.pop() || 'root', path: root, kind: 'dir', children };
 }
 
 export async function readText(path) {
@@ -53,7 +53,7 @@ export async function readText(path) {
     const invoke = await getInvoke();
     if (invoke) {
         try {
-            return await invoke('read_text_file', {path});
+            return await invoke('read_text_file', { path });
         } catch (e) {
             console.error('read_text_file failed', e);
             return '';
@@ -84,7 +84,7 @@ export async function pickDirectory() {
             console.warn('Dialog API not available');
             return null;
         }
-        const dir = await dialog.open({directory: true, multiple: false});
+        const dir = await dialog.open({ directory: true, multiple: false });
         if (!dir) return null;
         return Array.isArray(dir) ? dir[0] : dir;
     } catch (e) {

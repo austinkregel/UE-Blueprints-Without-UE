@@ -1,8 +1,8 @@
-import {selectedNodeId} from './state.js';
+import { selectedNodeId } from './state.js';
 
-export {selectedNodeId};
+export { selectedNodeId };
 
-export function selectNode({id}) {
+export function selectNode({ id }) {
     if (id) selectedNodeId.value = id;
 }
 

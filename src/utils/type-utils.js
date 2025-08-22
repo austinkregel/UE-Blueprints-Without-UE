@@ -1,5 +1,5 @@
 // Centralized type utilities for compatibility and casting rules
-import {TYPES} from './language-definition.js';
+import { TYPES } from './language-definition.js';
 
 export function isExecIO(ioLike) {
     if (!ioLike) return false;

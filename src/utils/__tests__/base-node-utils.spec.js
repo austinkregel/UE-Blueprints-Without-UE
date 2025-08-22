@@ -1,10 +1,10 @@
-import {debugMode, ioPositions, nodes} from '../state.js';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {connections, removeConnection as deleteConnection} from '../connection-manager.js';
-import {getIOPosition} from '../io-positions.js';
-import {moveNode, updateNodeIO} from '../nodes-core.js';
-import {closeSettings, selectedNodeId, selectNode} from '../node-selection.js';
-import {getNodeComponent} from '../get-node-component.js';
+import { debugMode, ioPositions, nodes } from '../state.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { connections, removeConnection as deleteConnection } from '../connection-manager.js';
+import { getIOPosition } from '../io-positions.js';
+import { moveNode, updateNodeIO } from '../nodes-core.js';
+import { closeSettings, selectedNodeId, selectNode } from '../node-selection.js';
+import { getNodeComponent } from '../get-node-component.js';
 
 describe('base-node-utils (modularized)', () => {
     it('state available', () => {
@@ -16,24 +16,24 @@ describe('getIOPosition', () => {
     beforeEach(() => {
         ioPositions.value = {
             1: {
-                inputs: {a: {x: 10, y: 20}, b: {x: 30, y: 40}},
-                outputs: {result: {x: 50, y: 60}}
+                inputs: { a: { x: 10, y: 20 }, b: { x: 30, y: 40 } },
+                outputs: { result: { x: 50, y: 60 } }
             },
             2: {
                 inputs: {},
-                outputs: {value: {x: 70, y: 80}}
+                outputs: { value: { x: 70, y: 80 } }
             }
         };
     });
 
     it('returns correct position for valid input', () => {
-        expect(getIOPosition(1, 'input', 'a')).toEqual({x: 10, y: 20});
-        expect(getIOPosition(1, 'input', 'b')).toEqual({x: 30, y: 40});
+        expect(getIOPosition(1, 'input', 'a')).toEqual({ x: 10, y: 20 });
+        expect(getIOPosition(1, 'input', 'b')).toEqual({ x: 30, y: 40 });
     });
 
     it('returns correct position for valid output', () => {
-        expect(getIOPosition(1, 'output', 'result')).toEqual({x: 50, y: 60});
-        expect(getIOPosition(2, 'output', 'value')).toEqual({x: 70, y: 80});
+        expect(getIOPosition(1, 'output', 'result')).toEqual({ x: 50, y: 60 });
+        expect(getIOPosition(2, 'output', 'value')).toEqual({ x: 70, y: 80 });
     });
 
     it('returns null for invalid nodeId', () => {
@@ -54,13 +54,13 @@ describe('moveNode', () => {
     beforeEach(() => {
         // Reset nodes to a known state
         nodes.value = [
-            {id: 1, x: 10, y: 20},
-            {id: 2, x: 30, y: 40}
+            { id: 1, x: 10, y: 20 },
+            { id: 2, x: 30, y: 40 }
         ];
     });
 
     it('updates the position of the correct node', () => {
-        moveNode({id: 1, x: 100, y: 200});
+        moveNode({ id: 1, x: 100, y: 200 });
         expect(nodes.value[0].x).toBe(100);
         expect(nodes.value[0].y).toBe(200);
         expect(nodes.value[1].x).toBe(30);
@@ -68,7 +68,7 @@ describe('moveNode', () => {
     });
 
     it('does nothing if node id does not exist', () => {
-        moveNode({id: 999, x: 100, y: 200});
+        moveNode({ id: 999, x: 100, y: 200 });
         expect(nodes.value[0].x).toBe(10);
         expect(nodes.value[0].y).toBe(20);
         expect(nodes.value[1].x).toBe(30);
@@ -85,7 +85,7 @@ describe('addNode (legacy test adjusted)', () => {
 
 describe('selectNode and closeSettings', () => {
     it('selects a node by id', () => {
-        selectNode({id: 42});
+        selectNode({ id: 42 });
         expect(selectedNodeId.value).toBe(42);
     });
 
@@ -98,73 +98,71 @@ describe('selectNode and closeSettings', () => {
 
 describe('updateNodeIO', () => {
     beforeEach(() => {
-        nodes.value = [{id: 1, inputs: [{name: 'a'}], outputs: [{name: 'b'}]}];
+        nodes.value = [{ id: 1, inputs: [{ name: 'a' }], outputs: [{ name: 'b' }] }];
     });
 
     it('updates inputs and outputs for a node', () => {
-        updateNodeIO({id: 1, inputs: [{name: 'x'}], outputs: [{name: 'y'}]});
-        expect(nodes.value[0].inputs).toEqual([{name: 'x'}]);
-        expect(nodes.value[0].outputs).toEqual([{name: 'y'}]);
+        updateNodeIO({ id: 1, inputs: [{ name: 'x' }], outputs: [{ name: 'y' }] });
+        expect(nodes.value[0].inputs).toEqual([{ name: 'x' }]);
+        expect(nodes.value[0].outputs).toEqual([{ name: 'y' }]);
     });
 
     it('does nothing if node id does not exist', () => {
-        updateNodeIO({id: 999, inputs: [{name: 'x'}], outputs: [{name: 'y'}]});
-        expect(nodes.value[0].inputs).toEqual([{name: 'a'}]);
-        expect(nodes.value[0].outputs).toEqual([{name: 'b'}]);
+        updateNodeIO({ id: 999, inputs: [{ name: 'x' }], outputs: [{ name: 'y' }] });
+        expect(nodes.value[0].inputs).toEqual([{ name: 'a' }]);
+        expect(nodes.value[0].outputs).toEqual([{ name: 'b' }]);
     });
 });
 
 describe('deleteConnection', () => {
     beforeEach(() => {
         connections.value = [
-            {from: {nodeId: 1, output: 'a'}, to: {nodeId: 2, input: 'b'}},
-            {from: {nodeId: 3, output: 'x'}, to: {nodeId: 4, input: 'y'}}
+            { from: { nodeId: 1, output: 'a' }, to: { nodeId: 2, input: 'b' } },
+            { from: { nodeId: 3, output: 'x' }, to: { nodeId: 4, input: 'y' } }
         ];
     });
 
     it('removes the correct connection', () => {
-        deleteConnection({from: {nodeId: 1, output: 'a'}, to: {nodeId: 2, input: 'b'}});
+        deleteConnection({ from: { nodeId: 1, output: 'a' }, to: { nodeId: 2, input: 'b' } });
         expect(connections.value.length).toBe(1);
         expect(connections.value[0].from.nodeId).toBe(3);
     });
 
     it('does nothing if no matching connection exists', () => {
-        deleteConnection({from: {nodeId: 99, output: 'z'}, to: {nodeId: 88, input: 'w'}});
+        deleteConnection({ from: { nodeId: 99, output: 'z' }, to: { nodeId: 88, input: 'w' } });
         expect(connections.value.length).toBe(2);
     });
 });
 
 describe('getNodeComponent', () => {
     it('returns a component for variable node', () => {
-        expect(getNodeComponent({type: 'variable'})).toBeDefined();
+        expect(getNodeComponent({ type: 'variable' })).toBeDefined();
     });
     it('returns a component for function node', () => {
-        expect(getNodeComponent({type: 'function'})).toBeDefined();
+        expect(getNodeComponent({ type: 'function' })).toBeDefined();
     });
     it('returns a component for system node', () => {
-        expect(getNodeComponent({type: 'system'})).toBeDefined();
+        expect(getNodeComponent({ type: 'system' })).toBeDefined();
     });
     it('returns NodeBase for unknown type', () => {
-        expect(getNodeComponent({type: 'unknown'})).toBeDefined();
+        expect(getNodeComponent({ type: 'unknown' })).toBeDefined();
     });
 });
 
 describe('log', () => {
     it('logs when debugMode is true', async () => {
-        const spy = vi.spyOn(console, 'log').mockImplementation(() => {
-        });
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         debugMode.value = true;
-        const {log} = await import('../state.js');
+        const { log } = await import('../state.js');
         log('test', 123);
         expect(spy).toHaveBeenCalledWith('[DEBUG]', 'test', 123);
         spy.mockRestore();
     });
 
     it('does not log when debugMode is false', async () => {
-        const spy = vi.spyOn(console, 'log').mockImplementation(() => {
-        });
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
         debugMode.value = false;
-        const {log} = await import('../state.js');
+        const { log } = await import('../state.js');
         log('test', 123);
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();

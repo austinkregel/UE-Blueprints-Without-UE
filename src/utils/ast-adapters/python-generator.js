@@ -30,7 +30,7 @@ export function generatePython(ir) {
             case 'array':
                 return `[${(e.elements || []).map(expr).join(', ')}]`;
             case 'map': {
-                const pairs = (e.entries || []).map(({key, value}) => `${expr(key)}: ${expr(value)}`);
+                const pairs = (e.entries || []).map(({ key, value }) => `${expr(key)}: ${expr(value)}`);
                 return `{${pairs.join(', ')}}`;
             }
             case 'call': {

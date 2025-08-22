@@ -1,7 +1,7 @@
-import {ref} from 'vue';
-import {nodes} from './state.js';
-import {connectNodes} from './connection-utils.js';
-import {isExecIO, isSameType} from './type-utils.js';
+import { ref } from 'vue';
+import { nodes } from './state.js';
+import { connectNodes } from './connection-utils.js';
+import { isExecIO, isSameType } from './type-utils.js';
 
 export const pendingConnectionRequest = ref(null); // { drag, position }
 export function clearPendingConnectionRequest() {
@@ -26,7 +26,7 @@ export function attachPendingConnectionToNode(newNodeOrId) {
             return isSameType(input.type || null, fromType || null);
         });
         if (candidate) {
-            connectNodes({from: {...drag.from}, to: {nodeId: newNode.id, input: candidate.name || candidate}});
+            connectNodes({ from: { ...drag.from }, to: { nodeId: newNode.id, input: candidate.name || candidate } });
             clearPendingConnectionRequest();
             return true;
         }
@@ -40,7 +40,7 @@ export function attachPendingConnectionToNode(newNodeOrId) {
             return isSameType(output.type || null, toType || null);
         });
         if (candidate) {
-            connectNodes({from: {nodeId: newNode.id, output: candidate.name || candidate}, to: {...drag.to}});
+            connectNodes({ from: { nodeId: newNode.id, output: candidate.name || candidate }, to: { ...drag.to } });
             clearPendingConnectionRequest();
             return true;
         }

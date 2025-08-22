@@ -1,30 +1,31 @@
 <template>
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <!-- House-shaped pentagon -->
-    <path :d="pentagonPoints" :fill="active ? '#fff' : 'none'" :stroke="!active ? 'white' : 'none'" stroke-linejoin="round"
-          stroke-width="2"/>
-  </svg>
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path :d="pentagonPath" :fill="active ? '#ffff00' : 'none'" :stroke="active ? 'none' : '#ffff00'" stroke-width="2" stroke-linejoin="round" />
+    </svg>
 </template>
 
 <script setup>
-import {defineProps} from 'vue';
+    import { computed, defineProps } from 'vue';
 
-const props = defineProps({
-  active: {
-    type: Boolean,
-    default: false
-  }
-});
+    const { active } = defineProps({
+        active: {
+            type: Boolean,
+            default: false
+        }
+    });
 
-// Pentagon points: shaped like a sideways house
-const pentagonPoints = props?.active
-    ? 'M6.73516 1L13.6023 7.54883L6.69317 15.1357H1.13555V1H6.73516Z'
-    : 'M11.9354 4.5L19.3006 11.5244L11.9139 19.6357H5.63555V4.5H11.9354Z';
+    const pentagonPath = computed(() => {
+        // Active (filled) version - slightly smaller
+        if (active) {
+            return 'M5.13555 4H12.1355L20 11.5L12.1355 20.1355H5.13555L5.13555 4Z';
+        }
+        // Inactive (outline) version - slightly larger
+        return 'M11.7352 5L18.6023 11.5488L11.6932 19.1357H6.13555V5H11.7352Z';
+    });
 </script>
 
 <style scoped>
-svg {
-  display: block;
-  cursor: pointer;
-}
+    svg {
+        @apply block cursor-pointer;
+    }
 </style>

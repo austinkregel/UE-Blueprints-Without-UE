@@ -1,6 +1,6 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as actionNodeUtils from '../action-node-utils.js';
-import {log, nodes} from '../state.js';
+import { log, nodes } from '../state.js';
 
 vi.mock('../id-utils', () => ({
     getNextNodeId: vi.fn(() => 42)
@@ -36,7 +36,7 @@ describe('addActionNode', () => {
 
     it('calls log with correct arguments', () => {
         actionNodeUtils.addActionNode();
-        expect(log).toHaveBeenCalledWith('Action node added', expect.objectContaining({id: 42}));
+        expect(log).toHaveBeenCalledWith('Action node added', expect.objectContaining({ id: 42 }));
     });
 });
 

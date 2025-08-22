@@ -1,4 +1,4 @@
-import {describe, expect, it} from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
     getEventNodes,
     getNodeLibrary,
@@ -55,10 +55,10 @@ describe('node-library', () => {
     });
 
     it('getRecommendedNodes returns starters for nodeType starter and category-specific when provided', () => {
-        const r1 = getRecommendedNodes({nodeType: 'starter'});
+        const r1 = getRecommendedNodes({ nodeType: 'starter' });
         expect(r1).toHaveProperty('events');
 
-        const r2 = getRecommendedNodes({category: 'MATH'});
+        const r2 = getRecommendedNodes({ category: 'MATH' });
         expect(r2 && typeof r2).toBe('object');
     });
 });

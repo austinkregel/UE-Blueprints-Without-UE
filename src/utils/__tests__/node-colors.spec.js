@@ -1,6 +1,6 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {getAvailableColors, getCategoryColorByName, getNodeColor} from '../node-colors.js';
-import {getCategoryColor, getNodeDefinition} from '../language-definition.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getAvailableColors, getCategoryColorByName, getNodeColor } from '../node-colors.js';
+import { getCategoryColor, getNodeDefinition } from '../language-definition.js';
 
 // Mock the language definition module
 vi.mock('../language-definition.js', () => ({

@@ -1,8 +1,8 @@
-import {draggingConnection, log, nodes} from './state.js';
-import {getIOPosition} from './io-positions.js';
-import {createCastNode} from './node-factory.js';
-import {addConnection, connections} from './connection-manager.js';
-import {canCast, isSameType} from './type-utils.js';
+import { draggingConnection, log, nodes } from './state.js';
+import { getIOPosition } from './io-positions.js';
+import { createCastNode } from './node-factory.js';
+import { addConnection, connections } from './connection-manager.js';
+import { canCast, isSameType } from './type-utils.js';
 
 function isDuplicateConnection(from, to) {
     return connections.value.some(
@@ -34,21 +34,21 @@ function getIOType(node, ioName, ioType) {
     return io?.type || null;
 }
 
-export function connectNodes({from, to, areTypesCompatible}) {
+export function connectNodes({ from, to, areTypesCompatible }) {
     // Default compatibility uses centralized canCast
     const defaultAreTypesCompatible = (fromType, toType) => canCast(fromType, toType);
     areTypesCompatible = areTypesCompatible || defaultAreTypesCompatible;
 
     if (!from?.nodeId || !to?.nodeId) {
-        log('Invalid connection attempt:', {from, to});
+        log('Invalid connection attempt:', { from, to });
         return;
     }
     if (isDuplicateConnection(from, to)) {
-        log('Duplicate connection ignored:', {from, to});
+        log('Duplicate connection ignored:', { from, to });
         return;
     }
     if (isSelfConnection(from, to)) {
-        log('Ignoring self connection', {from, to});
+        log('Ignoring self connection', { from, to });
         return;
     }
     const fromNode = nodes.value.find((n) => n.id === from.nodeId);
@@ -71,30 +71,30 @@ export function connectNodes({from, to, areTypesCompatible}) {
         // Try to infer direction if only one side is set
         if (from.output && to.output) {
             // Connecting output to output (invalid)
-            log('Invalid IO direction for connection: output to output', {from, to});
+            log('Invalid IO direction for connection: output to output', { from, to });
             return;
         } else if (from.input && to.input) {
             // Connecting input to input (invalid)
-            log('Invalid IO direction for connection: input to input', {from, to});
+            log('Invalid IO direction for connection: input to input', { from, to });
             return;
         } else {
-            log('Invalid IO direction for connection:', {from, to});
+            log('Invalid IO direction for connection:', { from, to });
             return;
         }
     }
     if (!fromType || !toType) {
-        log('Invalid IO types for connection:', {from, to, fromType, toType});
+        log('Invalid IO types for connection:', { from, to, fromType, toType });
         return;
     }
 
     if (isSameType(fromType, toType)) {
         if (fromIsOutput) {
-            addConnection({from, to});
+            addConnection({ from, to });
         } else {
-            addConnection({from: to, to: from});
+            addConnection({ from: to, to: from });
         }
         // Start next drag from the target input just connected
-        const startPos = getIOPosition(to.nodeId, 'input', to.input) || {x: 0, y: 0};
+        const startPos = getIOPosition(to.nodeId, 'input', to.input) || { x: 0, y: 0 };
         draggingConnection.value = {
             from: to,
             to: null,
@@ -113,11 +113,11 @@ export function connectNodes({from, to, areTypesCompatible}) {
         const castNodeId = castNode.id;
         nodes.value.push(castNode);
         if (fromIsOutput) {
-            addConnection({from, to: {nodeId: castNodeId, input: 'in'}});
-            addConnection({from: {nodeId: castNodeId, output: 'out'}, to});
+            addConnection({ from, to: { nodeId: castNodeId, input: 'in' } });
+            addConnection({ from: { nodeId: castNodeId, output: 'out' }, to });
         } else {
-            addConnection({from: to, to: {nodeId: castNodeId, input: 'in'}});
-            addConnection({from: {nodeId: castNodeId, output: 'out'}, to: from});
+            addConnection({ from: to, to: { nodeId: castNodeId, input: 'in' } });
+            addConnection({ from: { nodeId: castNodeId, output: 'out' }, to: from });
         }
         const startPos = getIOPosition(to.nodeId, fromIsOutput ? 'input' : 'output', fromIsOutput ? to.input : from.input) || {
             x: 0,
@@ -130,10 +130,10 @@ export function connectNodes({from, to, areTypesCompatible}) {
             start: startPos,
             mouse: startPos
         };
-        log('Connection established with cast node:', {from, to, castNode});
+        log('Connection established with cast node:', { from, to, castNode });
         return;
     }
-    log('Connection failed: incompatible types and no cast available', {from, to, fromType, toType});
+    log('Connection failed: incompatible types and no cast available', { from, to, fromType, toType });
 }
 
-export {isDuplicateConnection, isSelfConnection, isVariableGetToSet, getIOType};
+export { isDuplicateConnection, isSelfConnection, isVariableGetToSet, getIOType };

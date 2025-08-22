@@ -1,6 +1,6 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as functionNodeUtils from '../function-node-utils.js';
-import {log, nextId, nodes} from '../state.js';
+import { log, nextId, nodes } from '../state.js';
 
 vi.mock('../state', async (importOriginal) => {
     const actual = await importOriginal();

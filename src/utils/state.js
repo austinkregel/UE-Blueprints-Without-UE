@@ -1,4 +1,4 @@
-import {ref} from 'vue';
+import { ref } from 'vue';
 
 // Global editor state
 export const nodes = ref([]);

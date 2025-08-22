@@ -1,9 +1,9 @@
-import {ioPositions} from './state.js';
-import {screenToWorld} from './viewport-utils.js';
+import { ioPositions } from './state.js';
+import { screenToWorld } from './viewport-utils.js';
 
-export function registerIO({nodeId, type, name, x, y}) {
-    if (!ioPositions.value[nodeId]) ioPositions.value[nodeId] = {inputs: {}, outputs: {}};
-    ioPositions.value[nodeId][type + 's'][name] = {x, y};
+export function registerIO({ nodeId, type, name, x, y }) {
+    if (!ioPositions.value[nodeId]) ioPositions.value[nodeId] = { inputs: {}, outputs: {} };
+    ioPositions.value[nodeId][type + 's'][name] = { x, y };
 }
 
 export function getConnectionPointsArray(conn) {
@@ -13,10 +13,10 @@ export function getConnectionPointsArray(conn) {
     return [from, to];
 }
 
-export function renderConnectionPath(points, {offset = true, startDirection = 'right', endDirection = 'left'} = {}) {
+export function renderConnectionPath(points, { offset = true, startDirection = 'right', endDirection = 'left' } = {}) {
     if (!points || points.length < 2) return '';
-    const start = offset ? {x: points[0].x, y: points[0].y} : points[0];
-    const end = offset ? {x: points[points.length - 1].x, y: points[points.length - 1].y} : points[points.length - 1];
+    const start = offset ? { x: points[0].x, y: points[0].y } : points[0];
+    const end = offset ? { x: points[points.length - 1].x, y: points[points.length - 1].y } : points[points.length - 1];
 
     // Calculate distance between points
     const dx = end.x - start.x;

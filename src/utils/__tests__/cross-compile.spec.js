@@ -1,57 +1,57 @@
-import {describe, expect, it} from 'vitest';
-import {generatePython} from '../ast-adapters/python-generator.js';
-import {generateElixir} from '../ast-adapters/elixir-generator.js';
+import { describe, expect, it } from 'vitest';
+import { generatePython } from '../ast-adapters/python-generator.js';
+import { generateElixir } from '../ast-adapters/elixir-generator.js';
 
 const sampleIR = {
     statements: [
-        {kind: 'assign', target: {kind: 'ident', name: 'x'}, value: {kind: 'int', value: 1}},
+        { kind: 'assign', target: { kind: 'ident', name: 'x' }, value: { kind: 'int', value: 1 } },
         {
             kind: 'assign',
-            target: {kind: 'ident', name: 'y'},
-            value: {kind: 'binop', op: '+', left: {kind: 'ident', name: 'x'}, right: {kind: 'int', value: 2}}
+            target: { kind: 'ident', name: 'y' },
+            value: { kind: 'binop', op: '+', left: { kind: 'ident', name: 'x' }, right: { kind: 'int', value: 2 } }
         },
         {
             kind: 'assign',
-            target: {kind: 'ident', name: 'arr'},
+            target: { kind: 'ident', name: 'arr' },
             value: {
                 kind: 'array',
                 elements: [
-                    {kind: 'int', value: 1},
-                    {kind: 'int', value: 2}
+                    { kind: 'int', value: 1 },
+                    { kind: 'int', value: 2 }
                 ]
             }
         },
         {
             kind: 'assign',
-            target: {kind: 'ident', name: 'm'},
-            value: {kind: 'map', entries: [{key: {kind: 'string', value: 'k'}, value: {kind: 'int', value: 3}}]}
+            target: { kind: 'ident', name: 'm' },
+            value: { kind: 'map', entries: [{ key: { kind: 'string', value: 'k' }, value: { kind: 'int', value: 3 } }] }
         },
         {
             kind: 'if',
-            cond: {kind: 'binop', op: '>', left: {kind: 'ident', name: 'y'}, right: {kind: 'int', value: 2}},
-            then: [{kind: 'print', value: {kind: 'string', value: 'ok'}}]
+            cond: { kind: 'binop', op: '>', left: { kind: 'ident', name: 'y' }, right: { kind: 'int', value: 2 } },
+            then: [{ kind: 'print', value: { kind: 'string', value: 'ok' } }]
         },
         {
             kind: 'for_range',
             var: 'i',
-            start: {kind: 'int', value: 0},
-            end: {kind: 'int', value: 3},
-            body: [{kind: 'print', value: {kind: 'ident', name: 'i'}}]
+            start: { kind: 'int', value: 0 },
+            end: { kind: 'int', value: 3 },
+            body: [{ kind: 'print', value: { kind: 'ident', name: 'i' } }]
         },
         {
             kind: 'foreach',
             var: 'v',
-            iterable: {kind: 'ident', name: 'arr'},
-            body: [{kind: 'print', value: {kind: 'ident', name: 'v'}}]
+            iterable: { kind: 'ident', name: 'arr' },
+            body: [{ kind: 'print', value: { kind: 'ident', name: 'v' } }]
         },
         {
             kind: 'while',
-            cond: {kind: 'binop', op: '<', left: {kind: 'ident', name: 'x'}, right: {kind: 'int', value: 3}},
+            cond: { kind: 'binop', op: '<', left: { kind: 'ident', name: 'x' }, right: { kind: 'int', value: 3 } },
             body: [
                 {
                     kind: 'assign',
-                    target: {kind: 'ident', name: 'x'},
-                    value: {kind: 'binop', op: '+', left: {kind: 'ident', name: 'x'}, right: {kind: 'int', value: 1}}
+                    target: { kind: 'ident', name: 'x' },
+                    value: { kind: 'binop', op: '+', left: { kind: 'ident', name: 'x' }, right: { kind: 'int', value: 1 } }
                 }
             ]
         },
@@ -59,10 +59,12 @@ const sampleIR = {
             kind: 'function',
             name: 'f',
             params: ['a', 'b'],
-            body: [{
-                kind: 'return',
-                value: {kind: 'binop', op: '+', left: {kind: 'ident', name: 'a'}, right: {kind: 'ident', name: 'b'}}
-            }]
+            body: [
+                {
+                    kind: 'return',
+                    value: { kind: 'binop', op: '+', left: { kind: 'ident', name: 'a' }, right: { kind: 'ident', name: 'b' } }
+                }
+            ]
         },
         {
             kind: 'expr',
@@ -70,8 +72,8 @@ const sampleIR = {
                 kind: 'call',
                 callee: 'f',
                 args: [
-                    {kind: 'int', value: 1},
-                    {kind: 'int', value: 2}
+                    { kind: 'int', value: 1 },
+                    { kind: 'int', value: 2 }
                 ]
             }
         }

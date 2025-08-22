@@ -1,5 +1,5 @@
 // Language-agnostic code importer: map parsed symbols to graph nodes
-import {createFunctionNode} from './node-factory.js';
+import { createFunctionNode } from './node-factory.js';
 
 function normalizeType(t) {
     if (!t || typeof t !== 'string') return 'mixed';
@@ -22,7 +22,7 @@ function sanitizeParamName(name, i) {
     return base.replace(/[^A-Za-z0-9_:$<>\[\]\-]/g, '_');
 }
 
-export function mapParsedToGraph(nf, {start = {x: 100, y: 100}, yStep = 100} = {}) {
+export function mapParsedToGraph(nf, { start = { x: 100, y: 100 }, yStep = 100 } = {}) {
     const nodes = [];
     const connections = [];
     let y = start.y;
@@ -34,12 +34,12 @@ export function mapParsedToGraph(nf, {start = {x: 100, y: 100}, yStep = 100} = {
         params.forEach((p, i) => {
             const name = sanitizeParamName(p?.name, i);
             const type = normalizeType(p?.ty || 'any');
-            inputs.push({name, type});
+            inputs.push({ name, type });
         });
 
         const outputs = [];
         if (s.return_type && normalizeType(s.return_type) !== 'void') {
-            outputs.push({name: 'result', type: normalizeType(s.return_type)});
+            outputs.push({ name: 'result', type: normalizeType(s.return_type) });
         }
 
         const node = createFunctionNode(s.name || 'fn', inputs, outputs, start.x, y, {
@@ -58,5 +58,5 @@ export function mapParsedToGraph(nf, {start = {x: 100, y: 100}, yStep = 100} = {
         y += yStep;
     }
 
-    return {nodes, connections, warnings: nf.warnings || []};
+    return { nodes, connections, warnings: nf.warnings || [] };
 }

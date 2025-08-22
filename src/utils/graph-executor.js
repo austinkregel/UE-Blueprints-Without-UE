@@ -5,9 +5,9 @@
  * from start nodes through the connected execution pins.
  */
 
-import {computed, ref} from 'vue';
-import {nodes} from './state.js';
-import {connections} from './connection-manager.js';
+import { computed, ref } from 'vue';
+import { nodes } from './state.js';
+import { connections } from './connection-manager.js';
 // Execution state
 export const isExecuting = ref(false);
 export const executionResults = ref(new Map());
@@ -151,7 +151,7 @@ async function executeNode(node) {
                 }
             }
         }
-        emitExecutionEvent({type: 'node-start', nodeId: node.id, inputs: inputValues});
+        emitExecutionEvent({ type: 'node-start', nodeId: node.id, inputs: inputValues });
         // Execute based on node type
         switch (node.nodeDefId || node.type) {
             case 'print':
@@ -251,7 +251,7 @@ async function executeNode(node) {
         console.error(`[Graph Execution] Error executing node ${node.id}:`, error);
         logEntry.error = error.message;
         logEntry.success = false;
-        emitExecutionEvent({type: 'node-end', nodeId: node.id, error: error.message, success: false});
+        emitExecutionEvent({ type: 'node-end', nodeId: node.id, error: error.message, success: false });
     }
 
     executionHistory.value.push(logEntry);
@@ -278,15 +278,14 @@ export function onExecutionEvent(listener) {
 }
 
 function emitExecutionEvent(evt) {
-    const withTime = {time: Date.now(), ...evt};
+    const withTime = { time: Date.now(), ...evt };
     executionEvents.value.push(withTime);
     // Cap buffer to avoid unbounded growth
     if (executionEvents.value.length > 2000) executionEvents.value.shift();
     _listeners.forEach((fn) => {
         try {
             fn(withTime);
-        } catch (_) {
-        }
+        } catch (_) {}
     });
 }
 
@@ -349,8 +348,8 @@ async function executeNextNodes(nodeId, outputName = null) {
     for (const c of connections) {
         emitExecutionEvent({
             type: 'edge-traverse',
-            from: {nodeId: c.from.nodeId, output: c.from.output},
-            to: {nodeId: c.to.nodeId, input: c.to.input}
+            from: { nodeId: c.from.nodeId, output: c.from.output },
+            to: { nodeId: c.to.nodeId, input: c.to.input }
         });
     }
     // Execute all connected nodes in parallel for data flow
@@ -735,7 +734,7 @@ function inferDataSinks() {
         for (const out of n.outputs || []) {
             if (isExecType(out.type)) continue;
             const hasOutgoing = connections.value.some((c) => c.from?.nodeId === n.id && c.from.output === (out.name || out));
-            if (!hasOutgoing) sinks.push({nodeId: n.id, output: out.name || out});
+            if (!hasOutgoing) sinks.push({ nodeId: n.id, output: out.name || out });
         }
     }
     return sinks;
@@ -746,22 +745,22 @@ function normalizeSinks(sinks) {
     return sinks.map((s) => {
         if (typeof s === 'string') {
             const [nid, out] = s.split('.');
-            return {nodeId: Number(nid), output: out};
+            return { nodeId: Number(nid), output: out };
         }
         return s;
     });
 }
 
-export function validateGraphInputs({sinks = null, overrides = null} = {}) {
+export function validateGraphInputs({ sinks = null, overrides = null } = {}) {
     const errs = [];
     const warns = [];
     const sinkList = normalizeSinks(sinks);
     // Build set of nodes relevant to sinks (backward slice)
     const neededNodes = new Set();
     const neededInputs = new Set(); // keys `${nodeId}.${inputName}`
-    const queue = [...sinkList.map((s) => ({nodeId: s.nodeId, output: s.output}))];
+    const queue = [...sinkList.map((s) => ({ nodeId: s.nodeId, output: s.output }))];
     while (queue.length) {
-        const {nodeId} = queue.pop();
+        const { nodeId } = queue.pop();
         neededNodes.add(nodeId);
         // For each input of this node, mark as needed and enqueue sources
         const node = nodes.value.find((n) => n.id === nodeId);
@@ -772,7 +771,7 @@ export function validateGraphInputs({sinks = null, overrides = null} = {}) {
             const incoming = findConnectionsToInput(nodeId, inp.name);
             if (incoming.length > 0) {
                 const src = incoming[0].from;
-                queue.push({nodeId: src.nodeId, output: src.output});
+                queue.push({ nodeId: src.nodeId, output: src.output });
             }
         }
     }
@@ -797,7 +796,7 @@ export function validateGraphInputs({sinks = null, overrides = null} = {}) {
         const incoming = findConnectionsToInput(nid, iname);
         if (!incoming.length) {
             if (inpDef && inpDef.defaultValue !== undefined) return; // default ok
-            errs.push({nodeId: nid, input: iname, reason: 'missing_input'});
+            errs.push({ nodeId: nid, input: iname, reason: 'missing_input' });
         } else {
             // Simple type compatibility check
             const srcNode = nodes.value.find((n) => n.id === incoming[0].from.nodeId);
@@ -806,15 +805,15 @@ export function validateGraphInputs({sinks = null, overrides = null} = {}) {
             const outType = String(outDef?.type || 'mixed').toLowerCase();
             if (inType !== 'mixed' && outType !== 'mixed' && inType !== outType) {
                 warns.push({
-                    from: {nodeId: incoming[0].from.nodeId, output: incoming[0].from.output, type: outType},
-                    to: {nodeId: nid, input: iname, type: inType},
+                    from: { nodeId: incoming[0].from.nodeId, output: incoming[0].from.output, type: outType },
+                    to: { nodeId: nid, input: iname, type: inType },
                     reason: 'type_mismatch'
                 });
             }
         }
     });
 
-    return {ok: errs.length === 0, errors: errs, warnings: warns, sinks: sinkList};
+    return { ok: errs.length === 0, errors: errs, warnings: warns, sinks: sinkList };
 }
 
 async function evaluatePureDataflow() {
@@ -860,7 +859,7 @@ async function evaluatePureDataflow() {
     }
 }
 
-export async function evaluateGraphToSinks({entryPoints = [], overrides = null, sinks = null} = {}) {
+export async function evaluateGraphToSinks({ entryPoints = [], overrides = null, sinks = null } = {}) {
     // Set overrides
     setInputOverrides(overrides);
 
@@ -871,9 +870,9 @@ export async function evaluateGraphToSinks({entryPoints = [], overrides = null, 
     currentExecutionStep.value = 0;
 
     // Validate inputs for requested sinks
-    const validation = validateGraphInputs({sinks, overrides});
+    const validation = validateGraphInputs({ sinks, overrides });
     if (!validation.ok) {
-        return {ok: false, errors: validation.errors, warnings: validation.warnings, outputs: {}};
+        return { ok: false, errors: validation.errors, warnings: validation.warnings, outputs: {} };
     }
 
     // Execute from entry points (exec flow)
@@ -900,5 +899,5 @@ export async function evaluateGraphToSinks({entryPoints = [], overrides = null, 
         }
     }
 
-    return {ok: true, errors: [], warnings: [], outputs};
+    return { ok: true, errors: [], warnings: [], outputs };
 }

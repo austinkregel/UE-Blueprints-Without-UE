@@ -1,6 +1,6 @@
-import {draggingConnection, nodes} from './state.js';
-import {renderConnectionPath} from './io-utils.js';
-import {getTypeColorHex} from './language-definition.js';
+import { draggingConnection, nodes } from './state.js';
+import { renderConnectionPath } from './io-utils.js';
+import { getTypeColorHex } from './language-definition.js';
 
 export function getConnectionColor(conn) {
     if (!conn || !conn.from || !conn.to) return '#6b7280';
@@ -26,11 +26,11 @@ export function getDraggingConnectionColor(draggingConn) {
 
 export function renderDraggingConnection() {
     if (!draggingConnection.value) return null;
-    const {start, mouse, type} = draggingConnection.value;
+    const { start, mouse, type } = draggingConnection.value;
     const points = [start, mouse];
     const startDirection = type === 'input' ? 'left' : 'right';
     const endDirection = type === 'input' ? 'right' : 'left';
-    return renderConnectionPath(points, {startDirection, endDirection});
+    return renderConnectionPath(points, { startDirection, endDirection });
 }
 
 export function isActionFlow(conn) {

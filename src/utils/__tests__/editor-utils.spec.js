@@ -1,7 +1,7 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {draggingConnection, ioPositions, nodes} from '../state.js';
-import {connectNodes} from '../connection-utils.js';
-import {onEditorMouseDown} from '../editor-utils.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { draggingConnection, ioPositions, nodes } from '../state.js';
+import { connectNodes } from '../connection-utils.js';
+import { onEditorMouseDown } from '../editor-utils.js';
 
 vi.mock('../connection-utils', () => ({
     connectNodes: vi.fn()
@@ -11,8 +11,8 @@ describe('onEditorMouseDown', () => {
     let getBoundingClientRectMock;
     beforeEach(() => {
         nodes.value = [
-            {id: 1, inputs: [{name: 'a'}], outputs: [{name: 'out'}], x: 10, y: 10},
-            {id: 2, inputs: [{name: 'b'}], outputs: [{name: 'out2'}], x: 100, y: 100}
+            { id: 1, inputs: [{ name: 'a' }], outputs: [{ name: 'out' }], x: 10, y: 10 },
+            { id: 2, inputs: [{ name: 'b' }], outputs: [{ name: 'out2' }], x: 100, y: 100 }
         ];
         connectNodes.mockClear();
 
@@ -33,19 +33,19 @@ describe('onEditorMouseDown', () => {
         // Mock ioPositions for both nodes
         ioPositions.value = {
             1: {
-                inputs: {a: {x: 10, y: 10}},
-                outputs: {out: {x: 20, y: 20}}
+                inputs: { a: { x: 10, y: 10 } },
+                outputs: { out: { x: 20, y: 20 } }
             },
             2: {
-                inputs: {b: {x: 100, y: 100}},
-                outputs: {out2: {x: 100, y: 100}}
+                inputs: { b: { x: 100, y: 100 } },
+                outputs: { out2: { x: 100, y: 100 } }
             }
         };
         getBoundingClientRectMock = vi
             .fn()
-            .mockReturnValueOnce({left: 0, right: 50, top: 0, bottom: 50})
-            .mockReturnValueOnce({left: 90, right: 150, top: 90, bottom: 150});
-        global.document.querySelector = vi.fn(() => ({getBoundingClientRect: getBoundingClientRectMock}));
+            .mockReturnValueOnce({ left: 0, right: 50, top: 0, bottom: 50 })
+            .mockReturnValueOnce({ left: 90, right: 150, top: 90, bottom: 150 });
+        global.document.querySelector = vi.fn(() => ({ getBoundingClientRect: getBoundingClientRectMock }));
     });
 
     it('connects output to input when mouse is over a node', () => {
@@ -54,11 +54,11 @@ describe('onEditorMouseDown', () => {
             ioType: 'output',
             nodeId: 1,
             ioName: 'out',
-            from: {nodeId: 1, output: 'out'}
+            from: { nodeId: 1, output: 'out' }
         };
 
         // Mock the event with target that has closest method
-        const mockNodeElement = {getAttribute: vi.fn(() => '2')};
+        const mockNodeElement = { getAttribute: vi.fn(() => '2') };
         global.mockTarget.closest.mockReturnValue(mockNodeElement);
 
         const event = {
@@ -69,8 +69,8 @@ describe('onEditorMouseDown', () => {
 
         onEditorMouseDown(event);
         expect(connectNodes).toHaveBeenCalledWith({
-            from: {nodeId: 1, output: 'out'},
-            to: {nodeId: 2, input: 'b'}
+            from: { nodeId: 1, output: 'out' },
+            to: { nodeId: 2, input: 'b' }
         });
     });
 
@@ -80,11 +80,11 @@ describe('onEditorMouseDown', () => {
             ioType: 'input',
             nodeId: 2,
             ioName: 'b',
-            to: {nodeId: 2, input: 'b'}
+            to: { nodeId: 2, input: 'b' }
         };
 
         // Mock the event with target that has closest method
-        const mockNodeElement = {getAttribute: vi.fn(() => '1')};
+        const mockNodeElement = { getAttribute: vi.fn(() => '1') };
         global.mockTarget.closest.mockReturnValue(mockNodeElement);
 
         const event = {
@@ -95,8 +95,8 @@ describe('onEditorMouseDown', () => {
 
         onEditorMouseDown(event);
         expect(connectNodes).toHaveBeenCalledWith({
-            from: {nodeId: 1, output: 'out'},
-            to: {nodeId: 2, input: 'b'}
+            from: { nodeId: 1, output: 'out' },
+            to: { nodeId: 2, input: 'b' }
         });
     });
 
@@ -106,7 +106,7 @@ describe('onEditorMouseDown', () => {
             ioType: 'output',
             nodeId: 1,
             ioName: 'out',
-            from: {nodeId: 1, output: 'out'}
+            from: { nodeId: 1, output: 'out' }
         };
 
         // Mock the event with target that returns null for closest (not over a node)

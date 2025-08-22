@@ -3,8 +3,8 @@
  * Centralized node creation and management without classes
  */
 
-import {ref} from 'vue';
-import {getNextNodeId} from './id-utils.js';
+import { ref } from 'vue';
+import { getNextNodeId } from './id-utils.js';
 
 // Centralized node registry
 const nodeRegistry = new Map();

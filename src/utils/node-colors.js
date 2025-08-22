@@ -1,4 +1,4 @@
-import {getCategoryColor, getNodeDefinition} from './language-definition.js';
+import { getCategoryColor, getNodeDefinition } from './language-definition.js';
 
 /**
  * Maps node types to their corresponding theme colors

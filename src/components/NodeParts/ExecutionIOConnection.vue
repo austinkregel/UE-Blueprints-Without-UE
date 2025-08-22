@@ -4,8 +4,10 @@
             :io="io"
             :connection="connection"
             :node-id="nodeId"
-            io-type="output"
-            pin-type="data"
+            :io-type="ioType"
+            pin-type="exec"
+            custom-classes="bg-gradient-to-r from-yellow-400/10 to-yellow-400/5 rounded hover:from-yellow-400/20 hover:to-yellow-400/10"
+            label-classes="text-yellow-400 font-semibold"
             @io-context-menu="$emit('io-context-menu', $event)"
         />
     </div>
@@ -15,7 +17,7 @@
     import { ref, watch, nextTick } from 'vue';
     import ConnectionPin from './ConnectionPin.vue';
 
-    const { io, connection, nodeId } = defineProps({
+    const { io, connection, nodeId, ioType } = defineProps({
         io: {
             type: [Object, String],
             required: true
@@ -27,6 +29,11 @@
         nodeId: {
             type: String,
             required: true
+        },
+        ioType: {
+            type: String,
+            required: true,
+            validator: (value) => ['input', 'output'].includes(value)
         }
     });
 
@@ -47,7 +54,7 @@
                     lastRect.value = { ...rect };
                     // Add detailed log
                     emit('io-position', {
-                        type: 'output',
+                        type: ioType,
                         name: io.name || io,
                         nodeId: nodeId,
                         rect
@@ -57,9 +64,8 @@
         });
     }
 
-    // Remove onMounted, rely on watcher (it fires on mount)
     watch(
-        () => [io.name || io, nodeId],
+        () => [io.name || io, nodeId, ioType],
         () => emitPosition('watch')
     );
 </script>

@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     addBranchNode,
     addDelayNode,
@@ -9,8 +9,8 @@ import {
     addMultigateNode,
     addSequenceNode
 } from '../node-creation.js';
-import {nodes} from '../state.js';
-import {addNode} from "../base-node-utils.js";
+import { nodes } from '../state.js';
+import { addNode } from '../base-node-utils.js';
 
 // Mock getNextNodeId to return predictable values
 vi.mock('../id-utils', () => ({
@@ -33,30 +33,30 @@ vi.mock('../node-factory', () => ({
 
 function getNodeInputs(nodeDefId) {
     const inputs = {
-        sequence: [{name: 'Exec', type: 'exec'}],
+        sequence: [{ name: 'Exec', type: 'exec' }],
         branch: [
-            {name: 'Exec', type: 'exec'},
-            {name: 'condition', type: 'bool'}
+            { name: 'Exec', type: 'exec' },
+            { name: 'condition', type: 'bool' }
         ],
         gate: [
-            {name: 'Enter', type: 'exec'},
-            {name: 'Open', type: 'exec'},
-            {name: 'Close', type: 'exec'},
-            {name: 'Toggle', type: 'exec'}
+            { name: 'Enter', type: 'exec' },
+            { name: 'Open', type: 'exec' },
+            { name: 'Close', type: 'exec' },
+            { name: 'Toggle', type: 'exec' }
         ],
         multigate: [
-            {name: 'Exec', type: 'exec'},
-            {name: 'Reset', type: 'exec'}
+            { name: 'Exec', type: 'exec' },
+            { name: 'Reset', type: 'exec' }
         ],
         do_once: [
-            {name: 'Exec', type: 'exec'},
-            {name: 'Reset', type: 'exec'}
+            { name: 'Exec', type: 'exec' },
+            { name: 'Reset', type: 'exec' }
         ],
         delay: [
-            {name: 'Exec', type: 'exec'},
-            {name: 'Duration', type: 'float'}
+            { name: 'Exec', type: 'exec' },
+            { name: 'Duration', type: 'float' }
         ],
-        flip_flop: [{name: 'Exec', type: 'exec'}]
+        flip_flop: [{ name: 'Exec', type: 'exec' }]
     };
     return inputs[nodeDefId] || [];
 }
@@ -64,26 +64,26 @@ function getNodeInputs(nodeDefId) {
 function getNodeOutputs(nodeDefId) {
     const outputs = {
         sequence: [
-            {name: 'Then 0', type: 'exec'},
-            {name: 'Then 1', type: 'exec'},
-            {name: 'Then 2', type: 'exec'}
+            { name: 'Then 0', type: 'exec' },
+            { name: 'Then 1', type: 'exec' },
+            { name: 'Then 2', type: 'exec' }
         ],
         branch: [
-            {name: 'True', type: 'exec'},
-            {name: 'False', type: 'exec'}
+            { name: 'True', type: 'exec' },
+            { name: 'False', type: 'exec' }
         ],
-        gate: [{name: 'Exit', type: 'exec'}],
+        gate: [{ name: 'Exit', type: 'exec' }],
         multigate: [
-            {name: 'Output 0', type: 'exec'},
-            {name: 'Output 1', type: 'exec'},
-            {name: 'Output 2', type: 'exec'}
+            { name: 'Output 0', type: 'exec' },
+            { name: 'Output 1', type: 'exec' },
+            { name: 'Output 2', type: 'exec' }
         ],
-        do_once: [{name: 'Completed', type: 'exec'}],
-        delay: [{name: 'Completed', type: 'exec'}],
+        do_once: [{ name: 'Completed', type: 'exec' }],
+        delay: [{ name: 'Completed', type: 'exec' }],
         flip_flop: [
-            {name: 'A', type: 'exec'},
-            {name: 'B', type: 'exec'},
-            {name: 'Is A', type: 'bool'}
+            { name: 'A', type: 'exec' },
+            { name: 'B', type: 'exec' },
+            { name: 'Is A', type: 'bool' }
         ]
     };
     return outputs[nodeDefId] || [];
@@ -102,7 +102,7 @@ describe('Exec Flow Node Creation', () => {
                 nodeDefId: 'sequence',
                 x: 200,
                 y: 200
-            })
+            });
             expect(nodes.value.length).toBe(1);
             expect(nodes.value[0]).toMatchObject({
                 id: 'exec-test-id',
@@ -114,7 +114,7 @@ describe('Exec Flow Node Creation', () => {
         });
 
         it('creates node at specified position', () => {
-            addExecFlowNode('branch', {x: 100, y: 150});
+            addExecFlowNode('branch', { x: 100, y: 150 });
 
             expect(nodes.value[0]).toMatchObject({
                 x: 100,
@@ -131,11 +131,11 @@ describe('Exec Flow Node Creation', () => {
                 nodeDefId: 'sequence',
                 type: 'exec'
             });
-            expect(nodes.value[0].inputs).toEqual([{name: 'Exec', type: 'exec'}]);
+            expect(nodes.value[0].inputs).toEqual([{ name: 'Exec', type: 'exec' }]);
             expect(nodes.value[0].outputs).toEqual([
-                {name: 'Then 0', type: 'exec'},
-                {name: 'Then 1', type: 'exec'},
-                {name: 'Then 2', type: 'exec'}
+                { name: 'Then 0', type: 'exec' },
+                { name: 'Then 1', type: 'exec' },
+                { name: 'Then 2', type: 'exec' }
             ]);
         });
 
@@ -147,12 +147,12 @@ describe('Exec Flow Node Creation', () => {
                 type: 'exec'
             });
             expect(nodes.value[0].inputs).toEqual([
-                {name: 'Exec', type: 'exec'},
-                {name: 'condition', type: 'bool'}
+                { name: 'Exec', type: 'exec' },
+                { name: 'condition', type: 'bool' }
             ]);
             expect(nodes.value[0].outputs).toEqual([
-                {name: 'True', type: 'exec'},
-                {name: 'False', type: 'exec'}
+                { name: 'True', type: 'exec' },
+                { name: 'False', type: 'exec' }
             ]);
         });
 
@@ -164,10 +164,10 @@ describe('Exec Flow Node Creation', () => {
                 type: 'exec'
             });
             expect(nodes.value[0].inputs).toEqual([
-                {name: 'Enter', type: 'exec'},
-                {name: 'Open', type: 'exec'},
-                {name: 'Close', type: 'exec'},
-                {name: 'Toggle', type: 'exec'}
+                { name: 'Enter', type: 'exec' },
+                { name: 'Open', type: 'exec' },
+                { name: 'Close', type: 'exec' },
+                { name: 'Toggle', type: 'exec' }
             ]);
         });
 
@@ -179,9 +179,9 @@ describe('Exec Flow Node Creation', () => {
                 type: 'exec'
             });
             expect(nodes.value[0].outputs).toEqual([
-                {name: 'Output 0', type: 'exec'},
-                {name: 'Output 1', type: 'exec'},
-                {name: 'Output 2', type: 'exec'}
+                { name: 'Output 0', type: 'exec' },
+                { name: 'Output 1', type: 'exec' },
+                { name: 'Output 2', type: 'exec' }
             ]);
         });
 
@@ -193,8 +193,8 @@ describe('Exec Flow Node Creation', () => {
                 type: 'exec'
             });
             expect(nodes.value[0].inputs).toEqual([
-                {name: 'Exec', type: 'exec'},
-                {name: 'Reset', type: 'exec'}
+                { name: 'Exec', type: 'exec' },
+                { name: 'Reset', type: 'exec' }
             ]);
         });
 
@@ -206,8 +206,8 @@ describe('Exec Flow Node Creation', () => {
                 type: 'exec'
             });
             expect(nodes.value[0].inputs).toEqual([
-                {name: 'Exec', type: 'exec'},
-                {name: 'Duration', type: 'float'}
+                { name: 'Exec', type: 'exec' },
+                { name: 'Duration', type: 'float' }
             ]);
         });
 
@@ -219,17 +219,16 @@ describe('Exec Flow Node Creation', () => {
                 type: 'exec'
             });
             expect(nodes.value[0].outputs).toEqual([
-                {name: 'A', type: 'exec'},
-                {name: 'B', type: 'exec'},
-                {name: 'Is A', type: 'bool'}
+                { name: 'A', type: 'exec' },
+                { name: 'B', type: 'exec' },
+                { name: 'Is A', type: 'bool' }
             ]);
         });
     });
 
     describe('Node Component Selection', () => {
         it('selects ExecNode component for exec type nodes', async () => {
-            const {getNodeComponent} = await import('../get-node-component.js');
-
+            const { getNodeComponent } = await import('../get-node-component.js');
 
             expect(typeof getNodeComponent).toBe('function');
         });

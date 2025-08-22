@@ -1,7 +1,7 @@
 // filepath: /-/desktop-app/src/utils/__tests__/code-importer.spec.js
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {createFunctionNode} from '../node-factory.js';
-import {mapParsedToGraph} from '../code-importer.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createFunctionNode } from '../node-factory.js';
+import { mapParsedToGraph } from '../code-importer.js';
 
 // Mock node-factory so we can intercept created nodes
 vi.mock('../node-factory.js', () => ({
@@ -32,16 +32,16 @@ describe('code-importer', () => {
                     kind: 'function',
                     name: 'add',
                     params: [
-                        {name: 'a', ty: 'i32'},
-                        {name: 'b', ty: 'i32'}
+                        { name: 'a', ty: 'i32' },
+                        { name: 'b', ty: 'i32' }
                     ],
                     return_type: 'i32',
-                    range: {start: {row: 1, col: 0}, end: {row: 1, col: 20}}
+                    range: { start: { row: 1, col: 0 }, end: { row: 1, col: 20 } }
                 }
             ]
         };
 
-        const {nodes, connections, warnings} = mapParsedToGraph(nf, {start: {x: 50, y: 75}});
+        const { nodes, connections, warnings } = mapParsedToGraph(nf, { start: { x: 50, y: 75 } });
 
         expect(connections).toEqual([]);
         expect(warnings || []).toEqual([]);
@@ -52,11 +52,11 @@ describe('code-importer', () => {
         expect(n.funcName).toBe('add');
         // Inputs on the left are represented by `inputs` array
         expect(n.inputs).toEqual([
-            {name: 'a', type: 'int'},
-            {name: 'b', type: 'int'}
+            { name: 'a', type: 'int' },
+            { name: 'b', type: 'int' }
         ]);
         // Outputs on the right are represented by `outputs` array
-        expect(n.outputs).toEqual([{name: 'result', type: 'int'}]);
+        expect(n.outputs).toEqual([{ name: 'result', type: 'int' }]);
         // Metadata retained
         expect(n.refs).toBeDefined();
         expect(n.refs.filePath).toBe('/proj/src/lib.rs');
@@ -67,12 +67,12 @@ describe('code-importer', () => {
         const nf = {
             filePath: '/x.js',
             language: 'javascript',
-            symbols: [{kind: 'function', name: 'log', params: [{name: 'msg text', ty: 'string'}], return_type: 'void'}]
+            symbols: [{ kind: 'function', name: 'log', params: [{ name: 'msg text', ty: 'string' }], return_type: 'void' }]
         };
 
-        const {nodes} = mapParsedToGraph(nf);
+        const { nodes } = mapParsedToGraph(nf);
         expect(nodes).toHaveLength(1);
-        expect(nodes[0].inputs).toEqual([{name: 'msg_text', type: 'string'}]);
+        expect(nodes[0].inputs).toEqual([{ name: 'msg_text', type: 'string' }]);
         expect(nodes[0].outputs).toEqual([]);
     });
 });

@@ -1,6 +1,6 @@
-import {nextTick, onBeforeUnmount, onMounted} from 'vue';
-import {ioPositions, log} from './state.js';
-import {registerAllIOForNode} from './io-utils.js';
+import { nextTick, onBeforeUnmount, onMounted } from 'vue';
+import { ioPositions, log } from './state.js';
+import { registerAllIOForNode } from './io-utils.js';
 
 export function construction(emit, props, nodeRef) {
     // Helper to get IO elements for a node
@@ -15,7 +15,7 @@ export function construction(emit, props, nodeRef) {
     }
 
     async function onDrag(e) {
-        emit('move', {id: props.node.id, x: e.clientX, y: e.clientY});
+        emit('move', { id: props.node.id, x: e.clientX, y: e.clientY });
         await nextTick(registerAllIO);
     }
 
@@ -28,8 +28,8 @@ export function construction(emit, props, nodeRef) {
     let connecting = null;
 
     async function startConnect(type, io) {
-        log('startConnect', {type, io});
-        connecting = {type, name: io.name || io};
+        log('startConnect', { type, io });
+        connecting = { type, name: io.name || io };
         // Add listener synchronously before awaiting
         window.addEventListener('mouseup', finishConnect);
         await nextTick(registerAllIO);
@@ -37,7 +37,7 @@ export function construction(emit, props, nodeRef) {
         let idx = (type === 'input' ? props.node.inputs : props.node.outputs).findIndex((x) => (x.name || x) === (io.name || io));
         if (elList[idx]) {
             const rect = elList[idx].getBoundingClientRect();
-            log('startConnect rect', {rect, idx});
+            log('startConnect rect', { rect, idx });
             emit('start-connection-drag', {
                 nodeId: props.node.id,
                 ioType: type,
@@ -53,7 +53,7 @@ export function construction(emit, props, nodeRef) {
 
     function highlightValidTargets(type, io) {
         document.querySelectorAll('.io.valid-target').forEach((el) => el.classList.remove('valid-target'));
-        log('Highlighting valid targets for', {type, io});
+        log('Highlighting valid targets for', { type, io });
         const isExec = (x) =>
             x?.type === 'Exec' || x === 'Exec' || (x?.name || x) === 'Exec' || x?.type === 'exec' || x === 'exec' || (x?.name || x) === 'exec';
         const lookingForExec = isExec(io);
@@ -79,7 +79,7 @@ export function construction(emit, props, nodeRef) {
 
     function onIOContextMenu(type, io, event) {
         event.preventDefault();
-        log('Opening IO context menu', {type, io, nodeId: props.node.id});
+        log('Opening IO context menu', { type, io, nodeId: props.node.id });
         emit('io-context-menu', {
             nodeId: props.node.id,
             type,
@@ -93,11 +93,11 @@ export function construction(emit, props, nodeRef) {
         const from = ioPositions.value[conn.from.nodeId]?.outputs?.[conn.from.output];
         const to = ioPositions.value[conn.to.nodeId]?.inputs?.[conn.to.input];
         if (!from || !to) return null;
-        return {x1: from.x, y1: from.y, x2: to.x, y2: to.y};
+        return { x1: from.x, y1: from.y, x2: to.x, y2: to.y };
     }
 
     function finishConnect(e) {
-        log('finishConnect', {connecting, mouseX: e.clientX, mouseY: e.clientY});
+        log('finishConnect', { connecting, mouseX: e.clientX, mouseY: e.clientY });
         if (connecting) {
             const mouseX = e.clientX;
             const mouseY = e.clientY;
@@ -110,7 +110,7 @@ export function construction(emit, props, nodeRef) {
                     let nodeEl = el.closest('[data-node-id]');
                     let nodeId = nodeEl ? Number(nodeEl.getAttribute('data-node-id')) : undefined;
                     let ioName = el.querySelector('.io-label')?.textContent?.trim() || el.textContent?.trim();
-                    found = {type, nodeId, ioName};
+                    found = { type, nodeId, ioName };
                     log('finishConnect foundIO', found);
                 }
             });
@@ -119,13 +119,13 @@ export function construction(emit, props, nodeRef) {
                 if ((connecting.type === 'output' && found.type === 'input') || (connecting.type === 'input' && found.type === 'output')) {
                     if (connecting.type === 'output') {
                         emit('connect', {
-                            from: {nodeId: props.node.id, output: connecting.name},
-                            to: {nodeId: found.nodeId, input: found.ioName}
+                            from: { nodeId: props.node.id, output: connecting.name },
+                            to: { nodeId: found.nodeId, input: found.ioName }
                         });
                     } else {
                         emit('connect', {
-                            from: {nodeId: found.nodeId, output: found.ioName},
-                            to: {nodeId: props.node.id, input: connecting.name}
+                            from: { nodeId: found.nodeId, output: found.ioName },
+                            to: { nodeId: props.node.id, input: connecting.name }
                         });
                     }
                 }

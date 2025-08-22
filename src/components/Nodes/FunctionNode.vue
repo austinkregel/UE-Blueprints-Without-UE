@@ -1,37 +1,32 @@
 <template>
-  <NodeBase
-      :connections="connections"
-      :node="computedNode"
-      @move="$emit('move', $event)"
-      @select="$emit('select', $event)"
-      @register-io="$emit('register-io', $event)"
-      @node-context-menu="$emit('node-context-menu', $event)"
-  >
-    <template #header> Function: {{ node.funcName }}</template>
-  </NodeBase>
+    <NodeBase
+        :connections="connections"
+        :node="computedNode"
+        @move="$emit('move', $event)"
+        @select="$emit('select', $event)"
+        @register-io="$emit('register-io', $event)"
+        @node-context-menu="$emit('node-context-menu', $event)"
+    >
+        <template #header> Function: {{ node.funcName }}</template>
+    </NodeBase>
 </template>
 
 <script setup>
-import NodeBase from './NodeBase.vue';
-import {computed} from 'vue';
+    import NodeBase from './NodeBase.vue';
+    import { computed } from 'vue';
 
-const emit = defineEmits(['move', 'select', 'register-io', 'node-context-menu']);
+    const emit = defineEmits(['move', 'select', 'register-io', 'node-context-menu']);
 
-const props = defineProps({
-  node: Object,
-  connections: Array
-});
+    const props = defineProps({
+        node: Object,
+        connections: Array
+    });
 
-const computedNode = computed(() => {
-  const n = {...props.node};
+    const computedNode = computed(() => {
+        const n = { ...props.node };
 
-  return n;
-});
+        return n;
+    });
 </script>
 
-<style scoped>
-.exec-pin {
-  color: #ff0;
-  font-weight: bold;
-}
-</style>
+<style scoped></style>

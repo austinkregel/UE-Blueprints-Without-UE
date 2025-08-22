@@ -1,6 +1,6 @@
-import {draggingConnection, ioPositions, log} from './state.js';
-import {connectNodes} from './connection-utils.js';
-import {screenToWorld, startPanning, stopPanning, suppressNextContextMenu, updatePanning} from './viewport-utils.js';
+import { draggingConnection, ioPositions, log } from './state.js';
+import { connectNodes } from './connection-utils.js';
+import { screenToWorld, startPanning, stopPanning, suppressNextContextMenu, updatePanning } from './viewport-utils.js';
 
 let rightMouseDown = false;
 let movedWhileRightDown = false;
@@ -83,7 +83,7 @@ export function onEditorMouseDown(e) {
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < minDist) {
                     minDist = dist;
-                    closestIO = {nodeId: parseNodeId(nodeId), side, ioName, pos};
+                    closestIO = { nodeId: parseNodeId(nodeId), side, ioName, pos };
                 }
             }
         }
@@ -94,15 +94,15 @@ export function onEditorMouseDown(e) {
         // Only allow connections to inputs when dragging from output
         if (dragType === 'output' && closestIO.side === 'inputs' && drag.from) {
             connectNodes({
-                from: {nodeId: drag.from.nodeId, output: drag.from.output},
-                to: {nodeId: closestIO.nodeId, input: closestIO.ioName}
+                from: { nodeId: drag.from.nodeId, output: drag.from.output },
+                to: { nodeId: closestIO.nodeId, input: closestIO.ioName }
             });
             draggingConnection.value = null;
             // Only allow connections to outputs when dragging from input
         } else if (dragType === 'input' && closestIO.side === 'outputs' && drag.to) {
             connectNodes({
-                from: {nodeId: closestIO.nodeId, output: closestIO.ioName},
-                to: {nodeId: drag.to.nodeId, input: drag.to.input}
+                from: { nodeId: closestIO.nodeId, output: closestIO.ioName },
+                to: { nodeId: drag.to.nodeId, input: drag.to.input }
             });
             draggingConnection.value = null;
         } else {
@@ -122,6 +122,6 @@ if (typeof window !== 'undefined') {
                 suppressNextContextMenu.value = false;
             }
         },
-        {capture: true}
+        { capture: true }
     );
 }

@@ -1,5 +1,5 @@
-import {getAllNodeDefinitions, getCategoryColor, getNodeDefinition} from './language-definition.js';
-import {getNextNodeId} from './id-utils.js';
+import { getAllNodeDefinitions, getCategoryColor, getNodeDefinition } from './language-definition.js';
+import { getNextNodeId } from './id-utils.js';
 
 /**
  * Create a new node based on a language definition
@@ -54,8 +54,8 @@ export function createVariableNode(varName, varType, action = 'get', x = 100, y 
         varAction: action,
         x,
         y,
-        inputs: action === 'set' ? [{name: 'value', type: varType}] : [],
-        outputs: action === 'get' ? [{name: 'value', type: varType}] : [],
+        inputs: action === 'set' ? [{ name: 'value', type: varType }] : [],
+        outputs: action === 'get' ? [{ name: 'value', type: varType }] : [],
         category: 'VARIABLE',
         ...overrides
     };
@@ -106,7 +106,7 @@ export function createLiteralNode(kind = 'string', value, x = 100, y = 100) {
         x,
         y,
         inputs: [],
-        outputs: [{name: printable, type: kind}], // keep IO map consistent with variable rendering
+        outputs: [{ name: printable, type: kind }], // keep IO map consistent with variable rendering
         category: 'CONSTANT',
         isLiteral: true,
         value
@@ -161,8 +161,8 @@ export function createCastNode(fromType, toType, x = 100, y = 100) {
         toType,
         x,
         y,
-        inputs: [{name: 'in', type: fromType}],
-        outputs: [{name: 'out', type: toType}],
+        inputs: [{ name: 'in', type: fromType }],
+        outputs: [{ name: 'out', type: toType }],
         category: 'CAST'
     };
 

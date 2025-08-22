@@ -1,4 +1,4 @@
-import {ref} from 'vue';
+import { ref } from 'vue';
 
 // Viewport state for infinite canvas
 export const viewport = ref({
@@ -8,16 +8,16 @@ export const viewport = ref({
 });
 
 // Canvas offset (top-left of the canvas area relative to the page/client)
-export const canvasOffset = ref({x: 0, y: 0});
+export const canvasOffset = ref({ x: 0, y: 0 });
 
 export function setCanvasOffset(x, y) {
-    canvasOffset.value = {x, y};
+    canvasOffset.value = { x, y };
 }
 
 // Panning state
 export const isPanning = ref(false);
-export const panStart = ref({x: 0, y: 0});
-export const panOffset = ref({x: 0, y: 0});
+export const panStart = ref({ x: 0, y: 0 });
+export const panOffset = ref({ x: 0, y: 0 });
 
 // Suppress the next contextmenu event if a right-drag (pan) occurred
 export const suppressNextContextMenu = ref(false);
@@ -47,8 +47,8 @@ export function worldToScreen(worldX, worldY) {
  */
 export function startPanning(clientX, clientY) {
     isPanning.value = true;
-    panStart.value = {x: clientX, y: clientY};
-    panOffset.value = {x: viewport.value.x, y: viewport.value.y};
+    panStart.value = { x: clientX, y: clientY };
+    panOffset.value = { x: viewport.value.x, y: viewport.value.y };
 }
 
 /**

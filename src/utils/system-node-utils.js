@@ -1,12 +1,12 @@
-import {nodes} from './state.js';
-import {getNextNodeId} from './id-utils.js';
-import {getSystemNodes, searchNodeLibrary} from './node-library.js';
-import {createNodeFromDefinition} from './node-factory.js';
+import { nodes } from './state.js';
+import { getNextNodeId } from './id-utils.js';
+import { getSystemNodes, searchNodeLibrary } from './node-library.js';
+import { createNodeFromDefinition } from './node-factory.js';
 
 /**
  * Add a system node by definition ID
  */
-export function addSystemNode(nodeDefId = 'print', position = {x: 500, y: 300}) {
+export function addSystemNode(nodeDefId = 'print', position = { x: 500, y: 300 }) {
     const newNode = createNodeFromDefinition(nodeDefId, position.x, position.y, {
         id: getNextNodeId('system'),
         type: 'system',
@@ -34,7 +34,7 @@ export function searchAvailableNodes(searchTerm) {
 /**
  * Add a common system node by name
  */
-export function addCommonSystemNode(nodeName, position = {x: 500, y: 300}) {
+export function addCommonSystemNode(nodeName, position = { x: 500, y: 300 }) {
     const commonNodes = {
         print: 'print',
         delay: 'delay',
@@ -70,8 +70,8 @@ export function addCommonSystemNode(nodeName, position = {x: 500, y: 300}) {
 /**
  * Add multiple related nodes (e.g., for a complete workflow)
  */
-export function addNodeGroup(groupType, startPosition = {x: 100, y: 100}) {
-    const spacing = {x: 250, y: 150};
+export function addNodeGroup(groupType, startPosition = { x: 100, y: 100 }) {
+    const spacing = { x: 250, y: 150 };
     const addedNodes = [];
 
     switch (groupType) {

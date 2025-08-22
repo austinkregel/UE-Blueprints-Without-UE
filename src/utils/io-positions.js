@@ -1,4 +1,4 @@
-import {ioPositions} from './state.js';
+import { ioPositions } from './state.js';
 
 export function getIOPosition(nodeId, ioType, ioName) {
     const nodeIO = ioPositions.value[nodeId];

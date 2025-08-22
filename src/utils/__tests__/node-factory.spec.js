@@ -1,14 +1,7 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {
-    createCastNode,
-    createFunctionNode,
-    createNodeFromDefinition,
-    createVariableNode,
-    getNodePalette,
-    validateNode
-} from '../node-factory.js';
-import {getAllNodeDefinitions, getCategoryColor, getNodeDefinition} from '../language-definition.js';
-import {getNextNodeId} from '../id-utils.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createCastNode, createFunctionNode, createNodeFromDefinition, createVariableNode, getNodePalette, validateNode } from '../node-factory.js';
+import { getAllNodeDefinitions, getCategoryColor, getNodeDefinition } from '../language-definition.js';
+import { getNextNodeId } from '../id-utils.js';
 
 // Mock the dependencies
 vi.mock('../language-definition.js', () => ({
@@ -33,10 +26,10 @@ describe('Node Factory', () => {
                 name: 'Add',
                 category: 'MATH',
                 inputs: [
-                    {name: 'a', type: 'float'},
-                    {name: 'b', type: 'float'}
+                    { name: 'a', type: 'float' },
+                    { name: 'b', type: 'float' }
                 ],
-                outputs: [{name: 'result', type: 'float'}],
+                outputs: [{ name: 'result', type: 'float' }],
                 description: 'Add two numbers'
             };
 
@@ -52,10 +45,10 @@ describe('Node Factory', () => {
                 x: 150,
                 y: 200,
                 inputs: [
-                    {name: 'a', type: 'float'},
-                    {name: 'b', type: 'float'}
+                    { name: 'a', type: 'float' },
+                    { name: 'b', type: 'float' }
                 ],
-                outputs: [{name: 'result', type: 'float'}],
+                outputs: [{ name: 'result', type: 'float' }],
                 description: 'Add two numbers',
                 category: 'MATH'
             });
@@ -116,8 +109,8 @@ describe('Node Factory', () => {
             const mockNodeDef = {
                 name: 'Test',
                 category: 'TEST',
-                inputs: [{name: 'input1', type: 'int'}],
-                outputs: [{name: 'output1', type: 'string'}],
+                inputs: [{ name: 'input1', type: 'int' }],
+                outputs: [{ name: 'output1', type: 'string' }],
                 description: 'Test'
             };
 
@@ -126,7 +119,7 @@ describe('Node Factory', () => {
             const result = createNodeFromDefinition('test');
 
             // Modify the result's inputs/outputs
-            result.inputs.push({name: 'new_input', type: 'float'});
+            result.inputs.push({ name: 'new_input', type: 'float' });
             result.outputs[0].name = 'modified_name';
 
             // Original should be unchanged
@@ -148,7 +141,7 @@ describe('Node Factory', () => {
                 x: 150,
                 y: 200,
                 inputs: [],
-                outputs: [{name: 'value', type: 'int'}],
+                outputs: [{ name: 'value', type: 'int' }],
                 category: 'VARIABLE'
             });
 
@@ -166,7 +159,7 @@ describe('Node Factory', () => {
                 varAction: 'set',
                 x: 150,
                 y: 200,
-                inputs: [{name: 'value', type: 'int'}],
+                inputs: [{ name: 'value', type: 'int' }],
                 outputs: [],
                 category: 'VARIABLE'
             });
@@ -177,7 +170,7 @@ describe('Node Factory', () => {
 
             expect(result.varAction).toBe('get');
             expect(result.inputs).toEqual([]);
-            expect(result.outputs).toEqual([{name: 'value', type: 'string'}]);
+            expect(result.outputs).toEqual([{ name: 'value', type: 'string' }]);
         });
 
         it('should use default position', () => {
@@ -191,10 +184,10 @@ describe('Node Factory', () => {
     describe('createFunctionNode', () => {
         it('should create a function node with inputs and outputs', () => {
             const inputs = [
-                {name: 'param1', type: 'int'},
-                {name: 'param2', type: 'string'}
+                { name: 'param1', type: 'int' },
+                { name: 'param2', type: 'string' }
             ];
-            const outputs = [{name: 'result', type: 'bool'}];
+            const outputs = [{ name: 'result', type: 'bool' }];
 
             const result = createFunctionNode('myFunction', inputs, outputs, 200, 300);
 
@@ -205,10 +198,10 @@ describe('Node Factory', () => {
                 x: 200,
                 y: 300,
                 inputs: [
-                    {name: 'param1', type: 'int'},
-                    {name: 'param2', type: 'string'}
+                    { name: 'param1', type: 'int' },
+                    { name: 'param2', type: 'string' }
                 ],
-                outputs: [{name: 'result', type: 'bool'}],
+                outputs: [{ name: 'result', type: 'bool' }],
                 category: 'FUNCTION'
             });
 
@@ -230,13 +223,13 @@ describe('Node Factory', () => {
         });
 
         it('should deep copy input arrays', () => {
-            const inputs = [{name: 'param', type: 'int'}];
-            const outputs = [{name: 'result', type: 'string'}];
+            const inputs = [{ name: 'param', type: 'int' }];
+            const outputs = [{ name: 'result', type: 'string' }];
 
             const result = createFunctionNode('test', inputs, outputs);
 
             // Modify the result's arrays
-            result.inputs.push({name: 'new_param', type: 'float'});
+            result.inputs.push({ name: 'new_param', type: 'float' });
             result.outputs[0].name = 'modified_result';
 
             // Originals should be unchanged
@@ -256,8 +249,8 @@ describe('Node Factory', () => {
                 toType: 'string',
                 x: 250,
                 y: 350,
-                inputs: [{name: 'in', type: 'int'}],
-                outputs: [{name: 'out', type: 'string'}],
+                inputs: [{ name: 'in', type: 'int' }],
+                outputs: [{ name: 'out', type: 'string' }],
                 category: 'CAST'
             });
 
@@ -279,28 +272,28 @@ describe('Node Factory', () => {
                     name: 'Add',
                     category: 'MATH',
                     description: 'Add two numbers',
-                    inputs: [{name: 'a', type: 'float'}],
-                    outputs: [{name: 'result', type: 'float'}]
+                    inputs: [{ name: 'a', type: 'float' }],
+                    outputs: [{ name: 'result', type: 'float' }]
                 },
                 subtract: {
                     name: 'Subtract',
                     category: 'MATH',
                     description: 'Subtract numbers',
-                    inputs: [{name: 'a', type: 'float'}],
-                    outputs: [{name: 'result', type: 'float'}]
+                    inputs: [{ name: 'a', type: 'float' }],
+                    outputs: [{ name: 'result', type: 'float' }]
                 },
                 if: {
                     name: 'If Statement',
                     category: 'CONTROL',
                     description: 'Conditional execution',
-                    inputs: [{name: 'condition', type: 'bool'}],
+                    inputs: [{ name: 'condition', type: 'bool' }],
                     outputs: []
                 }
             };
 
             getAllNodeDefinitions.mockReturnValue(mockNodes);
             getCategoryColor.mockImplementation((category) => {
-                const colors = {MATH: 'green', CONTROL: 'yellow'};
+                const colors = { MATH: 'green', CONTROL: 'yellow' };
                 return colors[category] || 'gray';
             });
 
@@ -315,15 +308,15 @@ describe('Node Factory', () => {
                             id: 'add',
                             name: 'Add',
                             description: 'Add two numbers',
-                            inputs: [{name: 'a', type: 'float'}],
-                            outputs: [{name: 'result', type: 'float'}]
+                            inputs: [{ name: 'a', type: 'float' }],
+                            outputs: [{ name: 'result', type: 'float' }]
                         },
                         {
                             id: 'subtract',
                             name: 'Subtract',
                             description: 'Subtract numbers',
-                            inputs: [{name: 'a', type: 'float'}],
-                            outputs: [{name: 'result', type: 'float'}]
+                            inputs: [{ name: 'a', type: 'float' }],
+                            outputs: [{ name: 'result', type: 'float' }]
                         }
                     ]
                 },
@@ -335,7 +328,7 @@ describe('Node Factory', () => {
                             id: 'if',
                             name: 'If Statement',
                             description: 'Conditional execution',
-                            inputs: [{name: 'condition', type: 'bool'}],
+                            inputs: [{ name: 'condition', type: 'bool' }],
                             outputs: []
                         }
                     ]
@@ -390,8 +383,8 @@ describe('Node Factory', () => {
 
         it('should validate against node definition when nodeDefId exists', () => {
             const mockNodeDef = {
-                inputs: [{name: 'a', type: 'int'}],
-                outputs: [{name: 'result', type: 'int'}]
+                inputs: [{ name: 'a', type: 'int' }],
+                outputs: [{ name: 'result', type: 'int' }]
             };
 
             getNodeDefinition.mockReturnValue(mockNodeDef);
@@ -402,8 +395,8 @@ describe('Node Factory', () => {
                 x: 100,
                 y: 200,
                 nodeDefId: 'add',
-                inputs: [{name: 'a', type: 'int'}],
-                outputs: [{name: 'result', type: 'int'}]
+                inputs: [{ name: 'a', type: 'int' }],
+                outputs: [{ name: 'result', type: 'int' }]
             };
 
             const result = validateNode(nodeWithDef);
@@ -415,8 +408,8 @@ describe('Node Factory', () => {
 
         it('should warn about definition mismatches', () => {
             const mockNodeDef = {
-                inputs: [{name: 'a', type: 'int'}],
-                outputs: [{name: 'result', type: 'int'}]
+                inputs: [{ name: 'a', type: 'int' }],
+                outputs: [{ name: 'result', type: 'int' }]
             };
 
             getNodeDefinition.mockReturnValue(mockNodeDef);
@@ -427,8 +420,8 @@ describe('Node Factory', () => {
                 x: 100,
                 y: 200,
                 nodeDefId: 'add',
-                inputs: [{name: 'b', type: 'float'}], // Different from definition
-                outputs: [{name: 'result', type: 'int'}]
+                inputs: [{ name: 'b', type: 'float' }], // Different from definition
+                outputs: [{ name: 'result', type: 'int' }]
             };
 
             const result = validateNode(nodeWithDifferentIO);

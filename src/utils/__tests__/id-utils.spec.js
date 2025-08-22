@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {getNextNodeId} from '../id-utils.js';
+import { describe, expect, it } from 'vitest';
+import { getNextNodeId } from '../id-utils.js';
 
 describe('getNextNodeId', () => {
     it('returns incrementing node ids', () => {

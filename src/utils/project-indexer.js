@@ -1,6 +1,6 @@
 // Cross-language Project Indexer using Tauri backend generic parser
 // Safely no-op outside Tauri so tests/web preview won’t break.
-import {registerProjectSymbolsAsNodes} from './code-symbols-to-nodes.js';
+import { registerProjectSymbolsAsNodes } from './code-symbols-to-nodes.js';
 
 function isTauri() {
     return typeof window !== 'undefined' && typeof window.__TAURI_INTERNALS__ !== 'undefined';
@@ -23,17 +23,17 @@ async function getInvoke() {
  *  - input: rootPath (string), { onProgress?: (p:{processed,total,filePath,lang}) => void }
  *  - output: { index, warnings }
  */
-export async function scanProject(rootPath, {onProgress} = {}) {
+export async function scanProject(rootPath, { onProgress } = {}) {
     const warnings = [];
-    const index = {files: {}, classes: {}, functions: {}, references: []};
+    const index = { files: {}, classes: {}, functions: {}, references: [] };
     if (!isTauri()) {
         warnings.push('Tauri API not available. Project scanning is only supported in the desktop app.');
-        return {index, warnings};
+        return { index, warnings };
     }
     const invoke = await getInvoke();
     if (!invoke) {
         warnings.push('invoke not available');
-        return {index, warnings};
+        return { index, warnings };
     }
 
     try {
@@ -43,7 +43,7 @@ export async function scanProject(rootPath, {onProgress} = {}) {
         const langFiles = {};
         for (const l of langs || []) {
             try {
-                const files = await invoke('enumerate_language_files', {lang: l.id, rootPath});
+                const files = await invoke('enumerate_language_files', { lang: l.id, rootPath });
                 langFiles[l.id] = files || [];
                 total += (files || []).length;
             } catch (e) {
@@ -54,7 +54,7 @@ export async function scanProject(rootPath, {onProgress} = {}) {
         for (const [langId, files] of Object.entries(langFiles)) {
             for (const path of files) {
                 try {
-                    const nf = await invoke('parse_file', {lang: langId, path});
+                    const nf = await invoke('parse_file', { lang: langId, path });
                     index.files[path] = nf;
                     // collect classes and methods
                     for (const s of nf.symbols || []) {
@@ -100,19 +100,20 @@ export async function scanProject(rootPath, {onProgress} = {}) {
                         }
                     }
                     // references
-                    (nf.references || []).forEach((r) => index.references.push({
-                        ...r,
-                        filePath: path,
-                        lang: nf.language
-                    }));
+                    (nf.references || []).forEach((r) =>
+                        index.references.push({
+                            ...r,
+                            filePath: path,
+                            lang: nf.language
+                        })
+                    );
                 } catch (e) {
                     warnings.push(`parse_file failed for ${path}: ${e?.message || e}`);
                 } finally {
                     processed += 1;
                     try {
-                        onProgress && onProgress({processed, total, filePath: path, lang: langId});
-                    } catch {
-                    }
+                        onProgress && onProgress({ processed, total, filePath: path, lang: langId });
+                    } catch {}
                 }
             }
         }
@@ -126,7 +127,7 @@ export async function scanProject(rootPath, {onProgress} = {}) {
                     const nameMatch = r.name && String(r.name).includes(m.name);
                     const qualMatch = r.qualifier ? String(r.qualifier).includes(cls.name) : false;
                     if (nameMatch && (qualMatch || r.kind === 'call')) {
-                        u.push({filePath: r.filePath, range: r.range, kind: r.kind, qualifier: r.qualifier || null});
+                        u.push({ filePath: r.filePath, range: r.range, kind: r.kind, qualifier: r.qualifier || null });
                     }
                 }
                 cls.usage[m.name] = u;
@@ -138,5 +139,5 @@ export async function scanProject(rootPath, {onProgress} = {}) {
     } catch (e) {
         warnings.push(`scan failed: ${e?.message || e}`);
     }
-    return {index, warnings};
+    return { index, warnings };
 }

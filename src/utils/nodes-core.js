@@ -1,7 +1,7 @@
-import {log, nextId, nodes} from './state.js';
-import {pruneDanglingConnections} from './connection-manager.js';
+import { log, nextId, nodes } from './state.js';
+import { pruneDanglingConnections } from './connection-manager.js';
 
-export function addNode({x = 200, y = 200, id, type, nodeDefId, ...args} = {}) {
+export function addNode({ x = 200, y = 200, id, type, nodeDefId, ...args } = {}) {
     // Use provided id/type or defaults
     const newId = id !== undefined ? id : nextId.value++;
     const newType = type !== undefined ? type : 'function';
@@ -14,14 +14,14 @@ export function addNode({x = 200, y = 200, id, type, nodeDefId, ...args} = {}) {
         inputs: [],
         outputs: [],
         // Include nodeDefId if provided
-        ...(nodeDefId !== undefined && {nodeDefId}),
+        ...(nodeDefId !== undefined && { nodeDefId }),
         args
     };
     nodes.value.push(node);
     return node;
 }
 
-export function moveNode({id, x, y}) {
+export function moveNode({ id, x, y }) {
     const node = nodes.value.find((n) => n.id === id);
     if (node) {
         node.x = x;
@@ -29,7 +29,7 @@ export function moveNode({id, x, y}) {
     }
 }
 
-export function updateNodeIO({id, inputs, outputs}) {
+export function updateNodeIO({ id, inputs, outputs }) {
     const node = nodes.value.find((n) => n.id === id);
     if (node) {
         node.inputs = Array.isArray(inputs) ? [...inputs] : [];

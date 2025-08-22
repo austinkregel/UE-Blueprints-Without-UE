@@ -1,6 +1,6 @@
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as systemNodeUtils from '../system-node-utils.js';
-import {nodes} from '../state.js';
+import { nodes } from '../state.js';
 
 // Mock getNextNodeId to return predictable values
 vi.mock('../id-utils', () => ({
@@ -23,10 +23,10 @@ describe('addSystemNode', () => {
             x: 500,
             y: 300,
             inputs: [
-                {name: 'Exec', type: 'exec'},
-                {name: 'value', type: 'mixed'}
+                { name: 'Exec', type: 'exec' },
+                { name: 'value', type: 'mixed' }
             ],
-            outputs: [{name: 'Exec', type: 'exec'}]
+            outputs: [{ name: 'Exec', type: 'exec' }]
         });
     });
 });

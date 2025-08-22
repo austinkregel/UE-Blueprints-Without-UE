@@ -1,5 +1,5 @@
 // Load extra node definitions from a JSON file and register them
-import {registerExtraNodeDefinitions} from './language-definition.js';
+import { registerExtraNodeDefinitions } from './language-definition.js';
 
 function isTauri() {
     return typeof window !== 'undefined' && typeof window.__TAURI_INTERNALS__ !== 'undefined';
@@ -16,15 +16,14 @@ export async function loadLanguageDefinitionsFromUrl(url = '/language-extras.jso
             registerExtraNodeDefinitions(json);
             return true;
         }
-    } catch (_) {
-    }
+    } catch (_) {}
     return false;
 }
 
 export async function loadLanguageDefinitionsFromPath(path) {
     if (!isTauri()) return false;
     try {
-        const {readTextFile} = await import('@tauri-apps/plugin-fs');
+        const { readTextFile } = await import('@tauri-apps/plugin-fs');
         const txt = await readTextFile(path);
         const json = JSON.parse(txt);
         registerExtraNodeDefinitions(json);

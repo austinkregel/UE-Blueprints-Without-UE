@@ -1,5 +1,5 @@
 // Convert project index (classes/methods/functions) into palette node definitions
-import {registerExtraNodeDefinitions} from './language-definition.js';
+import { registerExtraNodeDefinitions } from './language-definition.js';
 
 function normalizeType(t) {
     if (!t || typeof t !== 'string') return 'mixed';
@@ -29,11 +29,11 @@ function paramsToInputs(params = []) {
 function returnToOutputs(ret) {
     const t = normalizeType(ret);
     if (!t || t === 'void') return [];
-    return [{name: 'result', type: t}];
+    return [{ name: 'result', type: t }];
 }
 
 export function registerProjectSymbolsAsNodes(index) {
-    const extra = {PROJECT: {}};
+    const extra = { PROJECT: {} };
     // Top-level functions
     for (const fn of Object.values(index?.functions || {})) {
         const nodeId = `fn:${sanitizeName(fn.name)}`;

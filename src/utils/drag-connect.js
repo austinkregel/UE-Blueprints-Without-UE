@@ -1,15 +1,15 @@
-import {draggingConnection, ioPositions} from './state.js';
-import {screenToWorld} from './viewport-utils.js';
-import {connectNodes} from './connection-utils.js';
-import {pendingConnectionRequest} from './pending-connection.js';
+import { draggingConnection, ioPositions } from './state.js';
+import { screenToWorld } from './viewport-utils.js';
+import { connectNodes } from './connection-utils.js';
+import { pendingConnectionRequest } from './pending-connection.js';
 
-export function startConnectionDrag({nodeId, ioType, ioName, x, y}) {
+export function startConnectionDrag({ nodeId, ioType, ioName, x, y }) {
     draggingConnection.value = {
-        from: ioType === 'output' ? {nodeId, output: ioName} : null,
-        to: ioType === 'input' ? {nodeId, input: ioName} : null,
+        from: ioType === 'output' ? { nodeId, output: ioName } : null,
+        to: ioType === 'input' ? { nodeId, input: ioName } : null,
         type: ioType,
-        start: {x, y},
-        mouse: {x, y}
+        start: { x, y },
+        mouse: { x, y }
     };
     window.addEventListener('mousemove', onConnectionDragMove);
     window.addEventListener('mouseup', onConnectionDragEnd);
@@ -47,7 +47,7 @@ export function onConnectionDragEnd(e) {
                 const dist = Math.hypot(dx, dy);
                 if (dist < nearestDist) {
                     nearestDist = dist;
-                    nearestIO = {nodeId: parseNodeId(nodeId), side, ioName};
+                    nearestIO = { nodeId: parseNodeId(nodeId), side, ioName };
                 }
             }
         }
@@ -57,15 +57,15 @@ export function onConnectionDragEnd(e) {
         const drag = draggingConnection.value;
         if ((drag.type === 'output' || drag.type === 'exec') && nearestIO.side === 'inputs') {
             connectNodes({
-                from: {nodeId: drag.from.nodeId, output: drag.from.output},
-                to: {nodeId: nearestIO.nodeId, input: nearestIO.ioName}
+                from: { nodeId: drag.from.nodeId, output: drag.from.output },
+                to: { nodeId: nearestIO.nodeId, input: nearestIO.ioName }
             });
             draggingConnection.value = null;
             return;
         } else if (drag.type === 'input' && nearestIO.side === 'outputs') {
             connectNodes({
-                from: {nodeId: nearestIO.nodeId, output: nearestIO.ioName},
-                to: {nodeId: drag.to.nodeId, input: drag.to.input}
+                from: { nodeId: nearestIO.nodeId, output: nearestIO.ioName },
+                to: { nodeId: drag.to.nodeId, input: drag.to.input }
             });
             draggingConnection.value = null;
             return;
@@ -74,6 +74,6 @@ export function onConnectionDragEnd(e) {
 
     // Not connected to any IO: open node creation context via pending request
     const drag = draggingConnection.value;
-    pendingConnectionRequest.value = {drag, position: worldPos};
+    pendingConnectionRequest.value = { drag, position: worldPos };
     draggingConnection.value = null;
 }
