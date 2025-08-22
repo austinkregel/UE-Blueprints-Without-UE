@@ -88,8 +88,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Node Settings Modal removed; settings are shown in the right sidebar panel -->
     </div>
 </template>
 
@@ -104,14 +102,14 @@
     import { moveNode } from '../../utils/nodes-core.js';
     import { getConnectionPointsArray, registerIO, renderConnectionPath } from '../../utils/io-utils.js';
     import { addConnection, connections, removeConnection } from '../../utils/connection-manager.js';
-    import { onEditorMouseDown } from '../../utils/editor-utils.js';
+    import { onEditorMouseDown as onEditorMouseDownUtil } from '../../utils/editor-utils.js';
     import { getViewportTransform, setCanvasOffset, setZoom, viewport } from '../../utils/viewport-utils.js';
 
     const props = defineProps({
         debugMode: { type: Boolean, default: false }
     });
 
-    const emit = defineEmits(['context-menu', 'drop-node', 'node-context-menu']);
+    const emit = defineEmits(['context-menu', 'drop-node', 'node-context-menu', 'deselect']);
 
     const isDragOver = ref(false);
     const editorAreaRef = ref(null);
@@ -145,6 +143,7 @@
     });
 
     function onContextMenu(event) {
+        // Always update the canvas offset before emitting the event
         emit('context-menu', event);
     }
 
@@ -182,6 +181,11 @@
         event.preventDefault();
         isDragOver.value = false;
         emit('drop-node', event);
+    }
+
+    function onEditorMouseDown(event) {
+        // Call the shared utility, passing emit so it can emit 'deselect' if needed
+        onEditorMouseDownUtil(event, emit);
     }
 </script>
 

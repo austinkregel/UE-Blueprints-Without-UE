@@ -5,7 +5,7 @@ import { screenToWorld, startPanning, stopPanning, suppressNextContextMenu, upda
 let rightMouseDown = false;
 let movedWhileRightDown = false;
 
-export function onEditorMouseDown(e) {
+export function onEditorMouseDown(e, emit) {
     // Track right button state for drag detection
     if (e.button === 2) {
         rightMouseDown = true;
@@ -15,6 +15,11 @@ export function onEditorMouseDown(e) {
     // Check if we're right-clicking on empty space (not on a node)
     const target = e.target;
     const nodeElement = target.closest('[data-node-id]');
+
+    // Deselect node if left-click on empty space
+    if (e.button === 0 && !nodeElement && typeof emit === 'function') {
+        emit('deselect');
+    }
 
     // Handle right-click panning if not on a node and not currently dragging a connection
     if (e.button === 2 && !nodeElement && !draggingConnection.value) {

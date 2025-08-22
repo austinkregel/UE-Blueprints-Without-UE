@@ -33,6 +33,7 @@
                 @context-menu="onContextMenu"
                 @drop-node="onDrop"
                 @node-context-menu="onNodeContextMenu"
+                @deselect="onDeselect"
             />
 
             <!-- Execution Log Panel (right, non-overlapping) -->
@@ -71,7 +72,7 @@
 </template>
 
 <script setup>
-    import { computed, defineExpose, nextTick, ref, watch } from 'vue';
+    import { computed, defineExpose, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
     import NodePalette from './components/NodePalette.vue';
     import ContextMenu from './components/ContextMenu.vue';
     import NodeBrowser from './components/NodeBrowser.vue';
@@ -87,7 +88,7 @@
     import { debugMode, nodes } from './utils/state.js';
     import { addNode, deleteNode } from './utils/nodes-core.js';
     import { addNodeFromDefinition } from './utils/node-creation.js';
-    import { selectedNodeId, selectNode } from './utils/node-selection.js';
+    import { selectedNodeId, selectNode, closeSettings } from './utils/node-selection.js';
     import { attachPendingConnectionToNode, pendingConnectionRequest } from './utils/pending-connection.js';
     import { addActionNode } from './utils/action-node-utils.js';
     import { addSystemNode } from './utils/system-node-utils.js';
@@ -211,24 +212,26 @@
     function handleContextMenuAction(actionData) {
         const { type } = actionData;
         const worldPosition = contextMenuPosition.value.world || contextMenuPosition.value;
+        // Use the mouse world position directly for node spawn
+        const spawnPosition = { x: worldPosition.x, y: worldPosition.y };
         switch (type) {
             case 'addNode': {
-                const newNode = addNode(worldPosition);
+                const newNode = addNode(spawnPosition);
                 if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode);
                 break;
             }
             case 'addActionNode': {
-                const newNode = addActionNode(worldPosition);
+                const newNode = addActionNode(spawnPosition);
                 if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode);
                 break;
             }
             case 'addSystemNode': {
-                const newNode = addSystemNode('print', worldPosition);
+                const newNode = addSystemNode('print', spawnPosition);
                 if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode);
                 break;
             }
             case 'showNodeDropdown':
-                openNodeBrowser(worldPosition);
+                openNodeBrowser(spawnPosition);
                 break;
             default:
                 break;
@@ -333,24 +336,38 @@
         }
     }
 
-    // Removed: onFileDblClick PHP import to graph (AST/codegen UI)
-    // function onFileDblClick(filePath) { /* removed */ }
-
-    // Removed: AST panel sync and watchers
-    // function syncAstFromGraph() {}
-    // watch([nodes, connections], () => { /* removed */ }, { deep: true })
-    // watch(showAstTools, (v) => { if (v) syncAstFromGraph() })
-
     // Expose API used by tests
     defineExpose({ selectNode, selectedNodeId });
 
     // Implement onContextMenuNodeSelect to handle node creation from the context menu, using the correct position and attaching pending connections if present. Also closes the context menu after node creation.
     function onContextMenuNodeSelect({ node, position }) {
-        // Use the world position if available, otherwise fallback to the given position
-        const worldPosition = position?.world || position;
-        const newNode = addNodeFromDefinition(node.id, worldPosition);
+        const newNode = addNodeFromDefinition(node.id, screenToWorld(position.x, position.y));
         if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode);
         closeContextMenu();
+    }
+
+    // Keybinding system for node actions
+    function handleGlobalKeydown(event) {
+        if (!selectedNodeId.value) return;
+        // Delete or Backspace: delete selected node
+        if (event.key === 'Delete' || event.key === 'Backspace') {
+            deleteNode(selectedNodeId.value);
+            // Optionally clear selection after delete
+            selectedNodeId.value = null;
+            event.preventDefault();
+        }
+        // Add more keybindings here as needed
+    }
+
+    onMounted(() => {
+        window.addEventListener('keydown', handleGlobalKeydown);
+    });
+    onUnmounted(() => {
+        window.removeEventListener('keydown', handleGlobalKeydown);
+    });
+
+    function onDeselect() {
+        closeSettings();
     }
 </script>
 

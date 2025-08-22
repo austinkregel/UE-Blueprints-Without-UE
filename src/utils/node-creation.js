@@ -10,6 +10,7 @@ export function addNodeFromDefinition(nodeDefId, position = { x: 200, y: 200 }) 
         console.warn(`Failed to create node with definition ID: ${nodeDefId}`);
         return null;
     }
+    console.log({ position })
     const newNode = createNodeFromDefinition(nodeDefId, position.x, position.y);
     if (newNode) {
         nodes.value.push(newNode);

@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-wrap items-center gap-2 overflow-x-auto px-4 py-2">
+    <div class="flex flex-wrap items-center relative gap-2 px-4 py-2">
         <!-- View menu -->
         <DropdownMenu buttonClass="bg-gray-700 hover:bg-gray-800" label="View" widthClass="w-56">
             <MenuItem v-slot="{ active }">

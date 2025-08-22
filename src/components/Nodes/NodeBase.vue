@@ -109,6 +109,7 @@
     import OutputIOConnection from '../NodeParts/OutputIOConnection.vue';
     import ExecutionIOConnection from '../NodeParts/ExecutionIOConnection.vue';
     import { registerIO } from '../../utils/io-utils.js';
+    import { selectedNodeId, selectNode } from '../../utils/node-selection.js';
 
     const emit = defineEmits(['move', 'connect', 'register-io', 'select', 'start-connection-drag', 'delete-connection', 'node-context-menu']);
     const props = defineProps({
@@ -163,11 +164,12 @@
     // Get execution status for visual indicators
     const executionStatus = computed(() => getNodeExecutionStatus(props.node.id));
 
-    // Color mappings for different node types
+    const isSelected = computed(() => selectedNodeId.value === props.node.id);
+
+    // Color mappings for different node types, with selection override
     const colorClasses = computed(() => {
         // Get the color for this specific node using our coloring system
         const nodeColor = getNodeColor(props.node.type, props.node.nodeDefId);
-
         const colorMap = {
             blue: {
                 header: 'from-blue-500 to-blue-700',
@@ -215,7 +217,13 @@
                 shadow: 'shadow-gray-500/20'
             }
         };
-
+        // If selected, override border with a strong blue ring and border
+        if (isSelected.value) {
+            return {
+                ...colorMap[nodeColor],
+                border: 'ring-4 ring-blue-400 border-blue-400 z-20',
+            };
+        }
         return colorMap[nodeColor] || colorMap.blue;
     });
 
@@ -270,7 +278,7 @@
     const latestIOPositions = {};
     const lastWorldPositions = {};
 
-    function onIOPosition({ type, name, nodeId, rect }) {
+    function onIOPosition({ type, name, rect }) {
         // Store the latest DOM rect for each IO
         if (!latestIOPositions[type]) latestIOPositions[type] = {};
         latestIOPositions[type][name] = rect;
@@ -332,7 +340,8 @@
     }
 
     function handleClick() {
-        // No-op: selection is handled in mouseup
+        selectNode({ id: props.node.id });
+        emit('select', props.node.id);
     }
 
     function handleNodeContextMenu(event) {
@@ -348,8 +357,4 @@
 </script>
 
 <style scoped>
-    /* Keep only the valid-target class as it's used dynamically by JavaScript */
-    .valid-target {
-        @apply border-2 border-dashed opacity-100;
-    }
 </style>

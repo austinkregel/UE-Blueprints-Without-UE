@@ -50,14 +50,6 @@
 
     const emit = defineEmits(['action', 'close', 'node-select']);
 
-    function handleAction(actionType) {
-        emit('action', {
-            type: actionType,
-            position: props.position
-        });
-        emit('close');
-    }
-
     // Node search logic
     const searchQuery = ref('');
     const allNodes = computed(() => {
@@ -83,6 +75,9 @@
     });
 
     function handleNodeSelect(node) {
+      console.log({
+        node, position: props.position,
+      })
         emit('node-select', { node, position: props.position });
         emit('close');
     }
@@ -93,10 +88,8 @@
         (newVisible) => {
             if (newVisible) {
                 // Add click listener to close menu when clicking outside
-                setTimeout(() => {
                     document.addEventListener('click', handleOutsideClick);
                     document.addEventListener('keydown', handleKeyDown);
-                }, 0);
             } else {
                 document.removeEventListener('click', handleOutsideClick);
                 document.removeEventListener('keydown', handleKeyDown);
