@@ -21,7 +21,7 @@ export { registerIO, registerAllIOForNode, renderConnectionPath, getConnectionPo
 export { startConnectionDrag, onConnectionDragMove, onConnectionDragEnd } from './drag-connect.js';
 
 // Connection manager
-export { connections, addConnection, removeConnection, clearConnections } from './connection-manager.js';
+export { getConnections, addConnection, removeConnection, clearConnections } from './connection-manager.js';
 
 // Node creation utilities (data/control/exec families and patterns)
 export {

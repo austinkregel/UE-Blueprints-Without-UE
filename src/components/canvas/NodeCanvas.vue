@@ -13,6 +13,20 @@
     >
         <!-- Infinite Canvas Container -->
         <div class="absolute inset-0 z-0 overflow-hidden">
+            <!-- Background Grid -->
+            <div
+                class="absolute inset-0 bg-grid"
+                :style="{
+                    transform: `translate(${adjustedGridOffset.x}px, ${adjustedGridOffset.y}px)`,
+                    backgroundSize: `${Math.max(gridSize * viewport.zoom, 1)}px ${Math.max(gridSize * viewport.zoom, 1)}px`,
+                    backgroundImage: `
+                        linear-gradient(to right, rgba(50, 50, 50, 0.2) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(50, 50, 50, 0.2) 1px, transparent 1px),
+                        linear-gradient(to right, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max(5 * gridSize / viewport.zoom, 1))}px),
+                        linear-gradient(to bottom, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max(5 * gridSize / viewport.zoom, 1))}px)`
+                }"
+            ></div>
+
             <div :style="{ transform: getViewportTransform() }" class="canvas-content">
                 <!-- Connections under nodes -->
                 <svg
@@ -32,7 +46,7 @@
                             font-size="14"
                             pointer-events="none"
                         >
-                            {{ `Node ${node.id} (${node.x},${node.y})` }}
+                            {{ `Node ${node.id} (${Math.round(node.x)},${Math.round(node.y)})` }}
                         </text>
                         <template v-if="draggingConnection && draggingConnection.dragPos">
                             <circle :cx="draggingConnection.dragPos.x" :cy="draggingConnection.dragPos.y" fill="orange" pointer-events="none" r="7" />
@@ -47,7 +61,7 @@
                             </text>
                         </template>
                     </g>
-                    <g v-for="conn in connections" :key="`${conn.from.nodeId}:${conn.from.output}->${conn.to.nodeId}:${conn.to.input}`">
+                    <g v-for="conn in getConnections()" :key="`${conn.from.nodeId}:${conn.from.output}->${conn.to.nodeId}:${conn.to.input}`">
                         <path
                             v-if="getConnectionPointsArray(conn)"
                             :d="renderConnectionPath(getConnectionPointsArray(conn))"
@@ -76,7 +90,7 @@
                 <div v-for="node in nodes" :key="node.id" class="relative z-10">
                     <component
                         :is="getNodeComponent(node)"
-                        :connections="connections"
+                        :connections="getConnections()"
                         :node="node"
                         @connect="addConnection"
                         @move="moveNode"
@@ -92,18 +106,17 @@
 </template>
 
 <script setup>
-    import { onBeforeUnmount, onMounted, ref } from 'vue';
-    // Removed NodeSettings import
+    import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { activeWorkspace, draggingConnection, nodes } from '../../utils/state.js';
     import { getConnectionColor, isActionFlow, renderDraggingConnection } from '../../utils/connection-visuals.js';
-    import { draggingConnection, nodes } from '../../utils/state.js';
     import { selectNode } from '../../utils/node-selection.js';
     import { getNodeComponent } from '../../utils/get-node-component.js';
     import { startConnectionDrag } from '../../utils/drag-connect.js';
     import { moveNode } from '../../utils/nodes-core.js';
-    import { getConnectionPointsArray, registerIO, renderConnectionPath } from '../../utils/io-utils.js';
-    import { addConnection, connections, removeConnection } from '../../utils/connection-manager.js';
+    import { getConnectionPointsArray, renderConnectionPath } from '../../utils/io-utils.js';
+    import { addConnection, getConnections, removeConnection } from '../../utils/connection-manager.js';
     import { onEditorMouseDown as onEditorMouseDownUtil } from '../../utils/editor-utils.js';
-    import { getViewportTransform, setCanvasOffset, setZoom, viewport } from '../../utils/viewport-utils.js';
+    import { getViewportTransform, setCanvasOffset, setZoom, viewport, adjustGridToWorld } from '../../utils/viewport-utils.js';
 
     const props = defineProps({
         debugMode: { type: Boolean, default: false }
@@ -113,6 +126,21 @@
 
     const isDragOver = ref(false);
     const editorAreaRef = ref(null);
+
+    const gridSize = 50; // Base grid size
+
+    const adjustedGridOffset = ref(adjustGridToWorld({
+            x: -(viewport.x % (gridSize / viewport.zoom)),
+            y: -(viewport.y % (gridSize / viewport.zoom))
+        }, gridSize, viewport.zoom));
+
+    // Watch for changes in the active workspace
+    watch(activeWorkspace, (newWorkspace) => {
+        if (newWorkspace) {
+            nodes.value = newWorkspace.nodes;
+            draggingConnection.value = newWorkspace.draggingConnection;
+        }
+    });
 
     function updateCanvasOffset() {
         const rect = editorAreaRef.value?.getBoundingClientRect();
@@ -203,5 +231,10 @@
     .drag-over::before {
         content: 'Drop node here';
         @apply pointer-events-none absolute top-1/2 left-1/2 z-[1000] -translate-x-1/2 -translate-y-1/2 transform text-2xl font-bold text-blue-500/80;
+    }
+
+    .bg-grid {
+        background-image: linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+                          linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
     }
 </style>

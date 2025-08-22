@@ -1,14 +1,11 @@
-import { ref } from 'vue';
-import { log, nodes } from './state.js';
-
-export const connections = ref([]);
+import { log, activeWorkspace } from './state.js';
 
 function connectionKey(conn) {
     return `${conn.from.nodeId}:${conn.from.output}->${conn.to.nodeId}:${conn.to.input}`;
 }
 
 export function getConnections() {
-    return connections.value ?? [];
+    return activeWorkspace.value?.connections ?? [];
 }
 
 export function addConnection({ from, to }) {
@@ -17,7 +14,7 @@ export function addConnection({ from, to }) {
         return;
     }
     // Prevent duplicate connections
-    if (connections.value.some((conn) => connectionKey(conn) === connectionKey({ from, to }))) {
+    if (activeWorkspace.value?.connections.some((conn) => connectionKey(conn) === connectionKey({ from, to }))) {
         log('Connection already exists', { from, to });
         return;
     }
@@ -26,9 +23,14 @@ export function addConnection({ from, to }) {
         log('Self-connection not allowed', { from, to });
         return;
     }
+    // Prevent multiple outputs to a single input
+    if (activeWorkspace.value?.connections.some((conn) => conn.to.nodeId === to.nodeId && conn.to.input === to.input)) {
+        log('Input already connected to another output', { from, to });
+        return;
+    }
     // Validate IO types
-    const fromNode = nodes.value.find((n) => n.id === from.nodeId);
-    const toNode = nodes.value.find((n) => n.id === to.nodeId);
+    const fromNode = activeWorkspace.value?.nodes.find((n) => n.id === from.nodeId);
+    const toNode = activeWorkspace.value?.nodes.find((n) => n.id === to.nodeId);
     if (!fromNode || !toNode) return;
     const fromOut = fromNode.outputs?.find((o) => (o.name || o) === from.output);
     const toIn = toNode.inputs?.find((i) => (i.name || i) === to.input);
@@ -39,56 +41,33 @@ export function addConnection({ from, to }) {
     const isExec = (t) => String(t || '').toLowerCase() === 'exec';
     // Allow exec-to-exec regardless of names (Then 0, True, etc.)
     if (isExec(fromType) && isExec(toType)) {
-        // Enforce single-connection per IO: remove any existing on same from-output or to-input
-        const before = connections.value.length;
-        connections.value = (connections.value || []).filter((c) => {
-            const sameFrom = c.from?.nodeId === from.nodeId && c.from?.output === from.output;
-            const sameTo = c.to?.nodeId === to.nodeId && c.to?.input === to.input;
-            return !(sameFrom || sameTo);
-        });
-        const removed = before - connections.value.length;
-        if (removed > 0) log(`Replaced ${removed} existing connection(s) for exec IO`, { from, to });
-        connections.value.push({ from, to });
+        activeWorkspace.value.connections.push({ from, to });
         return;
     }
     // Disallow mixing exec with data
-    if (isExec(fromType) !== isExec(toType)) {
-        log('Incompatible types (exec/data mismatch)', { fromType, toType, from, to });
+    if (isExec(fromType) !== isExec(toType) || fromType !== toType) {
+        log('Incompatible types', { fromType, toType });
         return;
     }
-    // For data, types must match (casting handled elsewhere)
-    if (fromType !== toType) {
-        log('Incompatible data types', { fromType, toType, from, to });
-        return;
-    }
-    // Enforce single-connection per IO: remove any existing on same from-output or to-input
-    const before = connections.value.length;
-    connections.value = (connections.value || []).filter((c) => {
-        const sameFrom = c.from?.nodeId === from.nodeId && c.from?.output === from.output;
-        const sameTo = c.to?.nodeId === to.nodeId && c.to?.input === to.input;
-        return !(sameFrom || sameTo);
-    });
-    const removed = before - connections.value.length;
-    if (removed > 0) log(`Replaced ${removed} existing connection(s) for data IO`, { from, to });
-    connections.value.push({ from, to });
+    activeWorkspace.value.connections.push({ from, to });
 }
 
 export function removeConnection({ from, to }) {
     const key = connectionKey({ from, to });
-    connections.value = connections.value.filter((conn) => connectionKey(conn) !== key);
+    activeWorkspace.value.connections = activeWorkspace.value.connections.filter((conn) => connectionKey(conn) !== key);
     log('Connection removed', { from, to });
 }
 
 export function clearConnections() {
-    connections.value = [];
+    activeWorkspace.value.connections = [];
     log('All connections cleared');
 }
 
 // Remove connections whose endpoints reference nodes or pins that no longer exist
 export function pruneDanglingConnections() {
-    const nodeById = new Map((nodes.value || []).map((n) => [n.id, n]));
-    const before = connections.value.length;
-    connections.value = (connections.value || []).filter((conn) => {
+    const nodeById = new Map((activeWorkspace.value.nodes || []).map((n) => [n.id, n]));
+    const before = activeWorkspace.value.connections.length;
+    activeWorkspace.value.connections = (activeWorkspace.value.connections || []).filter((conn) => {
         const fromNode = nodeById.get(conn?.from?.nodeId);
         const toNode = nodeById.get(conn?.to?.nodeId);
         if (!fromNode || !toNode) return false;
@@ -99,6 +78,6 @@ export function pruneDanglingConnections() {
         const hasIn = (toNode.inputs || []).some((i) => (i.name || i) === inName);
         return hasOut && hasIn;
     });
-    const removed = before - connections.value.length;
+    const removed = before - activeWorkspace.value.connections.length;
     if (removed > 0) log(`Pruned ${removed} dangling connection(s)`);
 }

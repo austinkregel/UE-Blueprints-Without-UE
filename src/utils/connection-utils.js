@@ -1,11 +1,11 @@
 import { draggingConnection, log, nodes } from './state.js';
 import { getIOPosition } from './io-positions.js';
 import { createCastNode } from './node-factory.js';
-import { addConnection, connections } from './connection-manager.js';
+import { addConnection, getConnections } from './connection-manager.js';
 import { canCast, isSameType } from './type-utils.js';
 
 function isDuplicateConnection(from, to) {
-    return connections.value.some(
+    return getConnections().some(
         (conn) =>
             conn.from?.nodeId === from?.nodeId && conn.from?.output === from?.output && conn.to?.nodeId === to?.nodeId && conn.to?.input === to?.input
     );

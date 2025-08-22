@@ -34,7 +34,11 @@
                 @drop-node="onDrop"
                 @node-context-menu="onNodeContextMenu"
                 @deselect="onDeselect"
+                v-if="activeWorkspace"
             />
+            <div v-else class="flex-1 overflow-hidden flex items-center justify-center text-gray-500">
+                <p class="text-lg">No active workspace. Please create or open a workspace to start.</p>
+            </div>
 
             <!-- Execution Log Panel (right, non-overlapping) -->
             <ExecutionLog :logs="executionLog" @clear="clearExecutionResults" />
@@ -85,14 +89,13 @@
     import ProjectExplorer from './components/panels/ProjectExplorer.vue';
     import NodeSettings from './components/NodeSettings.vue';
 
-    import { debugMode, nodes } from './utils/state.js';
+    import {activeWorkspace, createWorkspace, debugMode, nodes} from './utils/state.js';
     import { addNode, deleteNode } from './utils/nodes-core.js';
     import { addNodeFromDefinition } from './utils/node-creation.js';
     import { selectedNodeId, selectNode, closeSettings } from './utils/node-selection.js';
     import { attachPendingConnectionToNode, pendingConnectionRequest } from './utils/pending-connection.js';
     import { addActionNode } from './utils/action-node-utils.js';
     import { addSystemNode } from './utils/system-node-utils.js';
-    import { connections } from './utils/connection-manager.js';
     import { canvasOffset, screenToWorld, viewport, worldToScreen } from './utils/viewport-utils.js';
     import {
         addEntryPoint,
@@ -257,7 +260,6 @@
     // Create a simple test graph for execution testing
     function createTestGraph() {
         nodes.value = [];
-        connections.value = [];
         const startNode = addNodeFromDefinition('on_start', 100, 100);
         const printNode1 = addNodeFromDefinition('print', 350, 100);
         const emitEventNode = addNodeFromDefinition('emit_event', 600, 100);
@@ -369,6 +371,18 @@
     function onDeselect() {
         closeSettings();
     }
+
+    // Watch for changes in the active workspace
+    watch(activeWorkspace, (newWorkspace) => {
+        if (newWorkspace) {
+            nodes.value = newWorkspace.nodes;
+            selectedNodeId.value = newWorkspace.selectedNodeId;
+        }
+    });
+
+    const createNewWorkspace = () => {
+        createWorkspace(Date.now(), { name: 'New Workspace' });
+    };
 </script>
 
 <style>

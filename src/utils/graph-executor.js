@@ -7,7 +7,7 @@
 
 import { computed, ref } from 'vue';
 import { nodes } from './state.js';
-import { connections } from './connection-manager.js';
+import { getConnections } from './connection-manager.js';
 // Execution state
 export const isExecuting = ref(false);
 export const executionResults = ref(new Map());
@@ -66,14 +66,14 @@ function findEntryPoints() {
  * Find all connections coming from a specific node's output
  */
 function findConnectionsFromOutput(nodeId, outputName) {
-    return connections.value.filter((conn) => conn.from && conn.from.nodeId === nodeId && conn.from.output === outputName);
+    return getConnections().filter((conn) => conn.from && conn.from.nodeId === nodeId && conn.from.output === outputName);
 }
 
 /**
  * Find all connections going to a specific node's input
  */
 function findConnectionsToInput(nodeId, inputName) {
-    return connections.value.filter((conn) => conn.to && conn.to.nodeId === nodeId && conn.to.input === inputName);
+    return getConnections().filter((conn) => conn.to && conn.to.nodeId === nodeId && conn.to.input === inputName);
 }
 
 /**
@@ -733,7 +733,7 @@ function inferDataSinks() {
     for (const n of nodes.value) {
         for (const out of n.outputs || []) {
             if (isExecType(out.type)) continue;
-            const hasOutgoing = connections.value.some((c) => c.from?.nodeId === n.id && c.from.output === (out.name || out));
+            const hasOutgoing = getConnections().some((c) => c.from?.nodeId === n.id && c.from.output === (out.name || out));
             if (!hasOutgoing) sinks.push({ nodeId: n.id, output: out.name || out });
         }
     }

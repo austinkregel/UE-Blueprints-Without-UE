@@ -6,7 +6,7 @@
             colorClasses.shadow,
             executionStatusClass,
             'absolute inline-block max-w-[420px] min-w-[220px] cursor-grab border-2 font-sans text-sm text-white select-none',
-            'bg-gradient-to-br from-slate-800/50 via-slate-700/30 to-slate-900/50',
+            'bg-gradient-to-br from-slate-600/70 via-slate-700/90 to-slate-800/80',
             'rounded-[18px] shadow-lg shadow-black/25 backdrop-blur-sm',
             !dragging.value ? '' : '',
             'hover:shadow-xl hover:shadow-black/35',
@@ -20,7 +20,7 @@
     >
         <div
             v-if="shouldShowHeader"
-            :class="[colorClasses.header, 'relative z-10 flex items-center justify-between rounded-t-lg bg-gradient-to-r px-3 py-1.5 font-bold']"
+            :class="[colorClasses.header, 'relative z-10 flex items-center justify-between rounded-t-[16px] bg-gradient-to-r px-3 py-1.5 font-bold']"
         >
             <slot name="header">{{ getDefaultHeaderText() }}</slot>
             <div v-if="executionStatus.executed" class="ml-2 text-xs">

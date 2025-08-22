@@ -6,8 +6,7 @@
             :node-id="nodeId"
             :io-type="ioType"
             pin-type="exec"
-            custom-classes="bg-gradient-to-r from-yellow-400/10 to-yellow-400/5 rounded hover:from-yellow-400/20 hover:to-yellow-400/10"
-            label-classes="text-yellow-400 font-semibold"
+            label-classes="text-white font-semibold"
             @io-context-menu="$emit('io-context-menu', $event)"
         />
     </div>

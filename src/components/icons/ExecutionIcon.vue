@@ -1,6 +1,6 @@
 <template>
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path :d="pentagonPath" :fill="active ? '#ffff00' : 'none'" :stroke="active ? 'none' : '#ffff00'" stroke-width="2" stroke-linejoin="round" />
+        <path :d="pentagonPath" :fill="active ? '#ffffff' : 'none'" :stroke="active ? 'none' : '#ffffff'" stroke-width="2" stroke-linejoin="round" />
     </svg>
 </template>
 

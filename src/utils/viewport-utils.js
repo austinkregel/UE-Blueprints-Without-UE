@@ -102,3 +102,20 @@ export function resetViewport() {
 export function getViewportTransform() {
     return `translate(${viewport.value.x}px, ${viewport.value.y}px) scale(${viewport.value.zoom})`;
 }
+
+/**
+ * Adjust grid offset to align with the world coordinates.
+ * Ensures the grid remains consistent during panning and zooming.
+ *
+ * @param {Object} gridOffset - Current grid offset {x, y}.
+ * @param {number} gridSize - Base size of the grid.
+ * @param {number} zoom - Current zoom level of the viewport.
+ * @returns {Object} - Adjusted grid offset {x, y}.
+ */
+export function adjustGridToWorld(gridOffset, gridSize, zoom) {
+    const scaledGridSize = gridSize / zoom; // Invert scaling logic to ensure squares shrink when zooming in and grow when zooming out
+    return {
+        x: -(gridOffset.x % scaledGridSize),
+        y: -(gridOffset.y % scaledGridSize)
+    };
+}
