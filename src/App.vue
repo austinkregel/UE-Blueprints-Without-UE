@@ -34,6 +34,7 @@
                 @drop-node="onDrop"
                 @node-context-menu="onNodeContextMenu"
                 @deselect="onDeselect"
+                @update-outputs="handleUpdateOutputs"
                 v-if="activeWorkspace"
             />
             <div v-else class="flex-1 overflow-hidden flex items-center justify-center text-gray-500">
@@ -45,7 +46,6 @@
 
             <!-- Right Palette Sidebar -->
             <div
-                v-if="showNodePalette"
                 class="flex max-h-screen w-86 shrink-0 flex-col overflow-y-auto border-l border-zinc-200 bg-white/80 dark:border-zinc-700 dark:bg-zinc-900/80"
             >
                 <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" />
@@ -95,7 +95,7 @@
     import { selectedNodeId, selectNode, closeSettings } from './utils/node-selection.js';
     import { attachPendingConnectionToNode, pendingConnectionRequest } from './utils/pending-connection.js';
     import { addActionNode } from './utils/action-node-utils.js';
-    import { addSystemNode } from './utils/system-node-utils.js';
+    import { addSystemNode, updateNodeOutputs } from './utils/system-node-utils.js';
     import { canvasOffset, screenToWorld, viewport, worldToScreen } from './utils/viewport-utils.js';
     import {
         addEntryPoint,
@@ -383,6 +383,11 @@
     const createNewWorkspace = () => {
         createWorkspace(Date.now(), { name: 'New Workspace' });
     };
+
+    // Method to handle update-outputs event from SystemNode
+    function handleUpdateOutputs(nodeId, newOutputs) {
+        updateNodeOutputs(nodeId, newOutputs);
+    }
 </script>
 
 <style>

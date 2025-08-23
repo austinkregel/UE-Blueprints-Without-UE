@@ -224,13 +224,26 @@
                     </button>
                 </li>
             </ul>
-            <button
-                class="mb-3 rounded-sm bg-zinc-200 px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
-                title="Add Output"
-                @click="addOutput"
-            >
-                + Out
-            </button>
+
+            <!-- IO Control for System Nodes -->
+            <div v-if="selectedNode.type === 'system'" class="mb-2">
+                <h4 class="mb-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">IO Control</h4>
+                <div class="mb-1.5 grid grid-cols-2 gap-1.5">
+                    <button
+                        @click="addOutput"
+                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                    >
+                        Add Output
+                    </button>
+                    <button
+                        @click="removeOutput"
+                        :disabled="selectedNode.outputs.length === 0"
+                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                    >
+                        Remove Output
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Variables List Section -->
@@ -376,11 +389,16 @@
     }
 
     function addOutput() {
-        localOutputs.value.push({ name: 'Output', type: '' });
+        const newOutput = { id: `output-${selectedNode.outputs.length + 1}`, name: `Output ${selectedNode.outputs.length + 1}` };
+        selectedNode.outputs.push(newOutput);
+        emit('update-outputs', selectedNode.id, selectedNode.outputs);
     }
 
-    function removeOutput(i) {
-        localOutputs.value.splice(i, 1);
+    function removeOutput() {
+        if (selectedNode.outputs.length > 0) {
+            selectedNode.outputs.pop();
+            emit('update-outputs', selectedNode.id, selectedNode.outputs);
+        }
     }
 
     function save() {

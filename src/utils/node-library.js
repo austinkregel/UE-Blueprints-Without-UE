@@ -144,13 +144,6 @@ export function getMemoryNodes() {
 }
 
 /**
- * Get advanced math nodes
- */
-export function getAdvancedMathNodes() {
-    return getNodesByCategory('ADVANCED_MATH');
-}
-
-/**
  * Get advanced string manipulation nodes
  */
 export function getAdvancedStringNodes() {

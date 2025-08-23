@@ -8,7 +8,7 @@ export function getNodeComponent(node) {
     if (node.type === 'variable') return VariableNode;
     if (node.type === 'function') return FunctionNode;
     if (node.type === 'system') return SystemNode;
-    if (node.type === 'constant') return NodeBase;
+    if (node.type === 'constant') return VariableNode;
     if (node.type === 'exec') return ExecNode;
     const execNodeIds = [
         'sequence',
@@ -25,7 +25,7 @@ export function getNodeComponent(node) {
         'while_loop'
     ];
     if (node.nodeDefId && execNodeIds.includes(node.nodeDefId)) {
-        return ExecNode;
+        return SystemNode;
     }
     return NodeBase;
 }

@@ -6,15 +6,28 @@ import { createNodeFromDefinition } from './node-factory.js';
 /**
  * Add a system node by definition ID
  */
-export function addSystemNode(nodeDefId = 'print', position = { x: 500, y: 300 }) {
+export function addSystemNode(nodeDefId = 'print', position = { x: 500, y: 300 }, outputs = []) {
     const newNode = createNodeFromDefinition(nodeDefId, position.x, position.y, {
         id: getNextNodeId('system'),
         type: 'system',
-        systemName: nodeDefId
+        systemName: nodeDefId,
+        outputs: outputs.length > 0 ? outputs : undefined // Initialize with dynamic outputs if provided
     });
 
     nodes.value.push(newNode);
     return newNode;
+}
+
+/**
+ * Update outputs for a specific node
+ */
+export function updateNodeOutputs(nodeId, newOutputs) {
+    const node = nodes.value.find((n) => n.id === nodeId);
+    if (node) {
+        node.outputs = newOutputs;
+    } else {
+        console.warn(`Node with ID ${nodeId} not found.`);
+    }
 }
 
 /**
@@ -65,147 +78,4 @@ export function addCommonSystemNode(nodeName, position = { x: 500, y: 300 }) {
         console.warn(`Unknown system node: ${nodeName}`);
         return null;
     }
-}
-
-/**
- * Add multiple related nodes (e.g., for a complete workflow)
- */
-export function addNodeGroup(groupType, startPosition = { x: 100, y: 100 }) {
-    const spacing = { x: 250, y: 150 };
-    const addedNodes = [];
-
-    switch (groupType) {
-        case 'basic_game_setup':
-            addedNodes.push(addEventNode('on_start', startPosition));
-            addedNodes.push(
-                addSystemNode('spawn_actor', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('play_sound', {
-                    x: startPosition.x + spacing.x * 2,
-                    y: startPosition.y
-                })
-            );
-            break;
-
-        case 'math_operations':
-            addedNodes.push(addSystemNode('add', startPosition));
-            addedNodes.push(
-                addSystemNode('multiply', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('equals', {
-                    x: startPosition.x + spacing.x * 2,
-                    y: startPosition.y
-                })
-            );
-            break;
-
-        case 'file_operations':
-            addedNodes.push(addSystemNode('file_exists', startPosition));
-            addedNodes.push(
-                addSystemNode('read_file', {
-                    x: startPosition.x,
-                    y: startPosition.y + spacing.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('write_file', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y + spacing.y
-                })
-            );
-            break;
-
-        case 'vector_math':
-            addedNodes.push(addSystemNode('make_vector', startPosition));
-            addedNodes.push(
-                addSystemNode('vector_length', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('normalize_vector', {
-                    x: startPosition.x + spacing.x * 2,
-                    y: startPosition.y
-                })
-            );
-            break;
-
-        case 'exec_flow_basic':
-            addedNodes.push(addSystemNode('sequence', startPosition));
-            addedNodes.push(
-                addSystemNode('branch', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('gate', {
-                    x: startPosition.x + spacing.x * 2,
-                    y: startPosition.y
-                })
-            );
-            break;
-
-        case 'exec_flow_advanced':
-            addedNodes.push(addSystemNode('multigate', startPosition));
-            addedNodes.push(
-                addSystemNode('do_once', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('flip_flop', {
-                    x: startPosition.x + spacing.x * 2,
-                    y: startPosition.y
-                })
-            );
-            break;
-
-        case 'exec_flow_loops':
-            addedNodes.push(addSystemNode('for_loop', startPosition));
-            addedNodes.push(
-                addSystemNode('for_each_loop', {
-                    x: startPosition.x,
-                    y: startPosition.y + spacing.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('while_loop', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y
-                })
-            );
-            break;
-
-        case 'exec_flow_timing':
-            addedNodes.push(addSystemNode('delay', startPosition));
-            addedNodes.push(
-                addSystemNode('retriggerable_delay', {
-                    x: startPosition.x + spacing.x,
-                    y: startPosition.y
-                })
-            );
-            addedNodes.push(
-                addSystemNode('do_n', {
-                    x: startPosition.x + spacing.x * 2,
-                    y: startPosition.y
-                })
-            );
-            break;
-
-        default:
-            console.warn(`Unknown node group: ${groupType}`);
-    }
-
-    return addedNodes;
 }

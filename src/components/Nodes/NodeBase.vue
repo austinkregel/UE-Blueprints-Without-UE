@@ -30,36 +30,18 @@
         </div>
         <slot></slot>
         <div class="relative z-10 flex flex-wrap justify-between p-2">
-            <!-- Variable nodes: Special compact layout -->
-            <div v-if="props.node.type === 'variable'" class="flex w-full items-end justify-end">
-                <ExecutionIOConnection
-                    v-if="props.node.varType === 'exec'"
-                    :io="{ name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' }"
-                    :connection="getOutputConnection(props.node.varName)"
-                    :node-id="props.node.id"
-                    io-type="output"
-                    class="bg-zinc-700/50 text-sm hover:bg-zinc-600/50"
-                    @io-position="onIOPosition"
-                />
-                <OutputIOConnection
-                    v-else
-                    :io="{ name: props.node.outputs?.[0]?.name || props.node.varName, type: props.node.varType || 'mixed' }"
-                    :connection="getOutputConnection(props.node.varName)"
-                    :node-id="props.node.id"
-                    class="bg-zinc-700/50 text-sm hover:bg-zinc-600/50"
-                    @io-position="onIOPosition"
-                />
-            </div>
-
-            <!-- Regular nodes: Standard input/output layout -->
+            <template v-if="node.dynamicOutputs">
+                <button @click="addDynamicOutput">Add Output</button>
+                <button @click="removeDynamicOutput" :disabled="node.outputs.length === 0">Remove Output</button>
+            </template>
             <template v-else>
                 <div class="inputs flex flex-col gap-1">
-                    <template v-for="input in node.inputs" :key="`${props.node.id}:${input.name || input}`">
+                    <template v-for="input in node.inputs" :key="`${node.id}:${input.name || input}`">
                         <ExecutionIOConnection
                             v-if="input.type === 'exec'"
                             :io="input"
                             :connection="getInputConnection(input)"
-                            :node-id="props.node.id"
+                            :node-id="node.id"
                             io-type="input"
                             @io-position="onIOPosition"
                         />
@@ -67,7 +49,7 @@
                             v-else
                             :io="input"
                             :connection="getInputConnection(input)"
-                            :node-id="props.node.id"
+                            :node-id="node.id"
                             @io-position="onIOPosition"
                         />
                     </template>
@@ -75,12 +57,12 @@
                 </div>
 
                 <div class="outputs flex flex-col gap-1">
-                    <template v-for="output in node.outputs" :key="`${props.node.id}:${output.name || output}`">
+                    <template v-for="output in node.outputs" :key="`${node.id}:${output.name || output}`">
                         <ExecutionIOConnection
                             v-if="output.type === 'exec'"
                             :io="output"
                             :connection="getOutputConnection(output)"
-                            :node-id="props.node.id"
+                            :node-id="node.id"
                             io-type="output"
                             @io-position="onIOPosition"
                         />
@@ -88,7 +70,7 @@
                             v-else
                             :io="output"
                             :connection="getOutputConnection(output)"
-                            :node-id="props.node.id"
+                            :node-id="node.id"
                             @io-position="onIOPosition"
                         />
                     </template>
@@ -96,6 +78,8 @@
                 </div>
             </template>
         </div>
+      <slot name="footer"></slot>
+
     </div>
 </template>
 
@@ -354,7 +338,24 @@
             }
         });
     }
+
+    function addDynamicOutput() {
+        const newOutput = { name: `Output ${node.outputs.length + 1}`, type: 'exec' };
+        node.outputs.push(newOutput);
+        emit('update-outputs', node.outputs);
+    }
+
+    function removeDynamicOutput() {
+        if (node.outputs.length > 0) {
+            node.outputs.pop();
+            emit('update-outputs', node.outputs);
+        }
+    }
 </script>
 
 <style scoped>
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
 </style>

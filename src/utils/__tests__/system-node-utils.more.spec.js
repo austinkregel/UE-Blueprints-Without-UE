@@ -3,7 +3,7 @@ import * as state from '../state.js';
 import * as nodeLibrary from '../node-library.js';
 import * as nodeFactory from '../node-factory.js';
 import * as idUtils from '../id-utils.js';
-import { addCommonSystemNode, addNodeGroup, addSystemNode, getAvailableSystemNodes, searchAvailableNodes } from '../system-node-utils.js';
+import { addCommonSystemNode, addSystemNode, getAvailableSystemNodes, searchAvailableNodes } from '../system-node-utils.js';
 
 describe('system-node-utils', () => {
     beforeEach(() => {
@@ -41,16 +41,6 @@ describe('system-node-utils', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
         expect(addCommonSystemNode('unknown')).toBeNull();
         expect(spy).toHaveBeenCalledWith(expect.stringContaining('Unknown system node'));
-        spy.mockRestore();
-    });
-
-    it('addNodeGroup adds nodes for known group, warns for unknown', () => {
-        const nodes = addNodeGroup('math_operations', { x: 0, y: 0 });
-        expect(Array.isArray(nodes)).toBe(true);
-        expect(nodes.length).toBeGreaterThan(0);
-        const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        expect(addNodeGroup('not_a_group')).toEqual([]);
-        expect(spy).toHaveBeenCalledWith(expect.stringContaining('Unknown node group'));
         spy.mockRestore();
     });
 });
