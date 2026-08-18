@@ -2,15 +2,11 @@
     <div
         ref="nodeRef"
         :class="[
-            colorClasses.border,
-            colorClasses.shadow,
+            'bp-node',
+            `na-${nodeColorName}`,
+            isSelected ? 'sel' : '',
             executionStatusClass,
-            'absolute inline-block max-w-[420px] min-w-[220px] cursor-grab border-2 font-sans text-sm text-white select-none',
-            'bg-gradient-to-br from-slate-600/70 via-slate-700/90 to-slate-800/80',
-            'rounded-[18px] shadow-lg shadow-black/25 backdrop-blur-sm',
-            !dragging.value ? '' : '',
-            'hover:shadow-xl hover:shadow-black/35',
-            'active:shadow-md active:shadow-black/35'
+            'absolute inline-block max-w-[420px] min-w-[220px] cursor-grab text-sm select-none'
         ]"
         :data-node-id="node.id"
         :style="{ left: node.x + 'px', top: node.y + 'px' }"
@@ -18,15 +14,15 @@
         @click.stop="handleClick"
         @contextmenu.stop.prevent="handleNodeContextMenu"
     >
-        <div
-            v-if="shouldShowHeader"
-            :class="[colorClasses.header, 'relative z-10 flex items-center justify-between rounded-t-[16px] bg-gradient-to-r px-3 py-1.5 font-bold']"
-        >
-            <slot name="header">{{ getDefaultHeaderText() }}</slot>
-            <div v-if="executionStatus.executed" class="ml-2 text-xs">
-                <span v-if="executionStatus.success === false" class="text-red-300">❌</span>
-                <span v-else class="text-green-300">✅</span>
-            </div>
+        <div v-if="shouldShowHeader" class="bp-node-head relative z-10">
+            <span class="bp-glyph"><i></i></span>
+            <span class="bp-title"
+                ><slot name="header">{{ getDefaultHeaderText() }}</slot></span
+            >
+            <span v-if="executionStatus.executed" class="bp-node-exec">
+                <span v-if="executionStatus.success === false">❌</span>
+                <span v-else>✅</span>
+            </span>
         </div>
         <slot></slot>
         <div class="relative z-10 flex flex-wrap justify-between p-2">
@@ -158,78 +154,15 @@
 
     const isSelected = computed(() => selectedNodeId.value === props.node.id);
 
-    // Color mappings for different node types, with selection override
-    const colorClasses = computed(() => {
-        // Get the color for this specific node using our coloring system
-        const nodeColor = getNodeColor(props.node.type, props.node.nodeDefId);
-        const colorMap = {
-            blue: {
-                header: 'from-blue-500 to-blue-700',
-                border: 'border-blue-400/30',
-                shadow: 'shadow-blue-500/20'
-            },
-            green: {
-                header: 'from-green-500 to-green-700',
-                border: 'border-green-400/30',
-                shadow: 'shadow-green-500/20'
-            },
-            yellow: {
-                header: 'from-yellow-500 to-yellow-700',
-                border: 'border-yellow-400/30',
-                shadow: 'shadow-yellow-500/20'
-            },
-            purple: {
-                header: 'from-purple-500 to-purple-700',
-                border: 'border-purple-400/30',
-                shadow: 'shadow-purple-500/20'
-            },
-            red: {
-                header: 'from-red-500 to-red-700',
-                border: 'border-red-400/30',
-                shadow: 'shadow-red-500/20'
-            },
-            cyan: {
-                header: 'from-cyan-500 to-cyan-700',
-                border: 'border-cyan-400/30',
-                shadow: 'shadow-cyan-500/20'
-            },
-            pink: {
-                header: 'from-pink-500 to-pink-700',
-                border: 'border-pink-400/30',
-                shadow: 'shadow-pink-500/20'
-            },
-            orange: {
-                header: 'from-orange-500 to-orange-700',
-                border: 'border-orange-400/30',
-                shadow: 'shadow-orange-500/20'
-            },
-            gray: {
-                header: 'from-gray-500 to-gray-700',
-                border: 'border-gray-400/30',
-                shadow: 'shadow-gray-500/20'
-            }
-        };
-        // If selected, override border with a strong blue ring and border
-        if (isSelected.value) {
-            return {
-                ...colorMap[nodeColor],
-                border: 'ring-4 ring-blue-400 border-blue-400 z-20'
-            };
-        }
-        return colorMap[nodeColor] || colorMap.blue;
-    });
+    // The node's accent color name (e.g. 'red'/'violet'/'amber'), resolved from its
+    // category. Drives the `.na-<color>` class that tints the header via --na.
+    const nodeColorName = computed(() => getNodeColor(props.node.type, props.node.nodeDefId) || 'blue');
 
-    // Execution status styling
+    // Execution status styling — a colored border after a run.
     const executionStatusClass = computed(() => {
         if (!executionStatus.value.executed) return '';
-
-        if (executionStatus.value.success === false) {
-            return 'border-red-500 shadow-red-500/30';
-        } else if (executionStatus.value.executed) {
-            return 'border-green-500 shadow-green-500/30';
-        }
-
-        return '';
+        if (executionStatus.value.success === false) return 'border-red-500';
+        return 'border-green-500';
     });
 
     // Determine if this node should show a header

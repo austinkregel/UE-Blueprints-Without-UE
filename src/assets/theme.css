@@ -74,3 +74,121 @@
 .type-mixed {
     color: var(--t-mixed);
 }
+
+/* ================================================================
+   Node visual language (generic). A node's accent comes from its
+   category color name via a `.na-<color>` class that sets --na; the
+   header is a dark, category-tinted gradient derived from it, so any
+   domain's categories theme their nodes without hard-coding.
+   ================================================================ */
+.na-blue {
+    --na: #1e9bff;
+}
+.na-green {
+    --na: #37d67a;
+}
+.na-yellow {
+    --na: #f5b942;
+}
+.na-purple {
+    --na: #8b5cf6;
+}
+.na-red {
+    --na: #ef5064;
+}
+.na-cyan {
+    --na: #22d3ee;
+}
+.na-pink {
+    --na: #ec4899;
+}
+.na-orange {
+    --na: #f97316;
+}
+.na-gray {
+    --na: #6f7d8e;
+}
+.na-slate {
+    --na: #64748b;
+}
+.na-violet {
+    --na: #8b5cf6;
+}
+.na-indigo {
+    --na: #6366f1;
+}
+.na-emerald {
+    --na: #34d399;
+}
+.na-amber {
+    --na: #f0a92b;
+}
+
+.bp-node {
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(28, 35, 46, 0.96), rgba(15, 19, 26, 0.97));
+    border: 1px solid var(--line);
+    box-shadow:
+        0 14px 30px -14px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    color: var(--ink);
+}
+.bp-node.sel {
+    border-color: var(--accent);
+    box-shadow:
+        0 0 0 1px var(--accent),
+        0 0 0 4px var(--accent-glow),
+        0 18px 36px -16px rgba(0, 0, 0, 0.75);
+    z-index: 20;
+}
+
+.bp-node-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 11px 0 9px;
+    border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+    position: relative;
+    color: #fff;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--na, #1e9bff) 42%, #171d27), color-mix(in srgb, var(--na, #1e9bff) 20%, #10141b));
+}
+.bp-node-head::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    border-radius: 10px 10px 0 0;
+    background: rgba(255, 255, 255, 0.12);
+}
+.bp-glyph {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.28);
+    flex: none;
+}
+.bp-glyph i {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: var(--na, #1e9bff);
+    display: block;
+}
+.bp-title {
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bp-node-exec {
+    margin-left: auto;
+    font-size: 12px;
+    flex: none;
+}
