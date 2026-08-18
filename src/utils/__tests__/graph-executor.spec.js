@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { nodes } from '../state.js';
-import { connections } from '../connection-manager.js';
+import { nodes, activeWorkspace, createWorkspace, workspaceState } from '../state.js';
 import {
     addEntryPoint,
     clearEntryPoints,
@@ -20,8 +19,15 @@ function makeNode(id, opts = {}) {
 
 describe('graph-executor', () => {
     beforeEach(() => {
+        // Reset workspace-scoped state and create a fresh active workspace.
+        // The executor reads the global `nodes` ref, but connection-manager
+        // (getConnections) reads activeWorkspace.value.connections, so both
+        // must be initialized for connection-driven behavior to work in tests.
+        workspaceState.workspaces = {};
+        workspaceState.activeWorkspaceId = null;
+        createWorkspace('test', { connections: [] });
         nodes.value = [];
-        connections.value = [];
+        activeWorkspace.value.connections = [];
         clearEntryPoints();
         clearExecutionResults();
     });
@@ -31,7 +37,7 @@ describe('graph-executor', () => {
         const n2 = makeNode(2, { inputs: [{ name: 'a', type: 'string' }] });
         nodes.value = [n1, n2];
         // Connect int -> string (mismatch)
-        connections.value = [{ from: { nodeId: 1, output: 'out' }, to: { nodeId: 2, input: 'a' } }];
+        activeWorkspace.value.connections = [{ from: { nodeId: 1, output: 'out' }, to: { nodeId: 2, input: 'a' } }];
 
         const res = validateGraphInputs({ sinks: [{ nodeId: 2, output: 'result' }] });
         expect(res.ok).toBe(true); // no required inputs without defaults are missing due to connection
@@ -63,7 +69,7 @@ describe('graph-executor', () => {
             ]
         });
         nodes.value = [seq, pr];
-        connections.value = [{ from: { nodeId: 1, output: 'Then 0' }, to: { nodeId: 2, input: 'Exec' } }];
+        activeWorkspace.value.connections = [{ from: { nodeId: 1, output: 'Then 0' }, to: { nodeId: 2, input: 'Exec' } }];
         addEntryPoint(1);
 
         await executeGraph();

@@ -3,10 +3,10 @@ import { draggingConnection, nodes } from '../state.js';
 import * as connectionUtils from '../connection-utils.js';
 import { addConnection } from '../connection-manager.js';
 
-// Mock addConnection and log in connection-manager.js
+// Mock addConnection and getConnections in connection-manager.js
 vi.mock('../connection-manager.js', () => ({
     addConnection: vi.fn(),
-    connections: { value: [] }
+    getConnections: vi.fn(() => [])
 }));
 // Mock areTypesCompatible in connection-utils.js
 vi.mock('../connection-utils', async () => {

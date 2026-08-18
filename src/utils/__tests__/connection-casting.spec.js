@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { nodes } from '../state.js';
-import { clearConnections, connections } from '../connection-manager.js';
+import { nodes, activeWorkspace, createWorkspace, workspaceState } from '../state.js';
+import { getConnections } from '../connection-manager.js';
 import { connectNodes } from '../connection-utils.js';
 
 function makeNode(id, type, x, y, inputs, outputs) {
@@ -9,9 +9,14 @@ function makeNode(id, type, x, y, inputs, outputs) {
 
 describe('connection casting behavior', () => {
     beforeEach(() => {
-        // Reset nodes/ connections to a minimal known state
-        nodes.value = [];
-        clearConnections();
+        // Reset workspace state and create a fresh active workspace.
+        // connectNodes() reads/pushes nodes via the global `nodes` ref, while
+        // connection-manager operates on `activeWorkspace.value`; point both at
+        // the same array so node lookups and connection validation agree.
+        workspaceState.workspaces = {};
+        workspaceState.activeWorkspaceId = null;
+        createWorkspace('test', { nodes: [], connections: [] });
+        nodes.value = activeWorkspace.value.nodes;
     });
 
     it('connects identical data types without cast', () => {
@@ -21,9 +26,9 @@ describe('connection casting behavior', () => {
 
         connectNodes({ from: { nodeId: a.id, output: 'out' }, to: { nodeId: b.id, input: 'in' } });
 
-        expect(connections.value.length).toBe(1);
-        expect(connections.value[0].from.nodeId).toBe('A');
-        expect(connections.value[0].to.nodeId).toBe('B');
+        expect(getConnections().length).toBe(1);
+        expect(getConnections()[0].from.nodeId).toBe('A');
+        expect(getConnections()[0].to.nodeId).toBe('B');
     });
 
     it('auto-inserts cast for int -> float', () => {
@@ -34,8 +39,10 @@ describe('connection casting behavior', () => {
         connectNodes({ from: { nodeId: a.id, output: 'out' }, to: { nodeId: b.id, input: 'in' } });
 
         // Should be two connections via cast node
-        expect(connections.value.length).toBe(2);
-        const via = connections.value.map((c) => c.from.nodeId).find((id) => id !== 'A');
+        expect(getConnections().length).toBe(2);
+        const via = getConnections()
+            .map((c) => c.from.nodeId)
+            .find((id) => id !== 'A');
         const castNode = nodes.value.find((n) => n.id === via);
         expect(castNode).toBeDefined();
         expect(castNode.type).toBe('cast');
@@ -50,7 +57,7 @@ describe('connection casting behavior', () => {
 
         connectNodes({ from: { nodeId: a.id, output: 'Exec' }, to: { nodeId: b.id, input: 'in' } });
 
-        expect(connections.value.length).toBe(0);
+        expect(getConnections().length).toBe(0);
     });
 
     it('allows exec to exec', () => {
@@ -60,7 +67,7 @@ describe('connection casting behavior', () => {
 
         connectNodes({ from: { nodeId: a.id, output: 'Then' }, to: { nodeId: b.id, input: 'Exec' } });
 
-        expect(connections.value.length).toBe(1);
+        expect(getConnections().length).toBe(1);
     });
 
     it('casts null and mixed appropriately', () => {
@@ -71,8 +78,10 @@ describe('connection casting behavior', () => {
         connectNodes({ from: { nodeId: a.id, output: 'out' }, to: { nodeId: b.id, input: 'in' } });
 
         // Should insert cast node due to canCast(null -> string)
-        expect(connections.value.length).toBe(2);
-        const via = connections.value.map((c) => c.from.nodeId).find((id) => id !== 'A');
+        expect(getConnections().length).toBe(2);
+        const via = getConnections()
+            .map((c) => c.from.nodeId)
+            .find((id) => id !== 'A');
         const castNode = nodes.value.find((n) => n.id === via);
         expect(castNode).toBeDefined();
         expect(castNode.type).toBe('cast');

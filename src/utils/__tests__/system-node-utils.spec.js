@@ -25,9 +25,17 @@ describe('addSystemNode', () => {
             inputs: [
                 { name: 'Exec', type: 'exec' },
                 { name: 'value', type: 'mixed' }
-            ],
-            outputs: [{ name: 'Exec', type: 'exec' }]
+            ]
         });
+        // A freshly-added system node initializes with no outputs; dynamic
+        // outputs are attached later via updateNodeOutputs (see system-node-utils.js).
+        expect(node.outputs).toBeUndefined();
+    });
+
+    it('initializes with provided dynamic outputs when given', () => {
+        const dynamicOutputs = [{ name: 'Result', type: 'string' }];
+        systemNodeUtils.addSystemNode('print', { x: 500, y: 300 }, dynamicOutputs);
+        expect(nodes.value[0].outputs).toEqual(dynamicOutputs);
     });
 });
 

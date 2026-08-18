@@ -1,6 +1,6 @@
-import { debugMode, ioPositions, nodes } from '../state.js';
+import { createWorkspace, debugMode, ioPositions, nodes, workspaceState } from '../state.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { connections, removeConnection as deleteConnection } from '../connection-manager.js';
+import { getConnections, removeConnection as deleteConnection } from '../connection-manager.js';
 import { getIOPosition } from '../io-positions.js';
 import { moveNode, updateNodeIO } from '../nodes-core.js';
 import { closeSettings, selectedNodeId, selectNode } from '../node-selection.js';
@@ -98,6 +98,12 @@ describe('selectNode and closeSettings', () => {
 
 describe('updateNodeIO', () => {
     beforeEach(() => {
+        // updateNodeIO mutates the global `nodes` ref but also calls
+        // pruneDanglingConnections(), which reads the active workspace.
+        // A workspace must exist or activeWorkspace is null.
+        workspaceState.workspaces = {};
+        workspaceState.activeWorkspaceId = null;
+        createWorkspace('test', { nodes: [], connections: [] });
         nodes.value = [{ id: 1, inputs: [{ name: 'a' }], outputs: [{ name: 'b' }] }];
     });
 
@@ -116,21 +122,28 @@ describe('updateNodeIO', () => {
 
 describe('deleteConnection', () => {
     beforeEach(() => {
-        connections.value = [
-            { from: { nodeId: 1, output: 'a' }, to: { nodeId: 2, input: 'b' } },
-            { from: { nodeId: 3, output: 'x' }, to: { nodeId: 4, input: 'y' } }
-        ];
+        // Connections are now workspace-scoped (connection-manager operates on
+        // activeWorkspace.value.connections, read via getConnections()).
+        workspaceState.workspaces = {};
+        workspaceState.activeWorkspaceId = null;
+        createWorkspace('test', {
+            nodes: [],
+            connections: [
+                { from: { nodeId: 1, output: 'a' }, to: { nodeId: 2, input: 'b' } },
+                { from: { nodeId: 3, output: 'x' }, to: { nodeId: 4, input: 'y' } }
+            ]
+        });
     });
 
     it('removes the correct connection', () => {
         deleteConnection({ from: { nodeId: 1, output: 'a' }, to: { nodeId: 2, input: 'b' } });
-        expect(connections.value.length).toBe(1);
-        expect(connections.value[0].from.nodeId).toBe(3);
+        expect(getConnections().length).toBe(1);
+        expect(getConnections()[0].from.nodeId).toBe(3);
     });
 
     it('does nothing if no matching connection exists', () => {
         deleteConnection({ from: { nodeId: 99, output: 'z' }, to: { nodeId: 88, input: 'w' } });
-        expect(connections.value.length).toBe(2);
+        expect(getConnections().length).toBe(2);
     });
 });
 
