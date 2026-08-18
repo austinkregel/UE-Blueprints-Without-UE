@@ -504,23 +504,16 @@ function buildMissionNodes() {
 
 // ---------------------------------------------------------------------------
 // §4 content catalog — mine the real Lua corpus into openable documents.
-//   Folders come from the corpus layout: the top dir is the "residency" band
-//   (resident / vz / shell), the second level groups by faction+type. Files are
-//   the contract/job/mission scripts. Each entry carries the class it inherits
-//   and the lifecycle hooks it overrides, so the plugin can build a starter graph.
+//   Everything here is READ FROM THE DATA, not hand-mapped:
+//     - residency band = the corpus top dir (resident / vz / shell)
+//     - faction        = sFactionId from the game's own tMissionData table
+//                        (wifmissiondata.lua) — the authoritative mission catalog
+//     - name / title   = sModuleName / sTitle from that same table
+//     - class + hooks  = inherit(...) and the function <Hook>(self) defs in the file
+//   Scripts absent from tMissionData (jobs, tutorials, support) group by the real
+//   class they inherit. Nothing invents a faction from the filename.
 // ---------------------------------------------------------------------------
-const RESIDENCY_LABELS = { resident: 'Resident', vz: 'Venezuela', shell: 'Shell' };
-const FACTION_LABELS = {
-    pmc: 'PMC',
-    oil: 'Oil',
-    chi: 'Chinese',
-    gur: 'Guerrillas',
-    all: 'Allies',
-    pir: 'Pirates',
-    mec: 'Mercs',
-    jet: 'Jets',
-    vza: 'Venezuela'
-};
+const MISSION_DATA = join(CORPUS_DIR, 'vz', 'wifmissiondata.lua');
 const LIFECYCLE_HOOKS = ['PreLoadAssets', 'LoadAssets', 'Activated', 'Complete', 'Cancel', 'Cleanup'];
 
 function kindFromClass(cls) {
@@ -533,18 +526,26 @@ function styleForKind(kind) {
     if (/Support/.test(kind)) return { icon: 'object', color: 'slate' };
     return { icon: 'mission', color: 'violet' };
 }
-function groupFor(base, kind) {
-    const m = /^([a-z]+?)(con|job)\d/.exec(base);
-    if (m && FACTION_LABELS[m[1]]) return `${FACTION_LABELS[m[1]]} ${m[2] === 'job' ? 'Jobs' : 'Contracts'}`;
-    if (/Tutorial/.test(kind)) return 'Tutorials';
-    if (/Support/.test(kind)) return 'Support';
-    if (/Objective/.test(kind)) return 'Objectives';
-    return 'Other';
-}
-function niceName(base, kind) {
-    const m = /^([a-z]+?)(con|job)(\d+)$/.exec(base);
-    if (m && FACTION_LABELS[m[1]]) return `${FACTION_LABELS[m[1]]} ${m[2] === 'job' ? 'Job' : 'Contract'} ${m[3]}`;
-    return `${base} (${kind})`;
+
+// Parse tMissionData: each entry opens with `sModuleName = "X"` then carries
+// `sFactionId` / `sTitle`. Splitting on the sModuleName delimiter bounds each
+// chunk to one entry, so the first faction/title in a chunk is that entry's.
+function parseMissionData() {
+    if (!existsSync(MISSION_DATA)) return {};
+    const src = readFileSync(MISSION_DATA, 'utf8');
+    const byModule = {};
+    for (const chunk of src.split(/sModuleName\s*=\s*"/).slice(1)) {
+        const q = chunk.indexOf('"');
+        if (q < 0) continue;
+        const module = chunk.slice(0, q);
+        const rest = chunk.slice(q + 1);
+        byModule[module.toLowerCase()] = {
+            module,
+            faction: (/sFactionId\s*=\s*"([^"]+)"/.exec(rest) || [])[1] || null,
+            title: (/sTitle\s*=\s*"([^"]+)"/.exec(rest) || [])[1] || null
+        };
+    }
+    return byModule;
 }
 
 function buildContentCatalog() {
@@ -552,6 +553,7 @@ function buildContentCatalog() {
         console.warn(`[mercs2:discover] corpus not found at ${CORPUS_DIR} — content catalog will be empty.`);
         return { entries: [] };
     }
+    const missionData = parseMissionData();
     const entries = [];
     for (const dir of readdirSync(CORPUS_DIR)) {
         const abs = join(CORPUS_DIR, dir);
@@ -561,7 +563,7 @@ function buildContentCatalog() {
         } catch {
             continue; // not a directory
         }
-        const residency = RESIDENCY_LABELS[dir] || dir.charAt(0).toUpperCase() + dir.slice(1);
+        const residency = dir.charAt(0).toUpperCase() + dir.slice(1);
         for (const file of files) {
             if (!file.endsWith('.lua')) continue;
             let src;
@@ -577,15 +579,21 @@ function buildContentCatalog() {
             const kind = kindFromClass(className);
             const hooks = LIFECYCLE_HOOKS.filter((h) => new RegExp(`function\\s+${h}\\s*\\(`).test(src));
             const style = styleForKind(kind);
+
+            // Join to the authoritative mission catalog by module name. Contracts
+            // group under their real faction; anything not catalogued (jobs,
+            // tutorials, support) groups under the class it inherits.
+            const md = missionData[base];
+            const faction = md?.faction || null;
             entries.push({
                 id: `${dir}/${base}`,
-                name: niceName(base, kind),
-                path: [residency, groupFor(base, kind)],
+                name: md?.module || base,
+                path: [residency, faction || kind],
                 className,
                 hooks,
                 icon: style.icon,
                 color: style.color,
-                meta: { kind }
+                meta: { kind, faction, title: md?.title || null }
             });
         }
     }
