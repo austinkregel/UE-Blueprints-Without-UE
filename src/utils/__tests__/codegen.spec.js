@@ -54,6 +54,23 @@ describe('codegen', () => {
             expect(targetVal.nodeId).toBe(9);
         });
 
+        it('returns no entries for a graph with no entry points', () => {
+            const a = { id: 1, inputs: [{ name: 'Exec', ...exec }], outputs: [] };
+            expect(buildGraphIR({ nodes: [a], connections: [] }).entries).toEqual([]);
+        });
+
+        it('handles multiple independent entry points', () => {
+            const e1 = { id: 1, outputs: [{ name: 'Body', ...exec }], inputs: [] };
+            const e2 = { id: 2, outputs: [{ name: 'Body', ...exec }], inputs: [] };
+            const ir = buildGraphIR({ nodes: [e1, e2], connections: [] });
+            expect(ir.entries.map((e) => e.entry.id).sort()).toEqual([1, 2]);
+        });
+
+        it('tolerates an empty/undefined graph', () => {
+            expect(buildGraphIR().entries).toEqual([]);
+            expect(buildGraphIR({}).entries).toEqual([]);
+        });
+
         it('does not loop on cyclic exec connections', () => {
             const entry = { id: 1, outputs: [{ name: 'Body', ...exec }], inputs: [] };
             const a = { id: 2, inputs: [{ name: 'Exec', ...exec }], outputs: [{ name: 'Exec', ...exec }] };
