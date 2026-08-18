@@ -1,142 +1,214 @@
 <template>
     <div class="ns-inspector border-t border-[var(--line)] bg-[var(--panel)] text-[11px] leading-tight text-[var(--ink)]">
         <!-- Node Settings Section (shown when a node is selected) -->
-        <div v-if="selectedNode" class="px-2 pt-2">
-            <div class="mb-1 flex items-center gap-1">
-                <span class="bp-sec-label !text-[var(--ink)]">Node {{ selectedNode.id }}</span>
-                <button class="bp-btn primary ml-auto" title="Save changes" @click="save">Save</button>
-                <button class="bp-btn" title="Close settings" @click="close">Close</button>
-            </div>
-            <!-- General -->
-            <div class="mb-2 grid grid-cols-2 gap-1.5">
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]" title="Type">Type</label>
-                    <input :value="selectedNode.type" class="bp-input" disabled />
+        <div v-if="selectedNode">
+            <!-- Inspector header -->
+            <div class="bp-insp-header">
+                <div class="flex items-start gap-3">
+                    <span class="bp-nicon" :class="`na-${nodeColorName}`"><i></i></span>
+                    <div class="min-w-0">
+                        <h1 class="truncate text-[16px] font-bold text-[var(--ink)]">
+                            {{ selectedNode.name || selectedNode.nodeDefId || 'Node ' + selectedNode.id }}
+                        </h1>
+                        <div class="mt-1.5 flex flex-wrap gap-1.5">
+                            <span class="bp-chip cat" :class="`na-${nodeColorName}`">{{ selectedNode.category || selectedNode.type || 'node' }}</span>
+                            <span v-if="selectedNode.nodeDefId" class="bp-chip mono">{{ selectedNode.nodeDefId }}</span>
+                        </div>
+                    </div>
+                    <button class="bp-btn ml-auto shrink-0" title="Close" @click="close">Close</button>
                 </div>
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]" title="Category">Cat</label>
-                    <input :value="selectedNode.category || ''" class="bp-input" disabled />
-                </div>
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]" title="Definition">Def</label>
-                    <input :value="selectedNode.nodeDefId || ''" class="bp-input" disabled />
-                </div>
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]" title="Display Name">Name</label>
-                    <input v-model="localName" class="bp-input" placeholder="(optional)" />
-                </div>
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]">X</label>
-                    <input v-model.number="localX" class="bp-input" type="number" />
-                </div>
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]">Y</label>
-                    <input v-model.number="localY" class="bp-input" type="number" />
-                </div>
+                <p v-if="selectedNode.description" class="bp-desc">{{ selectedNode.description }}</p>
             </div>
 
-            <!-- Variable specific -->
-            <div v-if="selectedNode.type === 'variable'" class="mb-2">
-                <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">Variable</h4>
-                <div class="mb-1.5 grid grid-cols-2 gap-1.5">
-                    <div>
-                        <label class="block text-[10px] text-[var(--ink-3)]">Action</label>
-                        <select v-model="localVarAction" class="bp-input">
-                            <option value="get">get</option>
-                            <option value="set">set</option>
-                        </select>
+            <!-- Parameters (edit each input's default value, live) -->
+            <div v-if="paramInputs.length" class="bp-sec">
+                <span class="bp-sec-label mb-2 block">Parameters</span>
+                <div v-for="inp in paramInputs" :key="inp.name" class="bp-prow">
+                    <div class="pl">
+                        {{ inp.name }}<span class="bp-ty">{{ inp.type }}</span>
                     </div>
-                    <div>
-                        <label class="block text-[10px] text-[var(--ink-3)]">Type</label>
-                        <select v-model="localVarType" class="bp-input">
-                            <option v-for="t in typeOptions" :key="t" :value="t">{{ t }}</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block text-[10px] text-[var(--ink-3)]">Name</label>
-                        <input v-model="localVarName" class="bp-input" />
-                    </div>
-                </div>
-                <div v-if="selectedNode.isLiteral" class="grid grid-cols-2 items-center gap-1.5">
-                    <div class="col-span-2">
-                        <label class="block text-[10px] text-[var(--ink-3)]">Literal</label>
-                        <input v-if="localVarType === 'string'" v-model="localLiteralValueString" class="bp-input" />
-                        <input
-                            v-else-if="localVarType === 'int' || localVarType === 'float'"
-                            v-model.number="localLiteralValueNumber"
-                            class="bp-input"
-                            type="number"
-                        />
-                        <label v-else-if="localVarType === 'bool'" class="inline-flex items-center gap-1 text-[11px] text-[var(--ink-2)]">
-                            <input v-model="localLiteralValueBool" type="checkbox" /> Boolean
-                        </label>
-                        <div v-else class="text-[10px] text-[var(--ink-3)]">Unsupported literal type</div>
+                    <div class="pc min-w-0">
+                        <button
+                            v-if="inp.type === 'bool'"
+                            class="bp-switch"
+                            :class="{ on: !!inp.defaultValue }"
+                            @click="inp.defaultValue = !inp.defaultValue"
+                        ></button>
+                        <div v-else-if="inp.type === 'int' || inp.type === 'float'" class="bp-stepper">
+                            <button @click="stepParam(inp, -1)">−</button>
+                            <input v-model.number="inp.defaultValue" type="number" />
+                            <button @click="stepParam(inp, 1)">+</button>
+                        </div>
+                        <input v-else v-model="inp.defaultValue" class="bp-input !h-8" :placeholder="inp.type" />
                     </div>
                 </div>
             </div>
 
-            <!-- Code Context for imported code nodes -->
-            <div v-if="selectedNode?.refs" class="mb-2">
-                <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">Code Context</h4>
-                <div class="grid grid-cols-1 gap-0.5 text-[10px] text-[var(--ink-2)]">
-                    <div><span class="text-[var(--ink-3)]">File:</span> {{ selectedNode.refs.filePath || '—' }}</div>
-                    <div v-if="selectedNode.refs.language"><span class="text-[var(--ink-3)]">Language:</span> {{ selectedNode.refs.language }}</div>
-                    <div v-if="selectedNode.refs.fqn">
-                        <span class="text-[var(--ink-3)]">FQN:</span>
-                        {{ selectedNode.refs.fqn }}
-                    </div>
-                    <div v-if="Array.isArray(selectedNode.refs.usage)">
-                        <span class="text-[var(--ink-3)]">Usage:</span> {{ selectedNode.refs.usage.length }} place(s)
-                    </div>
+            <!-- Execution routing (exec pins → targets) -->
+            <div v-if="execRouting.length" class="bp-sec">
+                <span class="bp-sec-label mb-2 block">Execution</span>
+                <div v-for="ex in execRouting" :key="ex.dir + ':' + ex.name" class="bp-execrow">
+                    <i class="esw" :class="{ hollow: !ex.connected }"></i>
+                    <span class="en">{{ ex.name }}</span>
+                    <span class="tgt" :class="{ none: !ex.connected }">
+                        {{ ex.connected ? (ex.dir === 'in' ? '← ' : '→ ') + ex.target : 'unconnected' }}
+                    </span>
                 </div>
-                <ul
-                    v-if="Array.isArray(selectedNode.refs.usage) && selectedNode.refs.usage.length"
-                    class="mt-1 max-h-24 overflow-auto rounded border border-[var(--line)] text-[10px] text-[var(--ink-3)]"
-                >
-                    <li
-                        v-for="(u, i) in selectedNode.refs.usage.slice(0, 8)"
-                        :key="i"
-                        class="border-b border-[var(--line-soft)] px-1.5 py-0.5 last:border-b-0"
-                    >
-                        <div class="truncate">{{ u.filePath }}</div>
-                        <div v-if="u.range" class="text-[var(--ink-4)]">@ {{ formatRange(u.range) }}</div>
-                    </li>
-                </ul>
             </div>
 
-            <!-- IO Editors -->
-            <label class="mb-0.5 block font-semibold text-[var(--ink-2)]">In:</label>
-            <ul class="flex flex-col">
-                <li v-for="input in filteredInputs" :key="input.name + '-' + input.type" class="mb-1 flex items-center gap-1 whitespace-nowrap">
-                    <input v-model="input.name" class="bp-input !h-7 !w-20" placeholder="name" />
-                    <select v-model="input.type" class="bp-input !h-7 !w-20 appearance-none">
-                        <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
-                        <option v-if="!typeOptions.includes(input.type)" :value="input.type">{{ input.type }}</option>
-                    </select>
-                    <input v-model="input.type" class="bp-input !h-7 !w-24" placeholder="type" />
-                    <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeInput(localInputs.indexOf(input))">✕</button>
-                </li>
-            </ul>
-            <button class="bp-btn mb-2 !h-7 !px-2" title="Add Input" @click="addInput">+ In</button>
-            <label class="mb-0.5 block font-semibold text-[var(--ink-2)]">Out:</label>
-            <ul class="flex flex-col">
-                <li v-for="output in filteredOutputs" :key="output.name + '-' + output.type" class="mb-1 flex items-center gap-1 whitespace-nowrap">
-                    <input v-model="output.name" class="bp-input !h-7 !w-20" placeholder="name" />
-                    <select v-model="output.type" class="bp-input !h-7 !w-20 appearance-none">
-                        <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
-                        <option v-if="!typeOptions.includes(output.type)" :value="output.type">{{ output.type }}</option>
-                    </select>
-                    <input v-model="output.type" class="bp-input !h-7 !w-24" placeholder="type" />
-                    <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeOutput(localOutputs.indexOf(output))">✕</button>
-                </li>
-            </ul>
+            <!-- Advanced: the raw node/IO editor -->
+            <div class="bp-sec">
+                <button class="bp-collapse-head" @click="advancedOpen = !advancedOpen">
+                    <span class="bp-sec-label">Advanced</span>
+                    <span class="tw">{{ advancedOpen ? '▾' : '▸' }}</span>
+                </button>
+                <div v-show="advancedOpen" class="mt-3">
+                    <div class="mb-1 flex items-center gap-1">
+                        <span class="bp-sec-label !text-[var(--ink-2)]">Node {{ selectedNode.id }}</span>
+                        <button class="bp-btn primary ml-auto" title="Save changes" @click="save">Save</button>
+                    </div>
+                    <!-- General -->
+                    <div class="mb-2 grid grid-cols-2 gap-1.5">
+                        <div>
+                            <label class="block text-[10px] text-[var(--ink-3)]" title="Type">Type</label>
+                            <input :value="selectedNode.type" class="bp-input" disabled />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-[var(--ink-3)]" title="Category">Cat</label>
+                            <input :value="selectedNode.category || ''" class="bp-input" disabled />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-[var(--ink-3)]" title="Definition">Def</label>
+                            <input :value="selectedNode.nodeDefId || ''" class="bp-input" disabled />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-[var(--ink-3)]" title="Display Name">Name</label>
+                            <input v-model="localName" class="bp-input" placeholder="(optional)" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-[var(--ink-3)]">X</label>
+                            <input v-model.number="localX" class="bp-input" type="number" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-[var(--ink-3)]">Y</label>
+                            <input v-model.number="localY" class="bp-input" type="number" />
+                        </div>
+                    </div>
 
-            <!-- IO Control for System Nodes -->
-            <div v-if="selectedNode.type === 'system'" class="mb-2">
-                <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">IO Control</h4>
-                <div class="mb-1.5 grid grid-cols-2 gap-1.5">
-                    <button class="bp-btn w-full" @click="addOutput">Add Output</button>
-                    <button :disabled="selectedNode.outputs.length === 0" class="bp-btn w-full" @click="removeOutput">Remove Output</button>
+                    <!-- Variable specific -->
+                    <div v-if="selectedNode.type === 'variable'" class="mb-2">
+                        <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">Variable</h4>
+                        <div class="mb-1.5 grid grid-cols-2 gap-1.5">
+                            <div>
+                                <label class="block text-[10px] text-[var(--ink-3)]">Action</label>
+                                <select v-model="localVarAction" class="bp-input">
+                                    <option value="get">get</option>
+                                    <option value="set">set</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-[var(--ink-3)]">Type</label>
+                                <select v-model="localVarType" class="bp-input">
+                                    <option v-for="t in typeOptions" :key="t" :value="t">{{ t }}</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[10px] text-[var(--ink-3)]">Name</label>
+                                <input v-model="localVarName" class="bp-input" />
+                            </div>
+                        </div>
+                        <div v-if="selectedNode.isLiteral" class="grid grid-cols-2 items-center gap-1.5">
+                            <div class="col-span-2">
+                                <label class="block text-[10px] text-[var(--ink-3)]">Literal</label>
+                                <input v-if="localVarType === 'string'" v-model="localLiteralValueString" class="bp-input" />
+                                <input
+                                    v-else-if="localVarType === 'int' || localVarType === 'float'"
+                                    v-model.number="localLiteralValueNumber"
+                                    class="bp-input"
+                                    type="number"
+                                />
+                                <label v-else-if="localVarType === 'bool'" class="inline-flex items-center gap-1 text-[11px] text-[var(--ink-2)]">
+                                    <input v-model="localLiteralValueBool" type="checkbox" /> Boolean
+                                </label>
+                                <div v-else class="text-[10px] text-[var(--ink-3)]">Unsupported literal type</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Code Context for imported code nodes -->
+                    <div v-if="selectedNode?.refs" class="mb-2">
+                        <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">Code Context</h4>
+                        <div class="grid grid-cols-1 gap-0.5 text-[10px] text-[var(--ink-2)]">
+                            <div><span class="text-[var(--ink-3)]">File:</span> {{ selectedNode.refs.filePath || '—' }}</div>
+                            <div v-if="selectedNode.refs.language">
+                                <span class="text-[var(--ink-3)]">Language:</span> {{ selectedNode.refs.language }}
+                            </div>
+                            <div v-if="selectedNode.refs.fqn">
+                                <span class="text-[var(--ink-3)]">FQN:</span>
+                                {{ selectedNode.refs.fqn }}
+                            </div>
+                            <div v-if="Array.isArray(selectedNode.refs.usage)">
+                                <span class="text-[var(--ink-3)]">Usage:</span> {{ selectedNode.refs.usage.length }} place(s)
+                            </div>
+                        </div>
+                        <ul
+                            v-if="Array.isArray(selectedNode.refs.usage) && selectedNode.refs.usage.length"
+                            class="mt-1 max-h-24 overflow-auto rounded border border-[var(--line)] text-[10px] text-[var(--ink-3)]"
+                        >
+                            <li
+                                v-for="(u, i) in selectedNode.refs.usage.slice(0, 8)"
+                                :key="i"
+                                class="border-b border-[var(--line-soft)] px-1.5 py-0.5 last:border-b-0"
+                            >
+                                <div class="truncate">{{ u.filePath }}</div>
+                                <div v-if="u.range" class="text-[var(--ink-4)]">@ {{ formatRange(u.range) }}</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- IO Editors -->
+                    <label class="mb-0.5 block font-semibold text-[var(--ink-2)]">In:</label>
+                    <ul class="flex flex-col">
+                        <li
+                            v-for="input in filteredInputs"
+                            :key="input.name + '-' + input.type"
+                            class="mb-1 flex items-center gap-1 whitespace-nowrap"
+                        >
+                            <input v-model="input.name" class="bp-input !h-7 !w-20" placeholder="name" />
+                            <select v-model="input.type" class="bp-input !h-7 !w-20 appearance-none">
+                                <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
+                                <option v-if="!typeOptions.includes(input.type)" :value="input.type">{{ input.type }}</option>
+                            </select>
+                            <input v-model="input.type" class="bp-input !h-7 !w-24" placeholder="type" />
+                            <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeInput(localInputs.indexOf(input))">✕</button>
+                        </li>
+                    </ul>
+                    <button class="bp-btn mb-2 !h-7 !px-2" title="Add Input" @click="addInput">+ In</button>
+                    <label class="mb-0.5 block font-semibold text-[var(--ink-2)]">Out:</label>
+                    <ul class="flex flex-col">
+                        <li
+                            v-for="output in filteredOutputs"
+                            :key="output.name + '-' + output.type"
+                            class="mb-1 flex items-center gap-1 whitespace-nowrap"
+                        >
+                            <input v-model="output.name" class="bp-input !h-7 !w-20" placeholder="name" />
+                            <select v-model="output.type" class="bp-input !h-7 !w-20 appearance-none">
+                                <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
+                                <option v-if="!typeOptions.includes(output.type)" :value="output.type">{{ output.type }}</option>
+                            </select>
+                            <input v-model="output.type" class="bp-input !h-7 !w-24" placeholder="type" />
+                            <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeOutput(localOutputs.indexOf(output))">✕</button>
+                        </li>
+                    </ul>
+
+                    <!-- IO Control for System Nodes -->
+                    <div v-if="selectedNode.type === 'system'" class="mb-2">
+                        <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">IO Control</h4>
+                        <div class="mb-1.5 grid grid-cols-2 gap-1.5">
+                            <button class="bp-btn w-full" @click="addOutput">Add Output</button>
+                            <button :disabled="selectedNode.outputs.length === 0" class="bp-btn w-full" @click="removeOutput">Remove Output</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -191,11 +263,54 @@
     import { updateNode, updateNodeIO } from '../utils/nodes-core.js';
     import { closeSettings, selectNode } from '../utils/node-selection.js';
     import { addVariableNode } from '../utils/node-creation.js';
+    import { getConnections } from '../utils/connection-manager.js';
+    import { getNodeColor } from '../utils/node-colors.js';
 
     defineProps({ variables: { type: Array, default: () => [] } });
     const emit = defineEmits(['update-outputs']);
 
     const selectedNode = computed(() => nodes.value.find((n) => n.id === selectedNodeId.value) || null);
+
+    // Inspector accent color (category-derived) for the header icon/chip.
+    const nodeColorName = computed(() => getNodeColor(selectedNode.value?.type, selectedNode.value?.nodeDefId) || 'blue');
+
+    // Editable non-exec inputs, shown as typed Parameter rows (bound live to defaultValue).
+    const paramInputs = computed(() =>
+        (selectedNode.value?.inputs || []).filter((i) => i && typeof i === 'object' && String(i.type).toLowerCase() !== 'exec')
+    );
+
+    function nodeLabel(id) {
+        const n = nodes.value.find((x) => x.id === id);
+        return n ? n.name || n.nodeDefId || `Node ${id}` : `Node ${id}`;
+    }
+
+    // Exec pins of the selected node with their wired target (for the Execution view).
+    const execRouting = computed(() => {
+        const n = selectedNode.value;
+        if (!n) return [];
+        const conns = getConnections();
+        const rows = [];
+        for (const inp of n.inputs || []) {
+            if (inp && inp.type === 'exec') {
+                const c = conns.find((cn) => cn.to?.nodeId === n.id && cn.to?.input === inp.name);
+                rows.push({ dir: 'in', name: inp.name, connected: !!c, target: c ? nodeLabel(c.from.nodeId) : '' });
+            }
+        }
+        for (const out of n.outputs || []) {
+            if (out && out.type === 'exec') {
+                const c = conns.find((cn) => cn.from?.nodeId === n.id && cn.from?.output === out.name);
+                rows.push({ dir: 'out', name: out.name, connected: !!c, target: c ? nodeLabel(c.to.nodeId) : '' });
+            }
+        }
+        return rows;
+    });
+
+    const advancedOpen = ref(false);
+
+    function stepParam(inp, dir) {
+        const cur = Number(inp.defaultValue) || 0;
+        inp.defaultValue = cur + dir;
+    }
 
     // Local editable copies
     const typeOptions = ['int', 'float', 'string', 'bool', 'array', 'object', 'callable', 'mixed', 'void', 'resource', 'null'];
