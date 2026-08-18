@@ -4,13 +4,38 @@ import {
     getAllNodeDefinitions,
     getAllTypes,
     getCategoryColor,
+    getCategoryInfo,
+    getCategoryName,
     getNodeDefinition,
     getNodesByCategory,
     getTypeColor,
     getTypeInfo,
     NODE_CATEGORIES,
+    registerExtraNodeCategories,
     TYPES
 } from '../language-definition.js';
+
+describe('Language Definition - External category metadata', () => {
+    it('registers extra categories and resolves name/color/info', () => {
+        registerExtraNodeCategories({
+            MERCS2_EVENT: { name: 'Mercs2 · Events', color: 'red', description: 'triggers' }
+        });
+        expect(getCategoryInfo('MERCS2_EVENT')).toMatchObject({ name: 'Mercs2 · Events', color: 'red' });
+        expect(getCategoryName('MERCS2_EVENT')).toBe('Mercs2 · Events');
+        expect(getCategoryColor('MERCS2_EVENT')).toBe('red');
+    });
+
+    it('falls back to the raw key and gray for unknown categories', () => {
+        expect(getCategoryName('DEFINITELY_UNKNOWN')).toBe('DEFINITELY_UNKNOWN');
+        expect(getCategoryColor('DEFINITELY_UNKNOWN')).toBe('gray');
+        expect(getCategoryInfo('DEFINITELY_UNKNOWN')).toBeNull();
+    });
+
+    it('built-in categories still resolve by key', () => {
+        expect(getCategoryColor('CONTROL')).toBe(NODE_CATEGORIES.CONTROL.color);
+        expect(getCategoryName('CONTROL')).toBe(NODE_CATEGORIES.CONTROL.name);
+    });
+});
 
 describe('Language Definition - Type System', () => {
     describe('getAllTypes', () => {

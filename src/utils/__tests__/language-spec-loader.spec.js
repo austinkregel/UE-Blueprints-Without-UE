@@ -19,6 +19,30 @@ describe('language-spec-loader', () => {
         vi.resetModules();
     });
 
+    it('loadLanguageDefinitionsFromUrl registers categories + nodes for the richer shape', async () => {
+        vi.resetModules();
+        const regNodes = vi.fn();
+        const regCats = vi.fn();
+        vi.doMock('../language-definition.js', () => ({
+            registerExtraNodeDefinitions: regNodes,
+            registerExtraNodeCategories: regCats
+        }));
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async () => ({
+                ok: true,
+                json: async () => ({ categories: { MERCS2_EVENT: { name: 'Events' } }, nodes: { MERCS2_EVENT: {} } })
+            }))
+        );
+        const { loadLanguageDefinitionsFromUrl } = await import('../language-spec-loader.js');
+        const ok = await loadLanguageDefinitionsFromUrl('/spec.json');
+        expect(ok).toBe(true);
+        expect(regCats).toHaveBeenCalledWith({ MERCS2_EVENT: { name: 'Events' } });
+        expect(regNodes).toHaveBeenCalledWith({ MERCS2_EVENT: {} });
+        vi.unstubAllGlobals();
+        vi.resetModules();
+    });
+
     it('loadLanguageDefinitionsFromUrl returns false on error', async () => {
         vi.resetModules();
         vi.doMock('../language-definition.js', () => ({ registerExtraNodeDefinitions: vi.fn() }));

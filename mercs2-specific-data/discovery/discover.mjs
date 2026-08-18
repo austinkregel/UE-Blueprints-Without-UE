@@ -84,7 +84,10 @@ function parseArgSpec(spec) {
     // Tuple form: (a, b, c): (T1, T2, T3)
     const tuple = /^\(([^)]*)\)\s*:\s*\(([^)]*)\)$/.exec(spec);
     if (tuple) {
-        const names = tuple[1].split(',').map((s) => s.trim()).filter(Boolean);
+        const names = tuple[1]
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
         const types = tuple[2].split(',').map((s) => s.trim());
         return names.map((name, i) => ({ name, type: rustTypeToPin(types[i] || 'mixed') }));
     }
@@ -101,10 +104,12 @@ function parseArgSpec(spec) {
 function buildBindingNodes(rustByGlobal) {
     const cov = JSON.parse(readFileSync(BINDING_COVERAGE, 'utf8'));
     const spec = {};
+    const globalByCat = {}; // categoryKey -> original global name (for category metadata)
 
     for (const ns of cov.namespaces) {
         const global = ns.global;
         const categoryKey = `MERCS2_${global.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`;
+        globalByCat[categoryKey] = global;
         spec[categoryKey] ||= {};
         const fns = [...(ns.real_fns || []), ...(ns.stub_fns || [])];
 
@@ -137,8 +142,56 @@ function buildBindingNodes(rustByGlobal) {
             };
         }
     }
-    return spec;
+    return { spec, globalByCat };
 }
+
+// ---------------------------------------------------------------------------
+// Category metadata (display name + color), from the safe color set the engine
+// already ships (only these Tailwind colors are guaranteed generated).
+// ---------------------------------------------------------------------------
+const NS_COLORS = {
+    Object: 'violet',
+    ObjectState: 'violet',
+    ObjectFilter: 'violet',
+    Pg: 'blue',
+    Player: 'green',
+    Ai: 'orange',
+    Vehicle: 'cyan',
+    Sound: 'pink',
+    VO: 'pink',
+    Gui: 'indigo',
+    Hud: 'indigo',
+    Net: 'emerald',
+    Math: 'green',
+    String: 'pink',
+    Weapon: 'red',
+    Airstrike: 'red',
+    Human: 'orange',
+    Camera: 'cyan',
+    Graphics: 'cyan',
+    Timer: 'amber',
+    Debug: 'gray',
+    Sys: 'slate'
+};
+
+function buildBindingCategories(globalByCat) {
+    const cats = {};
+    for (const [categoryKey, global] of Object.entries(globalByCat)) {
+        cats[categoryKey] = {
+            name: `Mercs2 · ${global}`,
+            color: NS_COLORS[global] || 'slate',
+            icon: 'mercs2',
+            description: `Mercenaries 2 ${global} engine bindings`
+        };
+    }
+    return cats;
+}
+
+const AUTHORING_CATEGORIES = {
+    MERCS2_MISSION: { name: 'Mercs2 · Mission', color: 'violet', icon: 'mercs2', description: 'Mission roots and lifecycle hooks' },
+    MERCS2_EVENT: { name: 'Mercs2 · Events', color: 'red', icon: 'mercs2', description: 'Event.<Type> trigger nodes (red event nodes)' },
+    MERCS2_OBJECTIVE: { name: 'Mercs2 · Objectives', color: 'amber', icon: 'mercs2', description: 'Objective task nodes with outcome exec pins' }
+};
 
 // ---------------------------------------------------------------------------
 // 3. Hand-encoded Blueprint authoring layer, from docs/scripts_graph_spec.md.
@@ -149,28 +202,162 @@ function buildBindingNodes(rustByGlobal) {
 // arg tuple becomes typed input pins. Excludes the payload-field non-triggers
 // called out in gotcha §6.2 (ButtonPress/PosX/PrimaryClipSize/…).
 const EVENT_TRIGGERS = [
-    ['TimerRelative', 'time', [['nSeconds', 'float'], ['bRepeat', 'bool', true]]],
-    ['ObjectProximity', 'spatial', [['uChar', 'object'], ['uTarget', 'object'], ['sCompare', 'string'], ['nDist', 'float']]],
-    ['Boundary', 'spatial', [['uChar', 'object'], ['uRegion', 'object'], ['sDir', 'string'], ['bPersist', 'bool', true]]],
-    ['ObjectHibernation', 'lifecycle', [['uGuid', 'object'], ['sState', 'string']]],
+    [
+        'TimerRelative',
+        'time',
+        [
+            ['nSeconds', 'float'],
+            ['bRepeat', 'bool', true]
+        ]
+    ],
+    [
+        'ObjectProximity',
+        'spatial',
+        [
+            ['uChar', 'object'],
+            ['uTarget', 'object'],
+            ['sCompare', 'string'],
+            ['nDist', 'float']
+        ]
+    ],
+    [
+        'Boundary',
+        'spatial',
+        [
+            ['uChar', 'object'],
+            ['uRegion', 'object'],
+            ['sDir', 'string'],
+            ['bPersist', 'bool', true]
+        ]
+    ],
+    [
+        'ObjectHibernation',
+        'lifecycle',
+        [
+            ['uGuid', 'object'],
+            ['sState', 'string']
+        ]
+    ],
     ['ObjectDeath', 'lifecycle', [['uGuid', 'object']]],
-    ['ObjectInSeat', 'lifecycle', [['uChar', 'object'], ['uVehicle', 'object'], ['sSeat', 'string'], ['sAction', 'string']]],
+    [
+        'ObjectInSeat',
+        'lifecycle',
+        [
+            ['uChar', 'object'],
+            ['uVehicle', 'object'],
+            ['sSeat', 'string'],
+            ['sAction', 'string']
+        ]
+    ],
     ['ObjectIsReady', 'lifecycle', [['uGuid', 'object']]],
     ['ObjectDelete', 'lifecycle', [['uGuid', 'object']]],
     ['ObjectIsVisible', 'lifecycle', [['uGuid', 'object']]],
-    ['ObjectWinched', 'lifecycle', [['uObj', 'object'], ['nIdx', 'mixed'], ['sMode', 'string']]],
-    ['ObjectHealth', 'combat', [['uGuid', 'object'], ['sCompare', 'string'], ['nHealth', 'float']]],
-    ['ObjectHealthLessThan', 'combat', [['uGuid', 'object'], ['nHealth', 'float']]],
-    ['WeaponEvent', 'combat', [['sClass', 'string'], ['sAction', 'string'], ['uGuid', 'object']]],
-    ['HumanStateTransition', 'state', [['uChar', 'object'], ['sFrom', 'string'], ['sTo', 'string'], ['sQualifier', 'string', true]]],
+    [
+        'ObjectWinched',
+        'lifecycle',
+        [
+            ['uObj', 'object'],
+            ['nIdx', 'mixed'],
+            ['sMode', 'string']
+        ]
+    ],
+    [
+        'ObjectHealth',
+        'combat',
+        [
+            ['uGuid', 'object'],
+            ['sCompare', 'string'],
+            ['nHealth', 'float']
+        ]
+    ],
+    [
+        'ObjectHealthLessThan',
+        'combat',
+        [
+            ['uGuid', 'object'],
+            ['nHealth', 'float']
+        ]
+    ],
+    [
+        'WeaponEvent',
+        'combat',
+        [
+            ['sClass', 'string'],
+            ['sAction', 'string'],
+            ['uGuid', 'object']
+        ]
+    ],
+    [
+        'HumanStateTransition',
+        'state',
+        [
+            ['uChar', 'object'],
+            ['sFrom', 'string'],
+            ['sTo', 'string'],
+            ['sQualifier', 'string', true]
+        ]
+    ],
     ['HumanActionComplete', 'state', [['uChar', 'object']]],
-    ['ObjectPhysicsEvent', 'state', [['uGuid', 'object'], ['sPhysTag', 'string']]],
-    ['AnimationEvent', 'state', [['uGuid', 'object'], ['sAnimTag', 'string']]],
-    ['ContextAction', 'input', [['uChar', 'object'], ['uGuid', 'object']]],
-    ['Button', 'input', [['uPlayerChar', 'object'], ['sButton', 'string'], ['sPhase', 'string'], ['bConsume', 'bool']]],
-    ['Minigame', 'input', [['uPlayerChar', 'object'], ['nTimeOut', 'float'], ['sMode', 'string'], ['uButton', 'object']]],
-    ['ScriptEvent', 'scripting', [['sChannel', 'string'], ['fFilter', 'mixed', true]]],
-    ['GameStateChange', 'scripting', [['sState', 'string'], ['sEdge', 'string']]]
+    [
+        'ObjectPhysicsEvent',
+        'state',
+        [
+            ['uGuid', 'object'],
+            ['sPhysTag', 'string']
+        ]
+    ],
+    [
+        'AnimationEvent',
+        'state',
+        [
+            ['uGuid', 'object'],
+            ['sAnimTag', 'string']
+        ]
+    ],
+    [
+        'ContextAction',
+        'input',
+        [
+            ['uChar', 'object'],
+            ['uGuid', 'object']
+        ]
+    ],
+    [
+        'Button',
+        'input',
+        [
+            ['uPlayerChar', 'object'],
+            ['sButton', 'string'],
+            ['sPhase', 'string'],
+            ['bConsume', 'bool']
+        ]
+    ],
+    [
+        'Minigame',
+        'input',
+        [
+            ['uPlayerChar', 'object'],
+            ['nTimeOut', 'float'],
+            ['sMode', 'string'],
+            ['uButton', 'object']
+        ]
+    ],
+    [
+        'ScriptEvent',
+        'scripting',
+        [
+            ['sChannel', 'string'],
+            ['fFilter', 'mixed', true]
+        ]
+    ],
+    [
+        'GameStateChange',
+        'scripting',
+        [
+            ['sState', 'string'],
+            ['sEdge', 'string']
+        ]
+    ]
 ];
 
 function buildEventNodes() {
@@ -210,17 +397,37 @@ const OBJECTIVE_OUTCOMES = [
     ['OnActivate', 'exec']
 ];
 const OBJECTIVES = [
-    ['Deliver', [['vDestRegion', 'mixed'], ['fDist', 'float'], ['bStop', 'bool']]],
+    [
+        'Deliver',
+        [
+            ['vDestRegion', 'mixed'],
+            ['fDist', 'float'],
+            ['bStop', 'bool']
+        ]
+    ],
     ['Destroy', [['bHeroOnly', 'bool']]],
     ['Protect', [['bHeroOnly', 'bool']]],
     ['Extract', [['fDist', 'float']]],
-    ['EnterVehicle', [['uPlayer', 'object'], ['bUseAnySeat', 'bool']]],
+    [
+        'EnterVehicle',
+        [
+            ['uPlayer', 'object'],
+            ['bUseAnySeat', 'bool']
+        ]
+    ],
     ['Verify', [['sFactionId', 'string']]],
     ['Action', [['sActionLabel', 'string']]],
     ['Release', [['sActionLabel', 'string']]],
     ['Accept', [['sDialogText', 'string']]],
     ['CaptureOutpost', [['uOutpostBldg', 'object']]],
-    ['Race', [['tCourseLocs', 'mixed'], ['fWidth', 'float'], ['sGateType', 'string']]]
+    [
+        'Race',
+        [
+            ['tCourseLocs', 'mixed'],
+            ['fWidth', 'float'],
+            ['sGateType', 'string']
+        ]
+    ]
 ];
 
 function buildObjectiveNodes() {
@@ -241,10 +448,24 @@ function buildObjectiveNodes() {
 
 // §3a mission root / lifecycle nodes.
 const ROOTS = [
-    ['Contract', 'MrxTaskContract', [['sFactionId', 'string'], ['sStarter', 'string']]],
+    [
+        'Contract',
+        'MrxTaskContract',
+        [
+            ['sFactionId', 'string'],
+            ['sStarter', 'string']
+        ]
+    ],
     ['ContractOutpost', 'MrxTaskContractOutpost', [['sFactionId', 'string']]],
     ['Job', 'MrxTaskJob', [['sFactionId', 'string']]],
-    ['Mission', 'MrxTaskMission', [['sFactionId', 'string'], ['oStarter', 'object']]]
+    [
+        'Mission',
+        'MrxTaskMission',
+        [
+            ['sFactionId', 'string'],
+            ['oStarter', 'object']
+        ]
+    ]
 ];
 const LIFECYCLE = ['PreLoadAssets', 'LoadAssets', 'Activated', 'Complete', 'Cancel', 'Cleanup'];
 
@@ -296,13 +517,17 @@ function main() {
     }
 
     const rustByGlobal = parseRustBindings();
-    const bindingNodes = buildBindingNodes(rustByGlobal);
+    const { spec: bindingNodes, globalByCat } = buildBindingNodes(rustByGlobal);
     const eventNodes = buildEventNodes();
     const objectiveNodes = buildObjectiveNodes();
     const missionNodes = buildMissionNodes();
 
-    const spec = mergeSpecs(missionNodes, eventNodes, objectiveNodes, bindingNodes);
+    const nodes = mergeSpecs(missionNodes, eventNodes, objectiveNodes, bindingNodes);
+    // Authoring categories win on key collisions (e.g. MERCS2_EVENT: the Event
+    // namespace bindings share the category with the red event-trigger nodes).
+    const categories = { ...buildBindingCategories(globalByCat), ...AUTHORING_CATEGORIES };
 
+    const spec = { categories, nodes };
     const json = JSON.stringify(spec, null, 2) + '\n';
     mkdirSync(dirname(OUT_CANONICAL), { recursive: true });
     mkdirSync(dirname(OUT_SERVED), { recursive: true });
@@ -313,8 +538,10 @@ function main() {
         (n, cat) => n + Object.values(cat).filter((d) => d.inputs.some((p) => p.type !== 'exec')).length,
         0
     );
-    console.log(`[mercs2:discover] categories: ${Object.keys(spec).length}`);
-    console.log(`[mercs2:discover] nodes: ${countNodes(spec)} (bindings ${countNodes(bindingNodes)}, events ${countNodes(eventNodes)}, objectives ${countNodes(objectiveNodes)}, mission ${countNodes(missionNodes)})`);
+    console.log(`[mercs2:discover] categories: ${Object.keys(categories).length}`);
+    console.log(
+        `[mercs2:discover] nodes: ${countNodes(nodes)} (bindings ${countNodes(bindingNodes)}, events ${countNodes(eventNodes)}, objectives ${countNodes(objectiveNodes)}, mission ${countNodes(missionNodes)})`
+    );
     console.log(`[mercs2:discover] binding nodes with typed arg pins (from Rust): ${typedBindingPins}`);
     console.log(`[mercs2:discover] wrote ${OUT_CANONICAL}`);
     console.log(`[mercs2:discover] wrote ${OUT_SERVED}`);

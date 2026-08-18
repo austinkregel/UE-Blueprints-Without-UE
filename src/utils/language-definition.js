@@ -2063,11 +2063,26 @@ export function getNodeDefinition(nodeId) {
 }
 
 /**
+ * Get metadata (name/color/icon/description) for a category, from the built-in
+ * catalog or from externally-registered categories (see registerExtraNodeCategories).
+ */
+export function getCategoryInfo(category) {
+    if (!category) return null;
+    return NODE_CATEGORIES[category.toUpperCase()] ?? EXTRA_NODE_CATEGORIES[category] ?? null;
+}
+
+/**
  * Get color for a node category
  */
 export function getCategoryColor(category) {
-    const categoryInfo = NODE_CATEGORIES[category?.toUpperCase()] ?? null;
-    return categoryInfo ? categoryInfo.color : 'gray';
+    return getCategoryInfo(category)?.color ?? 'gray';
+}
+
+/**
+ * Get the display name for a category, falling back to the raw key.
+ */
+export function getCategoryName(category) {
+    return getCategoryInfo(category)?.name ?? category;
 }
 
 /**
@@ -2101,16 +2116,31 @@ export function getAllNodeDefinitions() {
 
 // Support for external JSON specs
 const EXTRA_NODE_DEFINITIONS = {};
+// Externally-registered category metadata, keyed by category key (e.g. from a domain
+// spec). Merged in getCategoryInfo so any domain can name/color its categories without
+// the engine hard-coding them.
+const EXTRA_NODE_CATEGORIES = {};
 
-export function registerExtraNodeDefinitions(extra = {}) {
-    for (const [categoryKey, nodes] of Object.entries(extra || {})) {
-        EXTRA_NODE_DEFINITIONS[categoryKey] = { ...(EXTRA_NODE_DEFINITIONS[categoryKey] || {}), ...(nodes || {}) };
-    }
+function notifyDefinitionsUpdated() {
     try {
         if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
             window.dispatchEvent(new CustomEvent('language-definitions-updated'));
         }
     } catch {}
+}
+
+export function registerExtraNodeDefinitions(extra = {}) {
+    for (const [categoryKey, nodes] of Object.entries(extra || {})) {
+        EXTRA_NODE_DEFINITIONS[categoryKey] = { ...(EXTRA_NODE_DEFINITIONS[categoryKey] || {}), ...(nodes || {}) };
+    }
+    notifyDefinitionsUpdated();
+}
+
+export function registerExtraNodeCategories(categories = {}) {
+    for (const [categoryKey, info] of Object.entries(categories || {})) {
+        EXTRA_NODE_CATEGORIES[categoryKey] = { ...(EXTRA_NODE_CATEGORIES[categoryKey] || {}), ...(info || {}) };
+    }
+    notifyDefinitionsUpdated();
 }
 
 /**

@@ -1,4 +1,4 @@
-import { getAllNodeDefinitions, getCategoryColor, getNodeDefinition } from './language-definition.js';
+import { getAllNodeDefinitions, getCategoryColor, getCategoryName, getNodeDefinition } from './language-definition.js';
 import { getNextNodeId } from './id-utils.js';
 
 /**
@@ -125,7 +125,7 @@ export function getNodePalette() {
         const category = nodeDef.category;
         if (!palette[category]) {
             palette[category] = {
-                name: category,
+                name: getCategoryName(category),
                 color: getCategoryColor(category),
                 nodes: []
             };

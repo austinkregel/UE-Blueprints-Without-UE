@@ -9,3 +9,5 @@ src-tauri/gen/
 src-tauri/
 package-lock.json
 parsed_code_php.json
+.claude/
+mercs2-specific-data/spec/

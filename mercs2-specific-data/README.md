@@ -29,11 +29,11 @@ The engine was re-implemented in Rust; the authored game logic is decompiled Lua
 **both**, from an external checkout (`mercs2-wad-simulator`) whose path is hard-coded at the top of
 `discover.mjs` (initial hard-coded discovery — to be made configurable later):
 
-| Source | What we take from it |
-|---|---|
-| `crates/mercs2_script/binding_coverage.json` | The authoritative catalog: 37 engine namespaces / ~1092 C-function bindings, names + real/stub status. |
-| `crates/mercs2_script/src/bindings/*.rs` | Typed argument pins — parsed from each `b.real("Fn", …create_function(move \|_, (a,b): (T1,T2)\|` closure, anchored by each file's `pub const GLOBAL`. |
-| `docs/scripts_graph_spec.md` (fact-checked) | The Blueprint-shaped authoring layer above the raw bindings: event-trigger nodes (§3c, typed arg tuples), objective nodes (§3b), and mission root/lifecycle nodes (§3a). These are hand-encoded in `discover.mjs` from that spec. |
+| Source                                       | What we take from it                                                                                                                                                                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crates/mercs2_script/binding_coverage.json` | The authoritative catalog: 37 engine namespaces / ~1092 C-function bindings, names + real/stub status.                                                                                                                            |
+| `crates/mercs2_script/src/bindings/*.rs`     | Typed argument pins — parsed from each `b.real("Fn", …create_function(move \|_, (a,b): (T1,T2)\|` closure, anchored by each file's `pub const GLOBAL`.                                                                            |
+| `docs/scripts_graph_spec.md` (fact-checked)  | The Blueprint-shaped authoring layer above the raw bindings: event-trigger nodes (§3c, typed arg tuples), objective nodes (§3b), and mission root/lifecycle nodes (§3a). These are hand-encoded in `discover.mjs` from that spec. |
 
 Node roles follow the spec's Blueprint mapping: `Event.<Type>` → red event nodes (exec-out);
 `Get*/Is*/Has*` → pure data nodes (no exec); everything else → impure action nodes (exec-in/out).

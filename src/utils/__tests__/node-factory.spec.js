@@ -7,6 +7,7 @@ import { getNextNodeId } from '../id-utils.js';
 vi.mock('../language-definition.js', () => ({
     getNodeDefinition: vi.fn(),
     getCategoryColor: vi.fn(),
+    getCategoryName: vi.fn((c) => c),
     getAllNodeDefinitions: vi.fn()
 }));
 
