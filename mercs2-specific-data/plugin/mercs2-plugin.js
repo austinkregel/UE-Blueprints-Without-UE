@@ -19,6 +19,99 @@
         return found ? found.defaultValue : undefined;
     }
 
+    // ---- Lua codegen helpers ----
+    function luaLiteral(v) {
+        if (v === undefined || v === null || v === '') return 'nil';
+        if (typeof v === 'number') return String(v);
+        if (typeof v === 'boolean') return v ? 'true' : 'false';
+        return `"${String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+    }
+    function nsFn(node) {
+        const m = /^mercs2\.([^.]+)\.(.+)$/.exec((node && node.nodeDefId) || '');
+        return m ? { ns: m[1], fn: m[2] } : null;
+    }
+    // A node as a Lua value expression (variable read, engine getter, or literal).
+    function nodeExpr(node, byId, connections, depth) {
+        if (!node || depth > 8) return 'nil';
+        if (node.type === 'variable') return `self.${node.varName || 'var'}`;
+        const nf = nsFn(node);
+        if (nf) return `${nf.ns}.${nf.fn}(${resolveArgs(node, byId, connections, depth + 1)})`;
+        return 'nil';
+    }
+    function resolveArgs(node, byId, connections, depth) {
+        return (node.inputs || [])
+            .filter((i) => i && i.type !== 'exec')
+            .map((i) => {
+                const conn = connections.find((c) => c.to && c.to.nodeId === node.id && c.to.input === i.name);
+                if (conn) {
+                    const src = byId.get(conn.from.nodeId);
+                    return src ? nodeExpr(src, byId, connections, depth) : 'nil';
+                }
+                return luaLiteral(i.defaultValue);
+            })
+            .join(', ');
+    }
+    function valueExpr(value, byId, connections) {
+        if (!value) return 'nil';
+        if (value.kind === 'literal') return luaLiteral(value.value);
+        return value.node ? nodeExpr(value.node, byId, connections, 0) : 'nil';
+    }
+    // Emit one Lua statement for a step node.
+    function emitStep(step, byId, connections) {
+        const node = step.node;
+        if (node.category === 'MERCS2_OBJECTIVE') {
+            const type = (node.nodeDefId || '').replace('mercs2.Objective.', '');
+            const cfg = step.inputs
+                .filter((i) => valueExpr(i.value, byId, connections) !== 'nil')
+                .map((i) => `${i.name} = ${valueExpr(i.value, byId, connections)}`)
+                .join(', ');
+            return `self:CreateChild({ sModuleName = "MrxTaskObjective${type}"${cfg ? ', ' + cfg : ''} })`;
+        }
+        if (node.category === 'MERCS2_EVENT') {
+            const type = (node.nodeDefId || '').replace('mercs2.Event.', '');
+            const args = step.inputs.map((i) => valueExpr(i.value, byId, connections)).join(', ');
+            return `self:_CreateEvent(Event.${type}, { ${args} }, nil, { self })`;
+        }
+        const nf = nsFn(node);
+        if (nf) {
+            const args = step.inputs.map((i) => valueExpr(i.value, byId, connections)).join(', ');
+            return `${nf.ns}.${nf.fn}(${args})`;
+        }
+        if (node.type === 'variable' && node.varAction === 'set') {
+            return `self.${node.varName || 'var'} = ${valueExpr(step.inputs[0] && step.inputs[0].value, byId, connections)}`;
+        }
+        return `-- ${node.name || node.nodeDefId || node.id}`;
+    }
+    function generateLua(graph, ir) {
+        const nodes = graph.nodes || [];
+        const connections = graph.connections || [];
+        const byId = new Map(nodes.map((n) => [n.id, n]));
+        const lines = [];
+
+        const root = nodes.find((n) => n.category === 'MERCS2_MISSION' && /^mercs2\.Root\./.test(n.nodeDefId || ''));
+        if (root) {
+            const type = (root.nodeDefId || '').replace('mercs2.Root.', '');
+            const cls =
+                { Contract: 'MrxTaskContract', ContractOutpost: 'MrxTaskContractOutpost', Job: 'MrxTaskJob', Mission: 'MrxTaskMission' }[type] ||
+                'MrxTaskContract';
+            lines.push(`inherit("${cls}")`, '');
+        }
+
+        if (ir.entries.length === 0) {
+            lines.push('-- No entry points (lifecycle/event nodes) in this graph.');
+        }
+        for (const { entry, steps } of ir.entries) {
+            const hook = (entry.nodeDefId || '').startsWith('mercs2.Lifecycle.')
+                ? entry.nodeDefId.replace('mercs2.Lifecycle.', '')
+                : (entry.name || `On${entry.id}`).replace(/\s+/g, '');
+            lines.push(`function ${hook}(self)`);
+            if (steps.length === 0) lines.push('  -- (empty)');
+            for (const step of steps) lines.push('  ' + emitStep(step, byId, connections));
+            lines.push('end', '');
+        }
+        return lines.join('\n').trimEnd() + '\n';
+    }
+
     // Inject the mercs2 HUD styles once (kept out of the engine's theme.css).
     function injectStyles() {
         if (document.getElementById('mercs2-plugin-styles')) return;
@@ -158,5 +251,11 @@
             // Blueprint panel). Placed logic/action nodes stay on the canvas.
             return sections;
         });
+
+        // Codegen: lower the graph (via the engine's IR) into mission Lua.
+        api.registerCodegenTarget('lua', (graph) => ({
+            code: generateLua(graph, api.buildGraphIR(graph)),
+            language: 'lua'
+        }));
     });
 })();

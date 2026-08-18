@@ -94,6 +94,15 @@
                 <button
                     :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
                     class="w-full px-3 py-1.5 text-left text-sm"
+                    @click="$emit('compile-graph')"
+                >
+                    Compile
+                </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+                <button
+                    :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
+                    class="w-full px-3 py-1.5 text-left text-sm"
                     @click="$emit('create-test-graph')"
                 >
                     Create Test Graph
@@ -218,6 +227,7 @@
         'reset-viewport',
         'reset-layout',
         'run-graph',
+        'compile-graph',
         'stop-execution',
         'clear-results',
         'create-test-graph',

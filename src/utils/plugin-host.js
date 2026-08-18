@@ -11,6 +11,7 @@
 import { getCategoryInfo, registerExtraNodeCategories, registerExtraNodeDefinitions } from './language-definition.js';
 import { registerNodePreviewProvider, registerNodeValidator } from './node-inspector.js';
 import { registerOutlineProvider } from './outline.js';
+import { buildGraphIR, registerCodegenTarget } from './codegen.js';
 
 // The surface a plugin receives. Generic registration hooks + read-only lookups.
 const PLUGIN_API = Object.freeze({
@@ -19,7 +20,9 @@ const PLUGIN_API = Object.freeze({
     registerNodeValidator,
     registerNodePreviewProvider,
     registerOutlineProvider,
-    getCategoryInfo
+    registerCodegenTarget,
+    getCategoryInfo,
+    buildGraphIR
 });
 
 // Expose the global a plugin bundle calls. Idempotent.

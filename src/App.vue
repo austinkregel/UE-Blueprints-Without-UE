@@ -13,6 +13,7 @@
                 @reset-viewport="resetViewport"
                 @reset-layout="resetLayout"
                 @run-graph="executeGraph"
+                @compile-graph="compileGraph"
                 @stop-execution="stopExecution"
                 @clear-results="clearExecutionResults"
                 @create-test-graph="createTestGraph"
@@ -87,6 +88,7 @@
             @close="closeNodeContextMenu"
         />
         <EntryPointManager :visible="showEntryPointManager" @close="showEntryPointManager = false" />
+        <CodeOutput :visible="codeOutput.visible" :code="codeOutput.code" :language="codeOutput.language" @close="codeOutput.visible = false" />
     </div>
 </template>
 
@@ -126,6 +128,8 @@
     } from './utils/graph-executor.js';
     import { pickDirectory, readDirectoryTree } from './utils/file-tree.js';
     import { getWorkspaceIssueCount } from './utils/node-inspector.js';
+    import { getCodegenTargets, runCodegen } from './utils/codegen.js';
+    import CodeOutput from './components/CodeOutput.vue';
 
     const contextMenuVisible = ref(false);
     const contextMenuPosition = ref({ screen: { x: 0, y: 0 }, world: { x: 0, y: 0 } });
@@ -162,6 +166,27 @@
     function resetLayout() {
         leftWidth.value = 224;
         rightWidth.value = 344;
+    }
+
+    // Compile the graph via the active codegen target (installed by a domain).
+    const codeOutput = ref({ visible: false, code: '', language: '' });
+    function compileGraph() {
+        const targets = getCodegenTargets();
+        if (targets.length === 0) {
+            codeOutput.value = {
+                visible: true,
+                code: '-- No codegen target is installed.\n-- A domain plugin registers one (e.g. the mercs2 Lua target).',
+                language: 'info'
+            };
+            return;
+        }
+        const target = targets.includes('lua') ? 'lua' : targets[0];
+        try {
+            const { code, language } = runCodegen(target, { nodes: nodes.value, connections: getConnections() });
+            codeOutput.value = { visible: true, code, language };
+        } catch (e) {
+            codeOutput.value = { visible: true, code: `-- Codegen failed: ${e.message}`, language: 'error' };
+        }
     }
 
     // The outline's per-section "+" opens the Add Node picker.
