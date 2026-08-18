@@ -385,6 +385,13 @@
     color: var(--ink);
     box-shadow: inset 2px 0 0 var(--accent);
 }
+.bp-dotk {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    background: var(--na, #6f7d8e);
+    flex: none;
+}
 
 /* form controls (inspector / settings) */
 .bp-input {
