@@ -1,29 +1,24 @@
 <template>
-    <div class="node-palette h-full w-80 overflow-y-auto border-r border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-        <div class="border-b border-zinc-200 p-4 dark:border-zinc-700">
-            <h2 class="text-lg font-bold text-zinc-900 dark:text-white">Node Palette</h2>
-            <input
-                v-model="searchQuery"
-                class="mt-2 w-full rounded border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-900 placeholder-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
-                placeholder="Search nodes..."
-            />
-            <div class="mt-2 flex gap-2">
-                <button class="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" @click="scanProjectClick">Scan Project</button>
-                <span v-if="scanStatus" class="text-xs text-zinc-500">{{ scanStatus }}</span>
+    <div class="node-palette h-full overflow-y-auto bg-[var(--panel)] text-[var(--ink)]">
+        <div class="bp-panel-head flex-col items-stretch gap-3">
+            <h2 class="bp-sec-label">Node Palette</h2>
+            <div class="bp-filter !m-0">
+                <input v-model="searchQuery" placeholder="Search nodes..." />
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="bp-btn primary" @click="scanProjectClick">Scan Project</button>
+                <span v-if="scanStatus" class="text-xs text-[var(--ink-3)]">{{ scanStatus }}</span>
             </div>
         </div>
 
         <div class="p-2">
             <div v-for="(category, categoryKey) in filteredPalette" :key="categoryKey" class="mb-4">
-                <div
-                    class="flex cursor-pointer items-center justify-between rounded p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                    @click="toggleCategory(categoryKey)"
-                >
+                <div class="bp-row justify-between" @click="toggleCategory(categoryKey)">
                     <div class="flex items-center">
                         <div :class="`bg-${category.color}-500`" class="mr-2 h-3 w-3 rounded-full"></div>
-                        <span class="font-medium text-zinc-900 dark:text-white">{{ category.name }}</span>
+                        <span class="bp-sec-label !text-[var(--ink)]">{{ category.name }}</span>
                     </div>
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400"> {{ category.nodes.length }} nodes </span>
+                    <span class="text-xs text-[var(--ink-3)]"> {{ category.nodes.length }} nodes </span>
                 </div>
 
                 <div v-if="expandedCategories[categoryKey]" class="mt-2 ml-4">
@@ -31,39 +26,39 @@
                         v-for="node in category.nodes"
                         :key="node.id"
                         :draggable="true"
-                        class="mb-2 cursor-grab rounded border border-zinc-200 bg-white p-2 transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
+                        class="palette-node mb-2 cursor-grab rounded-md border border-[var(--line)] bg-[var(--raised)] p-2 transition-all duration-200 hover:border-[var(--accent-dim)]"
                         @click="onNodeSelect(node)"
                         @dragstart="onDragStart($event, node)"
                     >
                         <div class="mb-1 flex items-center justify-between">
-                            <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ node.name }}</span>
+                            <span class="text-sm font-medium text-[var(--ink)]">{{ node.name }}</span>
                             <div :class="`bg-${category.color}-400`" class="h-2 w-2 rounded-full"></div>
                         </div>
 
-                        <p class="mb-2 text-xs text-zinc-600 dark:text-zinc-400">{{ node.description }}</p>
+                        <p class="mb-2 text-xs text-[var(--ink-3)]">{{ node.description }}</p>
 
                         <div class="flex justify-between text-xs">
                             <div>
-                                <span class="text-zinc-600 dark:text-zinc-500">In:</span>
-                                <span class="ml-1 text-cyan-600 dark:text-cyan-400">{{ node.inputs?.length || 0 }}</span>
+                                <span class="text-[var(--ink-3)]">In:</span>
+                                <span class="ml-1 text-cyan-400">{{ node.inputs?.length || 0 }}</span>
                             </div>
                             <div>
-                                <span class="text-zinc-600 dark:text-zinc-500">Out:</span>
-                                <span class="ml-1 text-pink-600 dark:text-pink-400">{{ node.outputs?.length || 0 }}</span>
+                                <span class="text-[var(--ink-3)]">Out:</span>
+                                <span class="ml-1 text-pink-400">{{ node.outputs?.length || 0 }}</span>
                             </div>
                         </div>
 
                         <!-- Input/Output preview -->
-                        <div v-if="showIOPreview" class="mt-2 border-t border-zinc-200 pt-2 dark:border-zinc-700">
+                        <div v-if="showIOPreview" class="mt-2 border-t border-[var(--line)] pt-2">
                             <div v-if="node.inputs?.length" class="mb-1">
-                                <div class="mb-1 text-xs text-zinc-600 dark:text-zinc-500">Inputs:</div>
+                                <div class="mb-1 text-xs text-[var(--ink-3)]">Inputs:</div>
                                 <div class="flex flex-wrap gap-1">
                                     <Type v-for="input in node.inputs" :key="input.name" :name="input.name" :type="input.type" />
                                 </div>
                             </div>
 
                             <div v-if="node.outputs?.length">
-                                <div class="mb-1 text-xs text-zinc-600 dark:text-zinc-500">Outputs:</div>
+                                <div class="mb-1 text-xs text-[var(--ink-3)]">Outputs:</div>
                                 <div class="flex flex-wrap gap-1">
                                     <Type v-for="output in node.outputs" :key="output.name" :name="output.name" :type="output.type" />
                                 </div>
@@ -75,8 +70,8 @@
         </div>
 
         <!-- Toggle for IO preview -->
-        <div class="border-t border-zinc-200 p-4 dark:border-zinc-700">
-            <label class="flex items-center text-sm text-zinc-900 dark:text-white">
+        <div class="border-t border-[var(--line)] p-4">
+            <label class="flex items-center text-sm text-[var(--ink-2)]">
                 <input v-model="showIOPreview" class="mr-2" type="checkbox" />
                 Show I/O Details
             </label>

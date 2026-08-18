@@ -2,9 +2,9 @@
     <div
         :data-io-name="io.name || io"
         :class="[
-            'io connection-pin flex cursor-pointer items-center text-xs hover:bg-white/10',
+            'io connection-pin flex min-h-[26px] cursor-pointer items-center rounded-sm px-2 text-xs transition-colors select-none hover:bg-white/10',
             ioType,
-            ioType === 'input' ? 'px-1.5 py-0.5' : 'justify-end px-1.5 py-0.5',
+            ioType === 'input' ? 'justify-start' : 'justify-end',
             customClasses
         ]"
         @contextmenu="handleContextMenu"

@@ -1,7 +1,7 @@
 <template>
     <div class="blueprints-app flex h-full w-full flex-col">
-        <!-- Top Toolbar (no overlap) -->
-        <div class="shrink-0 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-700 dark:bg-zinc-800/80">
+        <!-- Command bar -->
+        <div class="shrink-0">
             <TopToolbar
                 :debug-mode="debugMode"
                 :execution-summary="executionSummary"
@@ -37,24 +37,29 @@
                 @deselect="onDeselect"
                 @update-outputs="handleUpdateOutputs"
             />
-            <div v-else class="flex flex-1 items-center justify-center overflow-hidden text-gray-500">
-                <p class="text-lg">No active workspace. Please create or open a workspace to start.</p>
+            <div v-else class="node-canvas-surface flex flex-1 items-center justify-center overflow-hidden" style="color: var(--ink-3)">
+                <p class="text-lg">No active workspace. Create or open a workspace to start.</p>
             </div>
 
             <!-- Execution Log Panel (right, non-overlapping) -->
             <ExecutionLog :logs="executionLog" @clear="clearExecutionResults" />
 
             <!-- Right Palette Sidebar -->
-            <div
-                v-show="showNodePalette"
-                class="flex max-h-screen w-86 shrink-0 flex-col overflow-y-auto border-l border-zinc-200 bg-white/80 dark:border-zinc-700 dark:bg-zinc-900/80"
-            >
+            <div v-show="showNodePalette" class="bp-panel right w-86 shrink-0 overflow-y-auto">
                 <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" />
                 <NodeSettings :variables="currentVariables" />
             </div>
-
-            <!-- AST Tools Sidebar -->
         </div>
+
+        <!-- Status bar -->
+        <footer class="bp-status shrink-0">
+            <span class="s"><i class="dot" :class="isExecuting ? 'warn' : 'ok'"></i>{{ isExecuting ? 'Running' : 'Ready' }}</span>
+            <span class="s mono">{{ nodes.length }} nodes</span>
+            <span class="right">
+                <span class="s mono">{{ activeWorkspace?.name || 'no workspace' }}</span>
+                <span class="s mono">{{ Math.round(viewport.zoom * 100) }}%</span>
+            </span>
+        </footer>
 
         <!-- Floating Menus/Modals outside canvas -->
         <ContextMenu

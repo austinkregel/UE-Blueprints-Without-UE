@@ -1,309 +1,183 @@
 <template>
-    <div class="border-t border-zinc-200 bg-white/80 text-[11px] leading-tight dark:border-zinc-700 dark:bg-zinc-900/80">
+    <div class="ns-inspector border-t border-[var(--line)] bg-[var(--panel)] text-[11px] leading-tight text-[var(--ink)]">
         <!-- Node Settings Section (shown when a node is selected) -->
-        <div v-if="selectedNode" class="px-2 pt-1">
+        <div v-if="selectedNode" class="px-2 pt-2">
             <div class="mb-1 flex items-center gap-1">
-                <span class="font-semibold text-zinc-700 dark:text-zinc-200">Node {{ selectedNode.id }}</span>
-                <button
-                    class="ml-auto rounded-sm bg-cyan-600 px-1.5 py-0.5 text-[10px] text-white hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-800"
-                    title="Save changes"
-                    @click="save"
-                >
-                    Save
-                </button>
-                <button
-                    class="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
-                    title="Close settings"
-                    @click="close"
-                >
-                    Close
-                </button>
+                <span class="bp-sec-label !text-[var(--ink)]">Node {{ selectedNode.id }}</span>
+                <button class="bp-btn primary ml-auto" title="Save changes" @click="save">Save</button>
+                <button class="bp-btn" title="Close settings" @click="close">Close</button>
             </div>
             <!-- General -->
             <div class="mb-2 grid grid-cols-2 gap-1.5">
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400" title="Type">Type</label>
-                    <input
-                        :value="selectedNode.type"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        disabled
-                    />
+                    <label class="block text-[10px] text-[var(--ink-3)]" title="Type">Type</label>
+                    <input :value="selectedNode.type" class="bp-input" disabled />
                 </div>
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400" title="Category">Cat</label>
-                    <input
-                        :value="selectedNode.category || ''"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        disabled
-                    />
+                    <label class="block text-[10px] text-[var(--ink-3)]" title="Category">Cat</label>
+                    <input :value="selectedNode.category || ''" class="bp-input" disabled />
                 </div>
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400" title="Definition">Def</label>
-                    <input
-                        :value="selectedNode.nodeDefId || ''"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        disabled
-                    />
+                    <label class="block text-[10px] text-[var(--ink-3)]" title="Definition">Def</label>
+                    <input :value="selectedNode.nodeDefId || ''" class="bp-input" disabled />
                 </div>
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400" title="Display Name">Name</label>
-                    <input
-                        v-model="localName"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        placeholder="(optional)"
-                    />
+                    <label class="block text-[10px] text-[var(--ink-3)]" title="Display Name">Name</label>
+                    <input v-model="localName" class="bp-input" placeholder="(optional)" />
                 </div>
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">X</label>
-                    <input
-                        v-model.number="localX"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        type="number"
-                    />
+                    <label class="block text-[10px] text-[var(--ink-3)]">X</label>
+                    <input v-model.number="localX" class="bp-input" type="number" />
                 </div>
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Y</label>
-                    <input
-                        v-model.number="localY"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        type="number"
-                    />
+                    <label class="block text-[10px] text-[var(--ink-3)]">Y</label>
+                    <input v-model.number="localY" class="bp-input" type="number" />
                 </div>
             </div>
 
             <!-- Variable specific -->
             <div v-if="selectedNode.type === 'variable'" class="mb-2">
-                <h4 class="mb-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">Variable</h4>
+                <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">Variable</h4>
                 <div class="mb-1.5 grid grid-cols-2 gap-1.5">
                     <div>
-                        <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Action</label>
-                        <select
-                            v-model="localVarAction"
-                            class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        >
+                        <label class="block text-[10px] text-[var(--ink-3)]">Action</label>
+                        <select v-model="localVarAction" class="bp-input">
                             <option value="get">get</option>
                             <option value="set">set</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Type</label>
-                        <select
-                            v-model="localVarType"
-                            class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        >
+                        <label class="block text-[10px] text-[var(--ink-3)]">Type</label>
+                        <select v-model="localVarType" class="bp-input">
                             <option v-for="t in typeOptions" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                     <div class="col-span-2">
-                        <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Name</label>
-                        <input
-                            v-model="localVarName"
-                            class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        />
+                        <label class="block text-[10px] text-[var(--ink-3)]">Name</label>
+                        <input v-model="localVarName" class="bp-input" />
                     </div>
                 </div>
                 <div v-if="selectedNode.isLiteral" class="grid grid-cols-2 items-center gap-1.5">
                     <div class="col-span-2">
-                        <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Literal</label>
-                        <input
-                            v-if="localVarType === 'string'"
-                            v-model="localLiteralValueString"
-                            class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        />
+                        <label class="block text-[10px] text-[var(--ink-3)]">Literal</label>
+                        <input v-if="localVarType === 'string'" v-model="localLiteralValueString" class="bp-input" />
                         <input
                             v-else-if="localVarType === 'int' || localVarType === 'float'"
                             v-model.number="localLiteralValueNumber"
-                            class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                            class="bp-input"
                             type="number"
                         />
-                        <label
-                            v-else-if="localVarType === 'bool'"
-                            class="inline-flex items-center gap-1 text-[11px] text-zinc-700 dark:text-zinc-200"
-                        >
+                        <label v-else-if="localVarType === 'bool'" class="inline-flex items-center gap-1 text-[11px] text-[var(--ink-2)]">
                             <input v-model="localLiteralValueBool" type="checkbox" /> Boolean
                         </label>
-                        <div v-else class="text-[10px] text-zinc-500 dark:text-zinc-400">Unsupported literal type</div>
+                        <div v-else class="text-[10px] text-[var(--ink-3)]">Unsupported literal type</div>
                     </div>
                 </div>
             </div>
 
             <!-- Code Context for imported code nodes -->
             <div v-if="selectedNode?.refs" class="mb-2">
-                <h4 class="mb-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">Code Context</h4>
-                <div class="grid grid-cols-1 gap-0.5 text-[10px] text-zinc-600 dark:text-zinc-300">
-                    <div><span class="text-zinc-500 dark:text-zinc-400">File:</span> {{ selectedNode.refs.filePath || '—' }}</div>
-                    <div v-if="selectedNode.refs.language">
-                        <span class="text-zinc-500 dark:text-zinc-400">Language:</span> {{ selectedNode.refs.language }}
-                    </div>
+                <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">Code Context</h4>
+                <div class="grid grid-cols-1 gap-0.5 text-[10px] text-[var(--ink-2)]">
+                    <div><span class="text-[var(--ink-3)]">File:</span> {{ selectedNode.refs.filePath || '—' }}</div>
+                    <div v-if="selectedNode.refs.language"><span class="text-[var(--ink-3)]">Language:</span> {{ selectedNode.refs.language }}</div>
                     <div v-if="selectedNode.refs.fqn">
-                        <span class="text-zinc-500 dark:text-zinc-400">FQN:</span>
+                        <span class="text-[var(--ink-3)]">FQN:</span>
                         {{ selectedNode.refs.fqn }}
                     </div>
                     <div v-if="Array.isArray(selectedNode.refs.usage)">
-                        <span class="text-zinc-500 dark:text-zinc-400">Usage:</span> {{ selectedNode.refs.usage.length }} place(s)
+                        <span class="text-[var(--ink-3)]">Usage:</span> {{ selectedNode.refs.usage.length }} place(s)
                     </div>
                 </div>
                 <ul
                     v-if="Array.isArray(selectedNode.refs.usage) && selectedNode.refs.usage.length"
-                    class="mt-1 max-h-24 overflow-auto rounded border border-zinc-200 text-[10px] text-zinc-500 dark:border-zinc-700 dark:text-zinc-400"
+                    class="mt-1 max-h-24 overflow-auto rounded border border-[var(--line)] text-[10px] text-[var(--ink-3)]"
                 >
                     <li
                         v-for="(u, i) in selectedNode.refs.usage.slice(0, 8)"
                         :key="i"
-                        class="border-b border-zinc-200 px-1.5 py-0.5 last:border-b-0 dark:border-zinc-800"
+                        class="border-b border-[var(--line-soft)] px-1.5 py-0.5 last:border-b-0"
                     >
                         <div class="truncate">{{ u.filePath }}</div>
-                        <div v-if="u.range" class="text-zinc-400">@ {{ formatRange(u.range) }}</div>
+                        <div v-if="u.range" class="text-[var(--ink-4)]">@ {{ formatRange(u.range) }}</div>
                     </li>
                 </ul>
             </div>
 
             <!-- IO Editors -->
-            <label class="mb-0.5 block font-semibold text-zinc-700 dark:text-zinc-200">In:</label>
+            <label class="mb-0.5 block font-semibold text-[var(--ink-2)]">In:</label>
             <ul class="flex flex-col">
                 <li v-for="input in filteredInputs" :key="input.name + '-' + input.type" class="mb-1 flex items-center gap-1 whitespace-nowrap">
-                    <input
-                        v-model="input.name"
-                        class="w-20 rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        placeholder="name"
-                    />
-                    <select
-                        v-model="input.type"
-                        class="w-20 appearance-none rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                    >
+                    <input v-model="input.name" class="bp-input !h-7 !w-20" placeholder="name" />
+                    <select v-model="input.type" class="bp-input !h-7 !w-20 appearance-none">
                         <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
                         <option v-if="!typeOptions.includes(input.type)" :value="input.type">{{ input.type }}</option>
                     </select>
-                    <input
-                        v-model="input.type"
-                        class="w-24 rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        placeholder="type"
-                    />
-                    <button
-                        class="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
-                        title="Remove"
-                        @click="removeInput(localInputs.indexOf(input))"
-                    >
-                        ✕
-                    </button>
+                    <input v-model="input.type" class="bp-input !h-7 !w-24" placeholder="type" />
+                    <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeInput(localInputs.indexOf(input))">✕</button>
                 </li>
             </ul>
-            <button
-                class="mb-2 rounded-sm bg-zinc-200 px-2 py-0.5 text-[11px] text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
-                title="Add Input"
-                @click="addInput"
-            >
-                + In
-            </button>
-            <label class="mb-0.5 block font-semibold text-zinc-700 dark:text-zinc-200">Out:</label>
+            <button class="bp-btn mb-2 !h-7 !px-2" title="Add Input" @click="addInput">+ In</button>
+            <label class="mb-0.5 block font-semibold text-[var(--ink-2)]">Out:</label>
             <ul class="flex flex-col">
                 <li v-for="output in filteredOutputs" :key="output.name + '-' + output.type" class="mb-1 flex items-center gap-1 whitespace-nowrap">
-                    <input
-                        v-model="output.name"
-                        class="w-20 rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        placeholder="name"
-                    />
-                    <select
-                        v-model="output.type"
-                        class="w-20 appearance-none rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                    >
+                    <input v-model="output.name" class="bp-input !h-7 !w-20" placeholder="name" />
+                    <select v-model="output.type" class="bp-input !h-7 !w-20 appearance-none">
                         <option v-for="type in typeOptions" :key="type" :value="type">{{ type }}</option>
                         <option v-if="!typeOptions.includes(output.type)" :value="output.type">{{ output.type }}</option>
                     </select>
-                    <input
-                        v-model="output.type"
-                        class="w-24 rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        placeholder="type"
-                    />
-                    <button
-                        class="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600"
-                        title="Remove"
-                        @click="removeOutput(localOutputs.indexOf(output))"
-                    >
-                        ✕
-                    </button>
+                    <input v-model="output.type" class="bp-input !h-7 !w-24" placeholder="type" />
+                    <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeOutput(localOutputs.indexOf(output))">✕</button>
                 </li>
             </ul>
 
             <!-- IO Control for System Nodes -->
             <div v-if="selectedNode.type === 'system'" class="mb-2">
-                <h4 class="mb-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">IO Control</h4>
+                <h4 class="bp-sec-label mb-1 !text-[var(--ink-2)]">IO Control</h4>
                 <div class="mb-1.5 grid grid-cols-2 gap-1.5">
-                    <button
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        @click="addOutput"
-                    >
-                        Add Output
-                    </button>
-                    <button
-                        :disabled="selectedNode.outputs.length === 0"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        @click="removeOutput"
-                    >
-                        Remove Output
-                    </button>
+                    <button class="bp-btn w-full" @click="addOutput">Add Output</button>
+                    <button :disabled="selectedNode.outputs.length === 0" class="bp-btn w-full" @click="removeOutput">Remove Output</button>
                 </div>
             </div>
         </div>
 
         <!-- Variables List Section -->
-        <div :class="{ 'mt-2': !!selectedNode }" class="flex items-center gap-1 border-t border-zinc-200 px-2 py-1 dark:border-zinc-700">
-            <span class="font-semibold text-zinc-700 dark:text-zinc-200">Variables</span>
-            <span v-if="variables?.length" :title="variables.length + ' variables'" class="ml-auto text-[10px] text-zinc-500 dark:text-zinc-400">{{
+        <div :class="{ 'mt-2': !!selectedNode }" class="flex items-center gap-1 border-t border-[var(--line)] px-2 py-2">
+            <span class="bp-sec-label !text-[var(--ink)]">Variables</span>
+            <span v-if="variables?.length" :title="variables.length + ' variables'" class="ml-auto text-[10px] text-[var(--ink-3)]">{{
                 variables.length
             }}</span>
         </div>
         <div class="max-h-56 overflow-y-auto p-1.5">
-            <div v-if="!variables || variables.length === 0" class="px-2 py-3 text-[10px] text-zinc-500 dark:text-zinc-400">
-                No variables detected.
-            </div>
+            <div v-if="!variables || variables.length === 0" class="px-2 py-3 text-[10px] text-[var(--ink-3)]">No variables detected.</div>
             <ul v-else class="space-y-1">
-                <li
-                    v-for="v in variables"
-                    :key="v.name"
-                    class="flex min-w-0 items-center gap-1 rounded-sm bg-zinc-100/60 px-1.5 py-0.5 text-[10px] dark:bg-zinc-800/60"
-                >
-                    <span class="text-amber-500 dark:text-amber-300">$</span>
-                    <span :title="v.name" class="flex-1 truncate text-zinc-700 dark:text-zinc-200">{{ v.name }}</span>
-                    <span :title="v.type || 'mixed'" class="ml-auto text-zinc-500 dark:text-zinc-400">{{ v.type || 'mixed' }}</span>
+                <li v-for="v in variables" :key="v.name" class="bp-row min-w-0 !gap-1 !py-1 text-[10px]">
+                    <span class="text-amber-300">$</span>
+                    <span :title="v.name" class="flex-1 truncate text-[var(--ink-2)]">{{ v.name }}</span>
+                    <span :title="v.type || 'mixed'" class="ml-auto text-[var(--ink-3)]">{{ v.type || 'mixed' }}</span>
                 </li>
             </ul>
             <!-- Add Variable Form -->
             <div class="mt-2 grid grid-cols-5 items-end gap-1">
                 <div class="col-span-2">
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Name</label>
-                    <input
-                        v-model="newVarName"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                        placeholder="myVar"
-                    />
+                    <label class="block text-[10px] text-[var(--ink-3)]">Name</label>
+                    <input v-model="newVarName" class="bp-input !h-7" placeholder="myVar" />
                 </div>
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Type</label>
-                    <select
-                        v-model="newVarType"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                    >
+                    <label class="block text-[10px] text-[var(--ink-3)]">Type</label>
+                    <select v-model="newVarType" class="bp-input !h-7 !px-1.5">
                         <option v-for="t in typeOptions" :key="t" :value="t">{{ t }}</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] text-zinc-500 dark:text-zinc-400">Action</label>
-                    <select
-                        v-model="newVarAction"
-                        class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-                    >
+                    <label class="block text-[10px] text-[var(--ink-3)]">Action</label>
+                    <select v-model="newVarAction" class="bp-input !h-7 !px-1.5">
                         <option value="get">get</option>
                         <option value="set">set</option>
                     </select>
                 </div>
                 <div>
-                    <button
-                        class="w-full rounded-sm bg-emerald-600 px-2 py-1 text-[11px] text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800"
-                        @click="createVariable"
-                    >
-                        Add
-                    </button>
+                    <button class="bp-btn primary !h-7 w-full justify-center" @click="createVariable">Add</button>
                 </div>
             </div>
         </div>

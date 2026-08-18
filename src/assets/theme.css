@@ -192,3 +192,296 @@
     font-size: 12px;
     flex: none;
 }
+
+/* ================================================================
+   Shell chrome (generic): command bar, panels, rows, status, pins.
+   Ported from the mockup design so every panel shares one language.
+   ================================================================ */
+.eyebrow,
+.bp-sec-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+/* command bar */
+.bp-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    height: 50px;
+    background: linear-gradient(180deg, #161c25, #12171f);
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+}
+.bp-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.bp-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(150deg, var(--accent), #0f5fa6);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+        0 3px 10px -2px var(--accent-glow);
+}
+.bp-word {
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    font-size: 13px;
+}
+.bp-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-3);
+    padding-left: 12px;
+    border-left: 1px solid var(--line);
+}
+.bp-breadcrumb .file {
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+}
+.bp-breadcrumb .cur {
+    color: var(--ink);
+    font-weight: 600;
+}
+.bp-tbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 30px;
+    padding: 0 11px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: var(--ink-2);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+.bp-tbtn:hover {
+    background: var(--raised);
+    border-color: var(--line);
+    color: var(--ink);
+}
+.bp-tbtn .kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-left: 2px;
+}
+.bp-tsep {
+    width: 1px;
+    height: 20px;
+    background: var(--line);
+    margin: 0 4px;
+}
+.bp-compile {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 14px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-dim));
+    border: none;
+    border-radius: 8px;
+    color: #06121e;
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow:
+        0 2px 12px -2px var(--accent-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.bp-iconbtn {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: var(--ink-3);
+}
+.bp-iconbtn:hover {
+    background: var(--raised);
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+/* side panels */
+.bp-panel {
+    background: var(--panel);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.bp-panel.left {
+    border-right: 1px solid var(--line);
+}
+.bp-panel.right {
+    border-left: 1px solid var(--line);
+}
+.bp-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+}
+.bp-filter {
+    position: relative;
+    margin: 12px;
+    flex: none;
+}
+.bp-filter input {
+    width: 100%;
+    height: 30px;
+    padding: 0 10px 0 30px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+}
+.bp-filter input::placeholder {
+    color: var(--ink-4);
+}
+.bp-filter input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.bp-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--ink-2);
+    cursor: pointer;
+}
+.bp-row:hover {
+    background: var(--raised);
+    color: var(--ink);
+}
+.bp-row.sel {
+    background: linear-gradient(90deg, rgba(30, 155, 255, 0.16), rgba(30, 155, 255, 0.03));
+    color: var(--ink);
+    box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* form controls (inspector / settings) */
+.bp-input {
+    height: 34px;
+    padding: 0 11px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    width: 100%;
+}
+.bp-input::placeholder {
+    color: var(--ink-4);
+}
+.bp-input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.bp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+.bp-btn:hover {
+    background: var(--raised);
+    color: var(--ink);
+}
+.bp-btn.primary {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+    background: rgba(30, 155, 255, 0.06);
+}
+
+/* status bar */
+.bp-status {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 14px;
+    height: 28px;
+    background: #10141b;
+    border-top: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--ink-3);
+}
+.bp-status .s {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.bp-status .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink-4);
+}
+.bp-status .dot.ok {
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok);
+}
+.bp-status .dot.warn {
+    background: var(--warn);
+    box-shadow: 0 0 8px var(--warn);
+}
+.bp-status .right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* getter pill — a compact pure/value node */
+.bp-getter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(38, 28, 18, 0.96), rgba(24, 17, 10, 0.96));
+    border: 1px solid #4a3418;
+    color: var(--ink);
+}
+.bp-getter .gk {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--t-array);
+    letter-spacing: 0.08em;
+}
