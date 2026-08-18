@@ -31,6 +31,11 @@ const BINDINGS_DIR = join(MERCS2_ROOT, 'crates/mercs2_script/src/bindings');
 const OUT_CANONICAL = join(REPO_ROOT, 'mercs2-specific-data/spec/mercs2.nodes.json');
 const OUT_SERVED = join(REPO_ROOT, 'public/language-extras.json');
 
+// Domain plugin (inspector code) — copied to public/ and listed in the plugin manifest.
+const PLUGIN_SRC = join(__dirname, '..', 'plugin', 'mercs2-plugin.js');
+const OUT_PLUGIN = join(REPO_ROOT, 'public/plugins/mercs2.js');
+const OUT_MANIFEST = join(REPO_ROOT, 'public/plugins.json');
+
 // ---------------------------------------------------------------------------
 // Type mapping: mercs2/Rust argument types -> generic engine pin types.
 // The engine's type system: int, float, string, bool, object, array, mixed, exec.
@@ -533,6 +538,11 @@ function main() {
     mkdirSync(dirname(OUT_SERVED), { recursive: true });
     writeFileSync(OUT_CANONICAL, json);
     writeFileSync(OUT_SERVED, json);
+
+    // Install the domain plugin (inspector providers) into public/ + manifest.
+    mkdirSync(dirname(OUT_PLUGIN), { recursive: true });
+    writeFileSync(OUT_PLUGIN, readFileSync(PLUGIN_SRC, 'utf8'));
+    writeFileSync(OUT_MANIFEST, JSON.stringify(['/plugins/mercs2.js'], null, 2) + '\n');
 
     const typedBindingPins = Object.values(bindingNodes).reduce(
         (n, cat) => n + Object.values(cat).filter((d) => d.inputs.some((p) => p.type !== 'exec')).length,
