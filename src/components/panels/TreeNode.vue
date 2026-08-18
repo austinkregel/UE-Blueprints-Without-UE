@@ -12,7 +12,7 @@
         </div>
         <div v-if="isDir && !collapsed" class="ml-0">
             <TreeNode
-                v-for="child in node.children"
+                v-for="child in localChildren"
                 :key="child.path"
                 :depth="(depth || 0) + 1"
                 :node="child"
@@ -36,19 +36,19 @@
     import { listDirectory } from '../../utils/file-tree.js';
 
     const props = defineProps({ node: { type: Object, required: true }, depth: { type: Number, default: 0 } });
-    const emit = defineEmits(['open-file']);
+    defineEmits(['open-file']);
     const collapsed = ref(false);
     const loading = ref(false);
+    // Local copy of children so lazy-loading does not mutate the parent-owned prop.
+    const localChildren = ref(Array.isArray(props.node.children) ? props.node.children : []);
 
     async function toggle() {
         collapsed.value = !collapsed.value;
         if (!collapsed.value && isDir.value) {
-            if (!Array.isArray(props.node.children) || props.node.children.length === 0) {
+            if (!Array.isArray(localChildren.value) || localChildren.value.length === 0) {
                 loading.value = true;
                 try {
-                    const children = await listDirectory(props.node.path);
-                    // Vue reactivity: mutate the object referenced by parent
-                    props.node.children = children;
+                    localChildren.value = await listDirectory(props.node.path);
                 } catch (e) {
                     console.error('Failed to list directory', e);
                 } finally {

@@ -5,10 +5,7 @@
 </template>
 
 <script setup>
-    import { computed } from 'vue';
-    import { getNodeColor } from '../utils/node-colors.js';
-
-    const props = defineProps({
+    defineProps({
         name: {
             type: String,
             required: true

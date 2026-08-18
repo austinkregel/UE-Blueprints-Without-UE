@@ -105,7 +105,7 @@
         removeEntryPoint as removeEntryPointFromConfig
     } from '../utils/graph-executor.js';
 
-    const emit = defineEmits(['close']);
+    defineEmits(['close']);
 
     defineProps({
         visible: Boolean

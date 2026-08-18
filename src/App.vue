@@ -28,6 +28,7 @@
 
             <!-- Canvas Area (no overlapping controls) -->
             <NodeCanvas
+                v-if="activeWorkspace"
                 :debug-mode="debugMode"
                 class="flex-1"
                 @context-menu="onContextMenu"
@@ -35,9 +36,8 @@
                 @node-context-menu="onNodeContextMenu"
                 @deselect="onDeselect"
                 @update-outputs="handleUpdateOutputs"
-                v-if="activeWorkspace"
             />
-            <div v-else class="flex-1 overflow-hidden flex items-center justify-center text-gray-500">
+            <div v-else class="flex flex-1 items-center justify-center overflow-hidden text-gray-500">
                 <p class="text-lg">No active workspace. Please create or open a workspace to start.</p>
             </div>
 
@@ -89,7 +89,7 @@
     import ProjectExplorer from './components/panels/ProjectExplorer.vue';
     import NodeSettings from './components/NodeSettings.vue';
 
-    import {activeWorkspace, createWorkspace, debugMode, nodes} from './utils/state.js';
+    import { activeWorkspace, debugMode, nodes } from './utils/state.js';
     import { addNode, deleteNode } from './utils/nodes-core.js';
     import { addNodeFromDefinition } from './utils/node-creation.js';
     import { selectedNodeId, selectNode, closeSettings } from './utils/node-selection.js';
@@ -379,10 +379,6 @@
             selectedNodeId.value = newWorkspace.selectedNodeId;
         }
     });
-
-    const createNewWorkspace = () => {
-        createWorkspace(Date.now(), { name: 'New Workspace' });
-    };
 
     // Method to handle update-outputs event from SystemNode
     function handleUpdateOutputs(nodeId, newOutputs) {

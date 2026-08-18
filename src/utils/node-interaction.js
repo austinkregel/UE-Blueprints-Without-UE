@@ -34,7 +34,7 @@ export function construction(emit, props, nodeRef) {
         window.addEventListener('mouseup', finishConnect);
         await nextTick(registerAllIO);
         const elList = getIOElements(type);
-        let idx = (type === 'input' ? props.node.inputs : props.node.outputs).findIndex((x) => (x.name || x) === (io.name || io));
+        const idx = (type === 'input' ? props.node.inputs : props.node.outputs).findIndex((x) => (x.name || x) === (io.name || io));
         if (elList[idx]) {
             const rect = elList[idx].getBoundingClientRect();
             log('startConnect rect', { rect, idx });
@@ -107,9 +107,9 @@ export function construction(emit, props, nodeRef) {
                 if (mouseX >= rect.left && mouseX <= rect.right && mouseY >= rect.top && mouseY <= rect.bottom) {
                     const isInput = el.classList.contains('input');
                     const type = isInput ? 'input' : 'output';
-                    let nodeEl = el.closest('[data-node-id]');
-                    let nodeId = nodeEl ? Number(nodeEl.getAttribute('data-node-id')) : undefined;
-                    let ioName = el.querySelector('.io-label')?.textContent?.trim() || el.textContent?.trim();
+                    const nodeEl = el.closest('[data-node-id]');
+                    const nodeId = nodeEl ? Number(nodeEl.getAttribute('data-node-id')) : undefined;
+                    const ioName = el.querySelector('.io-label')?.textContent?.trim() || el.textContent?.trim();
                     found = { type, nodeId, ioName };
                     log('finishConnect foundIO', found);
                 }

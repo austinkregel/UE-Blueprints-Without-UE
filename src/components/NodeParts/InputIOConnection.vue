@@ -39,7 +39,7 @@
         return a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
     }
 
-    function emitPosition(source = 'watch') {
+    function emitPosition() {
         nextTick(() => {
             if (pinRef.value) {
                 const rect = pinRef.value.getBoundingClientRect();
@@ -60,6 +60,6 @@
     // Remove onMounted, rely on watcher (it fires on mount)
     watch(
         () => [io.name || io, nodeId],
-        () => emitPosition('watch')
+        () => emitPosition()
     );
 </script>

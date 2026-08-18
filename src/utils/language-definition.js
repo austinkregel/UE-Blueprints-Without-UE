@@ -319,9 +319,7 @@ export const NODE_DEFINITIONS = {
             name: 'Sequence',
             category: 'CONTROL',
             inputs: [{ name: 'Exec', type: 'exec' }],
-            outputs: [
-                { name: 'Then 0', type: 'exec' },
-            ],
+            outputs: [{ name: 'Then 0', type: 'exec' }],
             description: 'Execute multiple outputs in sequence',
             dynamicOutputs: true
         },

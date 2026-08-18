@@ -230,15 +230,15 @@
                 <h4 class="mb-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-200">IO Control</h4>
                 <div class="mb-1.5 grid grid-cols-2 gap-1.5">
                     <button
-                        @click="addOutput"
                         class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                        @click="addOutput"
                     >
                         Add Output
                     </button>
                     <button
-                        @click="removeOutput"
                         :disabled="selectedNode.outputs.length === 0"
                         class="w-full rounded-sm border border-zinc-200 bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                        @click="removeOutput"
                     >
                         Remove Output
                     </button>
@@ -318,7 +318,8 @@
     import { closeSettings, selectNode } from '../utils/node-selection.js';
     import { addVariableNode } from '../utils/node-creation.js';
 
-    const props = defineProps({ variables: { type: Array, default: () => [] } });
+    defineProps({ variables: { type: Array, default: () => [] } });
+    const emit = defineEmits(['update-outputs']);
 
     const selectedNode = computed(() => nodes.value.find((n) => n.id === selectedNodeId.value) || null);
 
@@ -389,15 +390,15 @@
     }
 
     function addOutput() {
-        const newOutput = { id: `output-${selectedNode.outputs.length + 1}`, name: `Output ${selectedNode.outputs.length + 1}` };
-        selectedNode.outputs.push(newOutput);
-        emit('update-outputs', selectedNode.id, selectedNode.outputs);
+        const newOutput = { id: `output-${selectedNode.value.outputs.length + 1}`, name: `Output ${selectedNode.value.outputs.length + 1}` };
+        selectedNode.value.outputs.push(newOutput);
+        emit('update-outputs', selectedNode.value.id, selectedNode.value.outputs);
     }
 
     function removeOutput() {
-        if (selectedNode.outputs.length > 0) {
-            selectedNode.outputs.pop();
-            emit('update-outputs', selectedNode.id, selectedNode.outputs);
+        if (selectedNode.value.outputs.length > 0) {
+            selectedNode.value.outputs.pop();
+            emit('update-outputs', selectedNode.value.id, selectedNode.value.outputs);
         }
     }
 

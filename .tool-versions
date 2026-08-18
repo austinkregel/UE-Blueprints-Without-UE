@@ -1,2 +1,4 @@
 elixir 1.18.4
 erlang 28.0.2
+rust 1.94.1
+node 25.9.0

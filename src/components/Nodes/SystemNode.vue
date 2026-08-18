@@ -13,10 +13,10 @@
         </template>
         <template #footer>
             <div class="mx-4 mb-2 flex justify-end">
-              <button @click="addOutput" class="bg-none text-[10px] flex items-center gap-1">
-                <PlusIcon class="h-3 w-3 inline" />
-                <span>Add pin</span>
-              </button>
+                <button class="flex items-center gap-1 bg-none text-[10px]" @click="addOutput">
+                    <PlusIcon class="inline h-3 w-3" />
+                    <span>Add pin</span>
+                </button>
             </div>
         </template>
     </NodeBase>
@@ -34,16 +34,10 @@
     });
 
     function addOutput() {
-        const newOutput = { id: `output-${node.outputs.length + 1}`, name: `Output ${node.outputs.length + 1}`, type: 'string' };
-        node.outputs.push(newOutput);
-        emit('update-outputs', node.outputs);
-    }
-
-    function removeOutput() {
-        if (node.outputs.length > 0) {
-            node.outputs.pop();
-            emit('update-outputs', node.outputs);
-        }
+        const current = node.outputs || [];
+        const newOutput = { id: `output-${current.length + 1}`, name: `Output ${current.length + 1}`, type: 'string' };
+        // Emit a fresh array to the parent instead of mutating the prop directly.
+        emit('update-outputs', node.id, [...current, newOutput]);
     }
 </script>
 

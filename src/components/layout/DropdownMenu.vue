@@ -29,7 +29,7 @@
     import { defineProps } from 'vue';
     import { Menu, MenuButton, MenuItems } from '@headlessui/vue';
 
-    const props = defineProps({
+    defineProps({
         label: { type: String, required: true },
         buttonClass: { type: String, default: 'bg-gray-700 hover:bg-gray-800' },
         widthClass: { type: String, default: 'w-56' }

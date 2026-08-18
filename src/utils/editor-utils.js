@@ -2,16 +2,7 @@ import { draggingConnection, ioPositions, log } from './state.js';
 import { connectNodes } from './connection-utils.js';
 import { screenToWorld, startPanning, stopPanning, suppressNextContextMenu, updatePanning } from './viewport-utils.js';
 
-let rightMouseDown = false;
-let movedWhileRightDown = false;
-
 export function onEditorMouseDown(e, emit) {
-    // Track right button state for drag detection
-    if (e.button === 2) {
-        rightMouseDown = true;
-        movedWhileRightDown = false;
-    }
-
     // Check if we're right-clicking on empty space (not on a node)
     const target = e.target;
     const nodeElement = target.closest('[data-node-id]');
@@ -29,15 +20,12 @@ export function onEditorMouseDown(e, emit) {
         // Add event listeners for panning
         const handlePanMove = (moveEvent) => {
             updatePanning(moveEvent.clientX, moveEvent.clientY);
-            // Mark as moved and set suppression immediately
-            movedWhileRightDown = true;
+            // Set suppression immediately
             suppressNextContextMenu.value = true;
         };
 
         const handlePanEnd = () => {
             stopPanning();
-            rightMouseDown = false;
-            movedWhileRightDown = false;
             document.removeEventListener('mousemove', handlePanMove);
             document.removeEventListener('mouseup', handlePanEnd);
         };
@@ -51,12 +39,9 @@ export function onEditorMouseDown(e, emit) {
     // If it's a right click on a node (or any non-panning case), suppress menu if a drag occurs
     if (e.button === 2) {
         const handleGenericMove = () => {
-            movedWhileRightDown = true;
             suppressNextContextMenu.value = true;
         };
         const handleGenericUp = () => {
-            rightMouseDown = false;
-            movedWhileRightDown = false;
             document.removeEventListener('mousemove', handleGenericMove);
             document.removeEventListener('mouseup', handleGenericUp);
         };

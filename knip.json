@@ -1,0 +1,7 @@
+{
+    "$schema": "https://unpkg.com/knip@5/schema.json",
+    "entry": ["src/main.js", "index.html", "eslint.config.js", "vite.config.js", "vitest.config.js"],
+    "project": ["src/**/*.{js,vue}"],
+    "ignore": ["src-tauri/**", "parsed_code_php.json"],
+    "ignoreDependencies": ["autoprefixer", "postcss", "prettier-plugin-tailwindcss", "@vitest/coverage-istanbul"]
+}

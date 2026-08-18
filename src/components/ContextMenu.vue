@@ -75,9 +75,10 @@
     });
 
     function handleNodeSelect(node) {
-      console.log({
-        node, position: props.position,
-      })
+        console.log({
+            node,
+            position: props.position
+        });
         emit('node-select', { node, position: props.position });
         emit('close');
     }
@@ -88,8 +89,8 @@
         (newVisible) => {
             if (newVisible) {
                 // Add click listener to close menu when clicking outside
-                    document.addEventListener('click', handleOutsideClick);
-                    document.addEventListener('keydown', handleKeyDown);
+                document.addEventListener('click', handleOutsideClick);
+                document.addEventListener('keydown', handleKeyDown);
             } else {
                 document.removeEventListener('click', handleOutsideClick);
                 document.removeEventListener('keydown', handleKeyDown);

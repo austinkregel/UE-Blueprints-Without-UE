@@ -15,15 +15,15 @@
         <div class="absolute inset-0 z-0 overflow-hidden">
             <!-- Background Grid -->
             <div
-                class="absolute inset-0 bg-grid"
+                class="bg-grid absolute inset-0"
                 :style="{
                     transform: `translate(${adjustedGridOffset.x}px, ${adjustedGridOffset.y}px)`,
                     backgroundSize: `${Math.max(gridSize * viewport.zoom, 1)}px ${Math.max(gridSize * viewport.zoom, 1)}px`,
                     backgroundImage: `
                         linear-gradient(to right, rgba(50, 50, 50, 0.2) 1px, transparent 1px),
                         linear-gradient(to bottom, rgba(50, 50, 50, 0.2) 1px, transparent 1px),
-                        linear-gradient(to right, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max(5 * gridSize / viewport.zoom, 1))}px),
-                        linear-gradient(to bottom, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max(5 * gridSize / viewport.zoom, 1))}px)`
+                        linear-gradient(to right, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max((5 * gridSize) / viewport.zoom, 1))}px),
+                        linear-gradient(to bottom, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max((5 * gridSize) / viewport.zoom, 1))}px)`
                 }"
             ></div>
 
@@ -118,7 +118,7 @@
     import { onEditorMouseDown as onEditorMouseDownUtil } from '../../utils/editor-utils.js';
     import { getViewportTransform, setCanvasOffset, setZoom, viewport, adjustGridToWorld } from '../../utils/viewport-utils.js';
 
-    const props = defineProps({
+    defineProps({
         debugMode: { type: Boolean, default: false }
     });
 
@@ -129,10 +129,16 @@
 
     const gridSize = 50; // Base grid size
 
-    const adjustedGridOffset = ref(adjustGridToWorld({
-            x: -(viewport.x % (gridSize / viewport.zoom)),
-            y: -(viewport.y % (gridSize / viewport.zoom))
-        }, gridSize, viewport.zoom));
+    const adjustedGridOffset = ref(
+        adjustGridToWorld(
+            {
+                x: -(viewport.x % (gridSize / viewport.zoom)),
+                y: -(viewport.y % (gridSize / viewport.zoom))
+            },
+            gridSize,
+            viewport.zoom
+        )
+    );
 
     // Watch for changes in the active workspace
     watch(activeWorkspace, (newWorkspace) => {
@@ -234,7 +240,7 @@
     }
 
     .bg-grid {
-        background-image: linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-                          linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+        background-image:
+            linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
     }
 </style>

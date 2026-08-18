@@ -11,8 +11,8 @@ describe('getNextNodeId', () => {
     });
 
     it('continues incrementing after multiple calls', () => {
-        let last = getNextNodeId();
-        for (let i = 0; i < 10; i++) last = getNextNodeId();
+        getNextNodeId();
+        for (let i = 0; i < 10; i++) getNextNodeId();
         expect(getNextNodeId()).toBe('function-15');
     });
 });

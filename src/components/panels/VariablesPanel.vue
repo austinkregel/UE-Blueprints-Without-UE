@@ -304,7 +304,7 @@
     import { closeSettings, selectNode } from '../../utils/node-selection.js';
     import { addVariableNode } from '../../utils/node-creation.js';
 
-    const props = defineProps({ variables: { type: Array, default: () => [] } });
+    defineProps({ variables: { type: Array, default: () => [] } });
 
     // Selected node reactive reference
     const selectedNode = computed(() => nodes.value.find((n) => n.id === selectedNodeId.value) || null);

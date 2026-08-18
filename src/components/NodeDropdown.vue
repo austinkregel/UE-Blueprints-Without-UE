@@ -59,11 +59,11 @@
     import { computed, onMounted, onUnmounted, ref } from 'vue';
     import { getNodePalette } from '../utils/node-factory.js';
 
-    const props = defineProps({
+    defineProps({
         title: { type: String, default: 'Add Node' }
     });
 
-    const emit = defineEmits(['node-select']);
+    defineEmits(['node-select']);
 
     const isOpen = ref(false);
     const searchQuery = ref('');

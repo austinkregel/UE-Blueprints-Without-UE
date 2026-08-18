@@ -29,8 +29,8 @@ function isVariableGetToSet(fromNode, toNode) {
 
 function getIOType(node, ioName, ioType) {
     if (!node) return null;
-    let arr = ioType === 'input' ? node.inputs : node.outputs;
-    let io = arr?.find((x) => (x.name || x) === ioName);
+    const arr = ioType === 'input' ? node.inputs : node.outputs;
+    const io = arr?.find((x) => (x.name || x) === ioName);
     return io?.type || null;
 }
 
@@ -56,9 +56,7 @@ export function connectNodes({ from, to, areTypesCompatible }) {
     if (isVariableGetToSet(fromNode, toNode)) return;
 
     // Determine direction and types
-    let fromType,
-        toType,
-        fromIsOutput = true;
+    let fromType, toType, fromIsOutput;
     if (from.output && to.input) {
         fromType = getIOType(fromNode, from.output, 'output');
         toType = getIOType(toNode, to.input, 'input');

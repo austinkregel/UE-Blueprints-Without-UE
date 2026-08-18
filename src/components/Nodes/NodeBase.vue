@@ -32,7 +32,7 @@
         <div class="relative z-10 flex flex-wrap justify-between p-2">
             <template v-if="node.dynamicOutputs">
                 <button @click="addDynamicOutput">Add Output</button>
-                <button @click="removeDynamicOutput" :disabled="node.outputs.length === 0">Remove Output</button>
+                <button :disabled="node.outputs.length === 0" @click="removeDynamicOutput">Remove Output</button>
             </template>
             <template v-else>
                 <div class="inputs flex flex-col gap-1">
@@ -78,8 +78,7 @@
                 </div>
             </template>
         </div>
-      <slot name="footer"></slot>
-
+        <slot name="footer"></slot>
     </div>
 </template>
 
@@ -95,14 +94,23 @@
     import { registerIO } from '../../utils/io-utils.js';
     import { selectedNodeId, selectNode } from '../../utils/node-selection.js';
 
-    const emit = defineEmits(['move', 'connect', 'register-io', 'select', 'start-connection-drag', 'delete-connection', 'node-context-menu']);
+    const emit = defineEmits([
+        'move',
+        'connect',
+        'register-io',
+        'select',
+        'start-connection-drag',
+        'delete-connection',
+        'node-context-menu',
+        'update-outputs'
+    ]);
     const props = defineProps({
         node: Object,
         connections: Array
     });
 
     const nodeRef = ref();
-    const { registerAllIO, startDrag, onIOContextMenu } = construction(emit, props, nodeRef);
+    const { registerAllIO, onIOContextMenu } = construction(emit, props, nodeRef);
 
     // Provide the onIOContextMenu function to child IO components
     provide('onIOContextMenu', onIOContextMenu);
@@ -205,7 +213,7 @@
         if (isSelected.value) {
             return {
                 ...colorMap[nodeColor],
-                border: 'ring-4 ring-blue-400 border-blue-400 z-20',
+                border: 'ring-4 ring-blue-400 border-blue-400 z-20'
             };
         }
         return colorMap[nodeColor] || colorMap.blue;
@@ -340,22 +348,23 @@
     }
 
     function addDynamicOutput() {
-        const newOutput = { name: `Output ${node.outputs.length + 1}`, type: 'exec' };
-        node.outputs.push(newOutput);
-        emit('update-outputs', node.outputs);
+        const current = props.node.outputs || [];
+        const newOutput = { name: `Output ${current.length + 1}`, type: 'exec' };
+        // Emit a fresh array to the parent instead of mutating the prop directly.
+        emit('update-outputs', [...current, newOutput]);
     }
 
     function removeDynamicOutput() {
-        if (node.outputs.length > 0) {
-            node.outputs.pop();
-            emit('update-outputs', node.outputs);
+        const current = props.node.outputs || [];
+        if (current.length > 0) {
+            emit('update-outputs', current.slice(0, -1));
         }
     }
 </script>
 
 <style scoped>
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
+    button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
 </style>

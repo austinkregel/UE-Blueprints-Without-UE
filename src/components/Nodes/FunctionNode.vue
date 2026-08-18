@@ -15,7 +15,7 @@
     import NodeBase from './NodeBase.vue';
     import { computed } from 'vue';
 
-    const emit = defineEmits(['move', 'select', 'register-io', 'node-context-menu']);
+    defineEmits(['move', 'select', 'register-io', 'node-context-menu']);
 
     const props = defineProps({
         node: Object,

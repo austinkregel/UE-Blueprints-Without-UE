@@ -45,7 +45,7 @@
         return a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
     }
 
-    function emitPosition(source = 'watch') {
+    function emitPosition() {
         nextTick(() => {
             if (pinRef.value) {
                 const rect = pinRef.value.getBoundingClientRect();
@@ -65,6 +65,6 @@
 
     watch(
         () => [io.name || io, nodeId, ioType],
-        () => emitPosition('watch')
+        () => emitPosition()
     );
 </script>

@@ -154,62 +154,69 @@ async function executeNode(node) {
         emitExecutionEvent({ type: 'node-start', nodeId: node.id, inputs: inputValues });
         // Execute based on node type
         switch (node.nodeDefId || node.type) {
-            case 'print':
+            case 'print': {
                 const printValue = inputValues.value || inputValues.text || 'undefined';
                 console.log(`[Graph Execution] Print: ${printValue}`);
                 executionLog.value.push(`Print: ${printValue}`);
                 nodeResults.result = printValue;
                 break;
+            }
 
-            case 'add':
+            case 'add': {
                 const a = parseFloat(inputValues.a || inputValues.A || 0);
                 const b = parseFloat(inputValues.b || inputValues.B || 0);
                 const sum = a + b;
                 nodeResults.result = sum;
                 console.log(`[Graph Execution] Add: ${a} + ${b} = ${sum}`);
                 break;
+            }
 
-            case 'subtract':
+            case 'subtract': {
                 const subA = parseFloat(inputValues.a || inputValues.A || 0);
                 const subB = parseFloat(inputValues.b || inputValues.B || 0);
                 const diff = subA - subB;
                 nodeResults.result = diff;
                 console.log(`[Graph Execution] Subtract: ${subA} - ${subB} = ${diff}`);
                 break;
+            }
 
-            case 'multiply':
+            case 'multiply': {
                 const mulA = parseFloat(inputValues.a || inputValues.A || 0);
                 const mulB = parseFloat(inputValues.b || inputValues.B || 0);
                 const product = mulA * mulB;
                 nodeResults.result = product;
                 console.log(`[Graph Execution] Multiply: ${mulA} * ${mulB} = ${product}`);
                 break;
+            }
 
-            case 'divide':
+            case 'divide': {
                 const divA = parseFloat(inputValues.a || inputValues.A || 0);
                 const divB = parseFloat(inputValues.b || inputValues.B || 1);
                 const quotient = divB !== 0 ? divA / divB : NaN;
                 nodeResults.result = quotient;
                 console.log(`[Graph Execution] Divide: ${divA} / ${divB} = ${quotient}`);
                 break;
+            }
 
             case 'if':
-            case 'branch':
+            case 'branch': {
                 const condition = Boolean(inputValues.condition);
                 console.log(`[Graph Execution] Branch: condition = ${condition}`);
                 // Branch nodes don't produce data outputs, they control execution flow
                 break;
+            }
 
             case 'sequence':
                 console.log(`[Graph Execution] Sequence: executing in order`);
                 // Sequence nodes just control execution flow
                 break;
 
-            case 'delay':
+            case 'delay': {
                 const duration = parseFloat(inputValues.Duration || inputValues.duration || 1.0);
                 console.log(`[Graph Execution] Delay: waiting ${duration}s`);
                 await new Promise((resolve) => setTimeout(resolve, duration * 1000));
                 break;
+            }
 
             case 'variable':
                 // Variable nodes output their stored value
@@ -217,15 +224,16 @@ async function executeNode(node) {
                 console.log(`[Graph Execution] Variable ${node.varName}: ${nodeResults[node.varName]}`);
                 break;
 
-            case 'emit_event':
+            case 'emit_event': {
                 // Event emission node
                 const eventName = inputValues.eventName || inputValues.name || 'CustomEvent';
                 const eventData = inputValues.data || {};
                 emitEvent(eventName, eventData);
                 nodeResults.eventName = eventName;
                 break;
+            }
 
-            case 'on_event':
+            case 'on_event': {
                 // Event listener node - gets data from the event system
                 const listenEventName = node.eventName || inputValues.eventName || 'CustomEvent';
                 const eventInfo = activeEvents.value.get(listenEventName);
@@ -236,6 +244,7 @@ async function executeNode(node) {
                 }
                 console.log(`[Graph Execution] Event listener for '${listenEventName}'`);
                 break;
+            }
 
             default:
                 console.log(`[Graph Execution] Unknown node type: ${node.nodeDefId || node.type}`);
@@ -390,28 +399,30 @@ async function executeNodeFlow(node) {
 
     // Handle special execution flow control
     switch (node.nodeDefId) {
-        case 'sequence':
+        case 'sequence': {
             // Execute outputs in order: Then 0, Then 1, Then 2, etc.
             const sequenceOutputs = node.outputs?.filter((output) => output.type === 'exec') || [];
             for (const output of sequenceOutputs) {
                 await executeNextNodes(node.id, output.name);
             }
             break;
+        }
 
         case 'branch':
-        case 'if':
+        case 'if': {
             // Execute True or False branch based on condition
             const condition = Boolean(await getInputValue(node.id, 'condition'));
             const branchOutput = condition ? 'True' : 'False';
             await executeNextNodes(node.id, branchOutput);
             break;
+        }
 
         case 'delay':
             // After delay, continue execution
             await executeNextNodes(node.id, 'Completed');
             break;
 
-        default:
+        default: {
             // For other nodes, follow all exec outputs
             const execOutputs = node.outputs?.filter((output) => output.type === 'exec') || [];
             if (execOutputs.length > 0) {
@@ -422,6 +433,7 @@ async function executeNodeFlow(node) {
                 // No exec outputs, try to continue with generic exec flow
                 await executeNextNodes(node.id);
             }
+        }
     }
 }
 

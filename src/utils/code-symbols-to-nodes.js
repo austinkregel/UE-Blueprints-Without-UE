@@ -16,7 +16,7 @@ function normalizeType(t) {
 }
 
 function sanitizeName(name) {
-    return String(name || '').replace(/[^A-Za-z0-9_:$<>\[\]\-\.]/g, '_');
+    return String(name || '').replace(/[^A-Za-z0-9_:$<>[\]\-.]/g, '_');
 }
 
 function paramsToInputs(params = []) {

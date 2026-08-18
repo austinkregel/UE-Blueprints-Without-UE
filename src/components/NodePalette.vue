@@ -192,7 +192,7 @@
             setTimeout(() => {
                 scanStatus.value = '';
             }, 1500);
-        } catch (e) {
+        } catch {
             scanStatus.value = 'Failed';
             setTimeout(() => {
                 scanStatus.value = '';

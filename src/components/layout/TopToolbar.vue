@@ -1,7 +1,7 @@
 <template>
-    <div class="flex flex-wrap items-center relative gap-2 px-4 py-2">
+    <div class="relative flex flex-wrap items-center gap-2 px-4 py-2">
         <!-- View menu -->
-        <DropdownMenu buttonClass="bg-gray-700 hover:bg-gray-800" label="View" widthClass="w-56">
+        <DropdownMenu button-class="bg-gray-700 hover:bg-gray-800" label="View" width-class="w-56">
             <MenuItem v-slot="{ active }">
                 <button
                     :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
@@ -32,7 +32,7 @@
         </DropdownMenu>
 
         <!-- Graph menu -->
-        <DropdownMenu buttonClass="bg-green-700 hover:bg-green-800" label="Graph" widthClass="w-64">
+        <DropdownMenu button-class="bg-green-700 hover:bg-green-800" label="Graph" width-class="w-64">
             <MenuItem v-slot="{ active }">
                 <button
                     :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
@@ -92,7 +92,7 @@
         </DropdownMenu>
 
         <!-- Project menu -->
-        <DropdownMenu buttonClass="bg-emerald-700 hover:bg-emerald-800" label="Project" widthClass="w-56">
+        <DropdownMenu button-class="bg-emerald-700 hover:bg-emerald-800" label="Project" width-class="w-56">
             <MenuItem v-slot="{ active }">
                 <button
                     :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
@@ -128,7 +128,7 @@
     import { MenuItem } from '@headlessui/vue';
     import DropdownMenu from './DropdownMenu.vue';
 
-    const props = defineProps({
+    defineProps({
         showNodePalette: { type: Boolean, default: true },
         debugMode: { type: Boolean, default: false },
         isExecuting: { type: Boolean, default: false },

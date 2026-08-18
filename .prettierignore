@@ -6,3 +6,6 @@ node_modules/
 public/
 src-tauri/target/
 src-tauri/gen/
+src-tauri/
+package-lock.json
+parsed_code_php.json

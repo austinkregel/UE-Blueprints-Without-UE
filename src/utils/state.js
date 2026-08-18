@@ -51,7 +51,7 @@ export function createWorkspace(workspaceId, workspace = {}) {
             ioPositions: workspace.ioPositions || {},
             selectedNodeId: workspace.selectedNodeId || null,
             draggingConnection: workspace.draggingConnection || null,
-            connections: workspace.connections || [],
+            connections: workspace.connections || []
         };
     }
     workspaceState.activeWorkspaceId = workspaceId;

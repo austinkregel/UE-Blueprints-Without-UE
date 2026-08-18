@@ -33,7 +33,7 @@
     import { computed, ref } from 'vue';
     import NodeBase from './NodeBase.vue';
 
-    const emit = defineEmits(['move', 'connect', 'select', 'register-io', 'node-context-menu']);
+    defineEmits(['move', 'connect', 'select', 'register-io', 'node-context-menu']);
 
     const { node, connections } = defineProps({
         node: Object,
