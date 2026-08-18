@@ -119,11 +119,21 @@
             <span class="zval">{{ Math.round(viewport.zoom * 100) }}%</span>
             <button title="Zoom in" @click="zoomBy(1.1)">+</button>
         </div>
+
+        <!-- Minimap -->
+        <div class="bp-overlay bp-minimap" @mousedown.stop @click="minimapClick" title="Click to focus">
+            <span class="mm-head eyebrow">Map</span>
+            <span v-for="b in minimap.blips" :key="b.id" class="blip" :class="`na-${b.color}`" :style="{ left: b.x + 'px', top: b.y + 'px' }"></span>
+            <div
+                class="view"
+                :style="{ left: minimap.view.x + 'px', top: minimap.view.y + 'px', width: minimap.view.w + 'px', height: minimap.view.h + 'px' }"
+            ></div>
+        </div>
     </div>
 </template>
 
 <script setup>
-    import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+    import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
     import { activeWorkspace, draggingConnection, nodes } from '../../utils/state.js';
     import { getConnectionColor, isActionFlow, renderDraggingConnection } from '../../utils/connection-visuals.js';
     import { selectNode } from '../../utils/node-selection.js';
@@ -133,7 +143,19 @@
     import { getConnectionPointsArray, renderConnectionPath } from '../../utils/io-utils.js';
     import { addConnection, getConnections, removeConnection } from '../../utils/connection-manager.js';
     import { onEditorMouseDown as onEditorMouseDownUtil } from '../../utils/editor-utils.js';
-    import { getViewportTransform, setCanvasOffset, setCanvasSize, setZoom, viewport, adjustGridToWorld } from '../../utils/viewport-utils.js';
+    import {
+        adjustGridToWorld,
+        canvasOffset,
+        canvasSize,
+        focusWorldPoint,
+        getViewportTransform,
+        screenToWorld,
+        setCanvasOffset,
+        setCanvasSize,
+        setZoom,
+        viewport
+    } from '../../utils/viewport-utils.js';
+    import { getNodeColor } from '../../utils/node-colors.js';
 
     defineProps({
         debugMode: { type: Boolean, default: false }
@@ -211,6 +233,49 @@
         const cx = rect ? rect.width / 2 : 0;
         const cy = rect ? rect.height / 2 : 0;
         setZoom(viewport.value.zoom * factor, cx, cy);
+    }
+
+    // ----- minimap -----
+    const MM = { w: 172, h: 100, pad: 10 };
+    const NODE_W = 220; // approx node footprint for bounds
+    const NODE_H = 120;
+
+    const minimap = computed(() => {
+        const ns = nodes.value;
+        const w = canvasSize.value.w || 800;
+        const h = canvasSize.value.h || 600;
+        const off = canvasOffset.value;
+        // Current visible world region (top-left / bottom-right).
+        const tl = screenToWorld(off.x, off.y);
+        const br = screenToWorld(off.x + w, off.y + h);
+        let minX = Math.min(tl.x, br.x);
+        let minY = Math.min(tl.y, br.y);
+        let maxX = Math.max(tl.x, br.x);
+        let maxY = Math.max(tl.y, br.y);
+        for (const n of ns) {
+            minX = Math.min(minX, n.x);
+            minY = Math.min(minY, n.y);
+            maxX = Math.max(maxX, n.x + NODE_W);
+            maxY = Math.max(maxY, n.y + NODE_H);
+        }
+        const bw = Math.max(1, maxX - minX);
+        const bh = Math.max(1, maxY - minY);
+        const scale = Math.min((MM.w - MM.pad * 2) / bw, (MM.h - MM.pad * 2) / bh);
+        const map = (wx, wy) => ({ x: MM.pad + (wx - minX) * scale, y: MM.pad + (wy - minY) * scale });
+        const blips = ns.map((n) => ({ id: n.id, ...map(n.x, n.y), color: getNodeColor(n.type, n.nodeDefId) || 'blue' }));
+        const v1 = map(tl.x, tl.y);
+        const v2 = map(br.x, br.y);
+        const view = { x: Math.min(v1.x, v2.x), y: Math.min(v1.y, v2.y), w: Math.abs(v2.x - v1.x), h: Math.abs(v2.y - v1.y) };
+        return { blips, view, minX, minY, scale };
+    });
+
+    function minimapClick(e) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const m = minimap.value;
+        if (!m.scale) return;
+        const wx = m.minX + (e.clientX - rect.left - MM.pad) / m.scale;
+        const wy = m.minY + (e.clientY - rect.top - MM.pad) / m.scale;
+        focusWorldPoint(wx, wy);
     }
 
     function onWheel(event) {

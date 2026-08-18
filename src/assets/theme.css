@@ -962,3 +962,35 @@
 .bp-legend .li i.exec {
     border-radius: 2px;
 }
+
+/* minimap */
+.bp-minimap {
+    left: 14px;
+    bottom: 14px;
+    width: 172px;
+    height: 100px;
+    overflow: hidden;
+    cursor: pointer;
+}
+.bp-minimap .mm-head {
+    position: absolute;
+    top: 6px;
+    left: 9px;
+    z-index: 2;
+    pointer-events: none;
+}
+.bp-minimap .blip {
+    position: absolute;
+    width: 6px;
+    height: 4px;
+    border-radius: 1px;
+    background: var(--na, #64748b);
+    pointer-events: none;
+}
+.bp-minimap .view {
+    position: absolute;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    background: var(--accent-glow);
+    pointer-events: none;
+}
