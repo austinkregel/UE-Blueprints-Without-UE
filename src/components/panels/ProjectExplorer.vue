@@ -1,6 +1,6 @@
 <template>
-    <div class="flex">
-        <div class="bp-panel left flex w-56 flex-col">
+    <div class="flex h-full w-full">
+        <div class="bp-panel left flex w-full flex-col">
             <!-- Workflows -->
             <div class="bp-panel-head">
                 <span class="bp-sec-label">Workflows</span>
@@ -36,7 +36,7 @@
 
                 <div v-for="section in sections" :key="section.id" class="mt-2">
                     <div class="bp-collapse-head px-2 py-1.5">
-                        <button class="flex min-w-0 flex-1 items-center gap-2 bg-transparent" @click="toggle(section.id)">
+                        <button class="flex w-full items-center gap-2 bg-transparent" @click="toggle(section.id)">
                             <NodeGlyph
                                 v-if="section.icon"
                                 :name="section.icon"
@@ -45,15 +45,16 @@
                                 style="color: var(--na)"
                             />
                             <span v-else class="bp-dotk flex-none" :class="`na-${section.color || 'gray'}`"></span>
-                            <span class="bp-sec-label truncate">{{ section.title }}</span>
+                            <span class="bp-sec-label flex-none">{{ section.title }}</span>
                             <span
                                 v-if="section.hint"
-                                class="truncate text-[10px] text-[var(--ink-4)] normal-case"
-                                style="font-size: 10px; text-transform: none"
+                                class="min-w-0 flex-1 truncate text-left text-[10px] text-[var(--ink-4)]"
+                                style="text-transform: none"
                             >
                                 {{ section.hint }}
                             </span>
-                            <span class="ml-auto flex-none text-[10px] text-[var(--ink-4)]">{{ section.items.length }}</span>
+                            <span v-else class="flex-1"></span>
+                            <span class="flex-none text-[10px] text-[var(--ink-4)]">{{ section.items.length }}</span>
                             <span class="tw flex-none" :class="{ 'rotate-90': !collapsed[section.id] }">▸</span>
                         </button>
                         <button v-if="section.addable" class="bp-btn ml-1 !h-5 !w-5 flex-none !p-0 text-xs" title="Add" @click.stop="onAdd(section)">
@@ -93,10 +94,12 @@
     import { createWorkspace, deleteWorkspace, nodes, selectedNodeId, switchWorkspace, workspaceState } from '../../utils/state';
     import { selectNode } from '../../utils/node-selection.js';
     import { addVariableNode } from '../../utils/node-creation.js';
-    import { getOutlineSections } from '../../utils/outline.js';
+    import { getOutlineSections, outlineRevision } from '../../utils/outline.js';
     import { getNodeIssues } from '../../utils/node-inspector.js';
     import { getConnections } from '../../utils/connection-manager.js';
     import NodeGlyph from '../icons/NodeGlyph.vue';
+
+    const emit = defineEmits(['add-node']);
 
     const tabs = computed(() => {
         return Object.keys(workspaceState.workspaces).map((id) => ({
@@ -139,6 +142,7 @@
     // Generic sections from the outline model (provider or fallback), then
     // filtered by label and annotated with per-item issue counts.
     const sections = computed(() => {
+        void outlineRevision.value; // recompute when a domain (re)registers its outline provider
         const q = filter.value.trim().toLowerCase();
         const connections = getConnections();
         const raw = getOutlineSections({ nodes: nodes.value, variables: variables.value });
@@ -177,12 +181,14 @@
     }
 
     function onAdd(section) {
-        // Variables live in this panel; other sections' add affordances are
-        // reserved for domain-specific node creation.
+        // Variables are created here; other sections open the Add Node picker
+        // (optionally scoped to the section's category).
         if (section.id === 'VARIABLES') {
             const count = nodes.value.filter((x) => x.type === 'variable').length + 1;
             const n = addVariableNode(`var${count}`, 'mixed', 'get');
             if (n) selectNode({ id: n.id });
+        } else {
+            emit('add-node', { category: section.addCategory || section.id });
         }
     }
 

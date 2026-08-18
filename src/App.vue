@@ -21,10 +21,13 @@
             />
         </div>
 
-        <!-- Main Content: project explorer | canvas | right log | right palette | AST Tools -->
+        <!-- Main Content: project explorer | canvas | right log | inspector -->
         <div class="flex min-h-0 flex-1 overflow-hidden">
-            <!-- Project Explorer (left) -->
-            <ProjectExplorer :tree="projectTree" @open-project="openProject" />
+            <!-- Project Explorer (left, resizable) -->
+            <div class="shrink-0" :style="{ width: leftWidth + 'px' }">
+                <ProjectExplorer :tree="projectTree" @open-project="openProject" @add-node="onOutlineAddNode" />
+            </div>
+            <div class="bp-resize" @mousedown.prevent="startResize('left', $event)"></div>
 
             <!-- Canvas Area (no overlapping controls) -->
             <NodeCanvas
@@ -49,8 +52,9 @@
                 <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" />
             </div>
 
-            <!-- Inspector (the primary right panel) -->
-            <div class="bp-panel right w-86 shrink-0 overflow-y-auto">
+            <!-- Inspector (the primary right panel, resizable) -->
+            <div class="bp-resize" @mousedown.prevent="startResize('right', $event)"></div>
+            <div class="bp-panel right shrink-0 overflow-y-auto" :style="{ width: rightWidth + 'px' }">
                 <NodeSettings />
             </div>
         </div>
@@ -134,6 +138,32 @@
     // UI State
     const showNodePalette = ref(false);
     const showEntryPointManager = ref(false);
+
+    // Resizable side panels.
+    const leftWidth = ref(224);
+    const rightWidth = ref(344);
+    function startResize(side, e) {
+        e.preventDefault();
+        const onMove = (ev) => {
+            if (side === 'left') leftWidth.value = Math.min(480, Math.max(160, ev.clientX));
+            else rightWidth.value = Math.min(600, Math.max(240, window.innerWidth - ev.clientX));
+        };
+        const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    }
+
+    // The outline's per-section "+" opens the Add Node picker.
+    function onOutlineAddNode() {
+        openNodeBrowser({ x: Math.max(40, window.innerWidth / 2 - 160), y: Math.max(60, window.innerHeight / 2 - 200) });
+    }
 
     const projectTree = ref(null);
     // Total validation issues across the graph (status bar).

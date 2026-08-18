@@ -361,6 +361,17 @@
 .bp-panel.right {
     border-left: 1px solid var(--line);
 }
+.bp-resize {
+    width: 5px;
+    flex: none;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+    z-index: 6;
+}
+.bp-resize:hover {
+    background: var(--accent-glow);
+}
 .bp-panel-head {
     display: flex;
     align-items: center;

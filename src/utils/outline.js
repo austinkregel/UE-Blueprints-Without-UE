@@ -13,13 +13,19 @@
  * data so the outline component stays domain-agnostic.
  */
 
+import { ref } from 'vue';
 import { getCategoryColor, getCategoryInfo, getCategoryName } from './language-definition.js';
 
 let outlineProvider = null;
 
+// Bumped whenever the provider changes so reactive consumers (the outline panel)
+// recompute — plugins register their provider after the app has mounted.
+export const outlineRevision = ref(0);
+
 /** Register the outline provider: (ctx) => Section[]. Latest wins. */
 export function registerOutlineProvider(fn) {
     outlineProvider = typeof fn === 'function' ? fn : null;
+    outlineRevision.value++;
 }
 
 // Generic fallback: group the graph's nodes by category, plus a Variables section.

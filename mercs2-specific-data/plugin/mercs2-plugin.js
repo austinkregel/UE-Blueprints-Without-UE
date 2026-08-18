@@ -153,14 +153,26 @@
             for (const s of sections) if (!s.icon) s.icon = 'function';
             for (const s of sections) for (const it of s.items) if (!it.color) it.color = s.color;
 
+            // Remaining nodes (control flow, engine bindings, …) group under their
+            // own category — not one flat "Nodes" bucket.
             const others = nodes.filter((n) => !known.has(n.category) && n.type !== 'variable');
-            if (others.length) {
+            const byCat = new Map();
+            for (const n of others) {
+                const cat = n.category || 'OTHER';
+                if (!byCat.has(cat)) byCat.set(cat, []);
+                byCat.get(cat).push(n);
+            }
+            for (const [cat, ns] of byCat) {
+                const info = api.getCategoryInfo ? api.getCategoryInfo(cat) : null;
+                const color = info?.color || 'slate';
                 sections.push({
-                    id: 'NODES',
-                    title: 'Nodes',
-                    icon: 'function',
-                    color: 'slate',
-                    items: others.map((n) => ({ id: `n:${n.id}`, label: n.name || n.nodeDefId || `Node ${n.id}`, nodeId: n.id, color: 'slate' }))
+                    id: cat,
+                    title: info?.name || cat,
+                    icon: info?.icon || 'function',
+                    color,
+                    addable: true,
+                    addCategory: cat,
+                    items: ns.map((n) => ({ id: `n:${n.id}`, label: n.name || n.nodeDefId || `Node ${n.id}`, nodeId: n.id, color }))
                 });
             }
             return sections;
