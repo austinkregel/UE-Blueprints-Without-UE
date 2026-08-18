@@ -5,13 +5,13 @@
             <!-- Inspector header -->
             <div class="bp-insp-header">
                 <div class="flex items-start gap-3">
-                    <span class="bp-nicon" :class="`na-${nodeColorName}`"><i></i></span>
+                    <span class="bp-nicon" :class="`na-${nodeColorName}`"><NodeGlyph :name="categoryIcon" /></span>
                     <div class="min-w-0">
                         <h1 class="truncate text-[16px] font-bold text-[var(--ink)]">
                             {{ selectedNode.name || selectedNode.nodeDefId || 'Node ' + selectedNode.id }}
                         </h1>
                         <div class="mt-1.5 flex flex-wrap gap-1.5">
-                            <span class="bp-chip cat" :class="`na-${nodeColorName}`">{{ selectedNode.category || selectedNode.type || 'node' }}</span>
+                            <span class="bp-chip cat" :class="`na-${nodeColorName}`">{{ categoryName }}</span>
                             <span v-if="selectedNode.nodeDefId" class="bp-chip mono">{{ selectedNode.nodeDefId }}</span>
                         </div>
                     </div>
@@ -22,7 +22,10 @@
 
             <!-- Preview (domain-provided render, if any) -->
             <div v-if="preview" class="bp-sec">
-                <span class="bp-sec-label mb-2 block">Preview</span>
+                <div class="bp-sec-head">
+                    <span class="bp-sec-label">HUD Preview</span>
+                    <span class="bp-live"><i></i>LIVE</span>
+                </div>
                 <!-- eslint-disable-next-line vue/no-v-html -->
                 <div v-html="preview.html"></div>
             </div>
@@ -32,21 +35,35 @@
                 <span class="bp-sec-label mb-2 block">Parameters</span>
                 <div v-for="inp in paramInputs" :key="inp.name" class="bp-prow">
                     <div class="pl">
-                        {{ inp.name }}<span class="bp-ty">{{ inp.type }}</span>
+                        <span class="truncate">{{ inp.name }}</span>
+                        <span class="bp-ty">{{ tyLabel(inp.type) }}</span>
+                        <span v-if="hasFieldIssue(inp.name)" class="bp-wicon" :title="fieldIssueTitle(inp.name)">⚠</span>
                     </div>
                     <div class="pc min-w-0">
-                        <button
-                            v-if="inp.type === 'bool'"
-                            class="bp-switch"
-                            :class="{ on: !!inp.defaultValue }"
-                            @click="inp.defaultValue = !inp.defaultValue"
-                        ></button>
-                        <div v-else-if="inp.type === 'int' || inp.type === 'float'" class="bp-stepper">
+                        <div v-if="inp.type === 'bool'" class="flex items-center gap-2">
+                            <button
+                                class="bp-switch"
+                                :class="{ on: !!inp.defaultValue, 'bp-warn': hasFieldIssue(inp.name) }"
+                                @click="inp.defaultValue = !inp.defaultValue"
+                            ></button>
+                            <span class="bp-swval">{{ inp.defaultValue ? 'true' : 'false' }}</span>
+                        </div>
+                        <div
+                            v-else-if="inp.type === 'int' || inp.type === 'float'"
+                            class="bp-stepper"
+                            :class="{ 'bp-warn': hasFieldIssue(inp.name) }"
+                        >
                             <button @click="stepParam(inp, -1)">−</button>
                             <input v-model.number="inp.defaultValue" type="number" />
                             <button @click="stepParam(inp, 1)">+</button>
                         </div>
-                        <input v-else v-model="inp.defaultValue" class="bp-input !h-8" :placeholder="inp.type" />
+                        <input
+                            v-else
+                            v-model="inp.defaultValue"
+                            class="bp-input !h-8"
+                            :class="{ 'bp-warn': hasFieldIssue(inp.name) }"
+                            :placeholder="inp.type"
+                        />
                     </div>
                 </div>
             </div>
@@ -70,8 +87,20 @@
                     <div class="ihead">
                         <span class="ibolt">!</span>
                         <span class="ititle">{{ iss.title }}</span>
+                        <span v-if="iss.field" class="ifield">{{ iss.field }}</span>
                     </div>
                     <div v-if="iss.body" class="ibody">{{ iss.body }}</div>
+                    <div v-if="iss.fixes && iss.fixes.length" class="ifixes">
+                        <button
+                            v-for="(fx, fi) in iss.fixes"
+                            :key="fi"
+                            class="bp-btn !h-7 !px-2.5"
+                            :class="{ primary: fi === 0 }"
+                            @click="applyFix(fx)"
+                        >
+                            {{ fx.label }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -230,6 +259,14 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Action bar -->
+            <div class="bp-footer">
+                <button class="bp-btn primary" title="Focus this node on the canvas" @click="focusNode">Focus</button>
+                <button class="bp-btn" :class="{ 'opacity-50': disabled }" title="Toggle node disabled" @click="toggleDisabled">
+                    {{ disabled ? 'Enable' : 'Disable' }}
+                </button>
+            </div>
         </div>
 
         <!-- Variables List Section -->
@@ -285,6 +322,8 @@
     import { getConnections } from '../utils/connection-manager.js';
     import { getNodeColor } from '../utils/node-colors.js';
     import { getNodeIssues, getNodePreview } from '../utils/node-inspector.js';
+    import { getCategoryInfo } from '../utils/language-definition.js';
+    import NodeGlyph from './icons/NodeGlyph.vue';
 
     defineProps({ variables: { type: Array, default: () => [] } });
     const emit = defineEmits(['update-outputs']);
@@ -293,6 +332,18 @@
 
     // Inspector accent color (category-derived) for the header icon/chip.
     const nodeColorName = computed(() => getNodeColor(selectedNode.value?.type, selectedNode.value?.nodeDefId) || 'blue');
+
+    // Header glyph + display name for the node's category.
+    const categoryIcon = computed(() => getCategoryInfo(selectedNode.value?.category)?.icon || selectedNode.value?.type || '');
+    const categoryName = computed(
+        () => getCategoryInfo(selectedNode.value?.category)?.name || selectedNode.value?.category || selectedNode.value?.type || 'node'
+    );
+
+    // Short type badge label for a parameter row.
+    const TY_LABELS = { int: 'int', float: 'float', string: 'str', bool: 'bool', object: 'obj', array: 'arr' };
+    function tyLabel(t) {
+        return TY_LABELS[String(t).toLowerCase()] || t;
+    }
 
     // Editable non-exec inputs, shown as typed Parameter rows (bound live to defaultValue).
     const paramInputs = computed(() =>
@@ -331,9 +382,44 @@
     const issues = computed(() => getNodeIssues(selectedNode.value, { connections: getConnections() }));
     const preview = computed(() => getNodePreview(selectedNode.value));
 
+    // Group issues by the param they anchor to, so a row can surface its own warning.
+    const fieldIssues = computed(() => {
+        const map = {};
+        for (const iss of issues.value) {
+            if (iss.field) (map[iss.field] ||= []).push(iss);
+        }
+        return map;
+    });
+    function hasFieldIssue(name) {
+        return !!fieldIssues.value[name];
+    }
+    function fieldIssueTitle(name) {
+        return (fieldIssues.value[name] || []).map((i) => i.title).join('\n');
+    }
+
+    // One-click remedy from an issue's fixes[] (mutates node input defaultValues, reactive).
+    function applyFix(fx) {
+        try {
+            fx?.apply?.();
+        } catch {
+            /* a misbehaving fix must not break the inspector */
+        }
+    }
+
     function stepParam(inp, dir) {
         const cur = Number(inp.defaultValue) || 0;
         inp.defaultValue = cur + dir;
+    }
+
+    // Footer actions.
+    const disabled = computed(() => !!selectedNode.value?.disabled);
+    function focusNode() {
+        const n = selectedNode.value;
+        if (n) selectNode({ id: n.id });
+    }
+    function toggleDisabled() {
+        const n = selectedNode.value;
+        if (n) n.disabled = !n.disabled;
     }
 
     // Local editable copies

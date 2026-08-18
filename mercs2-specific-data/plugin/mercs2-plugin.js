@@ -70,10 +70,22 @@
             if (node.category === 'MERCS2_OBJECTIVE') {
                 const quota = param(node, 'nQuota');
                 if (quota !== undefined && quota !== null && quota !== '' && Number(quota) <= 0) {
+                    const nq = (node.inputs || []).find((i) => i && i.name === 'nQuota');
                     issues.push({
                         level: 'error',
-                        title: 'Quota must be positive',
-                        body: `nQuota is ${quota}; this objective can never complete. Set a quota of at least 1.`
+                        title: "Quota can't be met",
+                        body: `nQuota is ${quota}; this objective can never complete. Set a quota of at least 1.`,
+                        field: 'nQuota',
+                        fixes: nq
+                            ? [
+                                  {
+                                      label: 'Set quota to 1',
+                                      apply: () => {
+                                          nq.defaultValue = 1;
+                                      }
+                                  }
+                              ]
+                            : []
                     });
                 }
             }
@@ -83,14 +95,75 @@
                     (i) => i && i.type !== 'exec' && i.defaultValue !== undefined && i.defaultValue !== null && i.defaultValue !== ''
                 );
                 if (hasConfig && !configured) {
+                    const firstArg = (node.inputs || []).find((i) => i && i.type !== 'exec');
                     issues.push({
                         level: 'warn',
                         title: 'Event has no configuration',
-                        body: 'This event trigger has no argument values set, so it may never fire.'
+                        body: 'This event trigger has no argument values set, so it may never fire.',
+                        field: firstArg ? firstArg.name : undefined
                     });
                 }
             }
             return issues;
+        });
+
+        // Mission-shaped outline: group the graph into SCRIPT / EVENTS / OBJECTIVES /
+        // VARIABLES so the left panel reads like the mission file (even when empty).
+        api.registerOutlineProvider(({ nodes = [], variables = [] }) => {
+            const itemsFor = (cats, kindFn) =>
+                nodes
+                    .filter((n) => cats.includes(n.category))
+                    .map((n) => ({
+                        id: `n:${n.id}`,
+                        label: n.name || n.nodeDefId || `Node ${n.id}`,
+                        nodeId: n.id,
+                        kind: kindFn ? kindFn(n) : undefined
+                    }));
+
+            const known = new Set(['MERCS2_MISSION', 'MERCS2_EVENT', 'MERCS2_OBJECTIVE']);
+            const sections = [
+                {
+                    id: 'SCRIPT',
+                    title: 'Script',
+                    hint: 'the mission file',
+                    icon: 'mission',
+                    color: 'violet',
+                    addable: true,
+                    items: itemsFor(['MERCS2_MISSION'], (n) => (String(n.nodeDefId || '').includes('Lifecycle') ? 'lifecycle' : 'root'))
+                },
+                {
+                    id: 'EVENTS',
+                    title: 'Events',
+                    hint: 'handlers · entry points',
+                    icon: 'event',
+                    color: 'red',
+                    addable: true,
+                    items: itemsFor(['MERCS2_EVENT'], () => 'trigger')
+                },
+                { id: 'OBJECTIVES', title: 'Objectives', icon: 'objective', color: 'amber', addable: true, items: itemsFor(['MERCS2_OBJECTIVE']) },
+                {
+                    id: 'VARIABLES',
+                    title: 'Variables',
+                    icon: 'variable',
+                    color: 'purple',
+                    addable: true,
+                    items: variables.map((v) => ({ id: `v:${v.name}`, label: v.name, kind: v.type || 'mixed', color: 'purple' }))
+                }
+            ];
+            for (const s of sections) if (!s.icon) s.icon = 'function';
+            for (const s of sections) for (const it of s.items) if (!it.color) it.color = s.color;
+
+            const others = nodes.filter((n) => !known.has(n.category) && n.type !== 'variable');
+            if (others.length) {
+                sections.push({
+                    id: 'NODES',
+                    title: 'Nodes',
+                    icon: 'function',
+                    color: 'slate',
+                    items: others.map((n) => ({ id: `n:${n.id}`, label: n.name || n.nodeDefId || `Node ${n.id}`, nodeId: n.id, color: 'slate' }))
+                });
+            }
+            return sections;
         });
     });
 })();

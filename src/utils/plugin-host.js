@@ -10,13 +10,15 @@
 
 import { registerExtraNodeCategories, registerExtraNodeDefinitions } from './language-definition.js';
 import { registerNodePreviewProvider, registerNodeValidator } from './node-inspector.js';
+import { registerOutlineProvider } from './outline.js';
 
 // The surface a plugin receives. Only generic registration hooks.
 const PLUGIN_API = Object.freeze({
     registerExtraNodeDefinitions,
     registerExtraNodeCategories,
     registerNodeValidator,
-    registerNodePreviewProvider
+    registerNodePreviewProvider,
+    registerOutlineProvider
 });
 
 // Expose the global a plugin bundle calls. Idempotent.

@@ -172,12 +172,11 @@
     place-items: center;
     background: rgba(0, 0, 0, 0.28);
     flex: none;
+    color: color-mix(in srgb, var(--na, #1e9bff) 75%, #ffffff);
 }
-.bp-glyph i {
-    width: 9px;
-    height: 9px;
-    border-radius: 3px;
-    background: var(--na, #1e9bff);
+.bp-glyph svg {
+    width: 12px;
+    height: 12px;
     display: block;
 }
 .bp-title {
@@ -191,6 +190,33 @@
     margin-left: auto;
     font-size: 12px;
     flex: none;
+}
+.bp-warn-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 10px;
+    background: var(--warn);
+    color: #2a1e04;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    box-shadow:
+        0 0 0 3px rgba(245, 185, 66, 0.22),
+        0 4px 12px -2px rgba(245, 185, 66, 0.6);
+}
+.bp-warn-badge.error {
+    background: var(--t-bool);
+    color: #2a0a0e;
+    box-shadow:
+        0 0 0 3px rgba(239, 80, 100, 0.22),
+        0 4px 12px -2px rgba(239, 80, 100, 0.6);
 }
 
 /* ================================================================
@@ -738,6 +764,96 @@
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--ink-2);
+}
+/* trailing param-anchor tag inside an issue header */
+.bp-issue .ifield {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--ink-4);
+    flex: none;
+}
+/* one-click fix buttons row */
+.bp-issue .ifixes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 12px 11px;
+}
+
+/* glyph inside the header icon tile, tinted by the category accent */
+.bp-nicon svg {
+    width: 18px;
+    height: 18px;
+    color: var(--na, #1e9bff);
+}
+
+/* section header row: a label with a trailing badge (e.g. LIVE) */
+.bp-sec-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+/* LIVE badge with a pulsing green dot */
+.bp-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+    color: var(--ok);
+}
+.bp-live i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 6px var(--ok);
+    animation: bp-pulse 1.6s ease-in-out infinite;
+}
+@keyframes bp-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.35;
+        transform: scale(0.7);
+    }
+}
+
+/* warn affordance: a param control whose value has a validation issue */
+.bp-warn {
+    border-color: var(--warn) !important;
+}
+.bp-wicon {
+    color: var(--warn);
+    flex: none;
+}
+/* bool value label shown beside the switch */
+.bp-swval {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+}
+
+/* sticky action bar at the bottom of the selected-node inspector */
+.bp-footer {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    z-index: 1;
+}
+.bp-footer .bp-btn {
+    flex: 1;
+    justify-content: center;
 }
 
 /* floating popups (context menus, dropdowns, search) */

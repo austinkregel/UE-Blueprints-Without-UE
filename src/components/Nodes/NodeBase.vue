@@ -14,8 +14,11 @@
         @click.stop="handleClick"
         @contextmenu.stop.prevent="handleNodeContextMenu"
     >
+        <div v-if="nodeIssues.length" class="bp-warn-badge" :class="{ error: nodeHasError }" :title="`${nodeIssues.length} issue(s)`">
+            ⚠ {{ nodeIssues.length }}
+        </div>
         <div v-if="shouldShowHeader" class="bp-node-head relative z-10">
-            <span class="bp-glyph"><i></i></span>
+            <span class="bp-glyph"><NodeGlyph :name="glyphName" /></span>
             <span class="bp-title"
                 ><slot name="header">{{ getDefaultHeaderText() }}</slot></span
             >
@@ -82,6 +85,10 @@
     import { computed, nextTick, onMounted, ref, watch, provide } from 'vue';
     import { construction } from '../../utils/node-interaction.js';
     import { getNodeColor } from '../../utils/node-colors.js';
+    import { getCategoryInfo } from '../../utils/language-definition.js';
+    import { getNodeIssues } from '../../utils/node-inspector.js';
+    import { getConnections } from '../../utils/connection-manager.js';
+    import NodeGlyph from '../icons/NodeGlyph.vue';
     import { getNodeExecutionStatus } from '../../utils/graph-executor.js';
     import { screenToWorld } from '../../utils/viewport-utils.js';
     import InputIOConnection from '../NodeParts/InputIOConnection.vue';
@@ -157,6 +164,13 @@
     // The node's accent color name (e.g. 'red'/'violet'/'amber'), resolved from its
     // category. Drives the `.na-<color>` class that tints the header via --na.
     const nodeColorName = computed(() => getNodeColor(props.node.type, props.node.nodeDefId) || 'blue');
+
+    // Category-derived glyph for the header icon (falls back to a default shape).
+    const glyphName = computed(() => getCategoryInfo(props.node.category)?.icon || props.node.type || '');
+
+    // Validation issues on this node → warning badge.
+    const nodeIssues = computed(() => getNodeIssues(props.node, { connections: props.connections || getConnections() }));
+    const nodeHasError = computed(() => nodeIssues.value.some((i) => i.level === 'error'));
 
     // Execution status styling — a colored border after a run.
     const executionStatusClass = computed(() => {

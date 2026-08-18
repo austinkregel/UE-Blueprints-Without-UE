@@ -27,18 +27,19 @@ describe('App.vue', () => {
         // toggle-palette flips palette visibility.
         const toolbar = wrapper.findComponent({ name: 'TopToolbar' });
         expect(toolbar.exists()).toBe(true);
-        // initial state: showNodePalette is ref(true) so the palette shows on launch
-        expect(toolbar.props().showNodePalette).toBe(true);
+        // initial state: showNodePalette is ref(false) — the inspector is the right panel,
+        // the palette is a toggle drawer.
+        expect(toolbar.props().showNodePalette).toBe(false);
         // emit toggle-palette event from stub
         toolbar.vm.$emit('toggle-palette');
         await nextTick();
-        // expect palette visibility flag to flip off
-        expect(toolbar.props().showNodePalette).toBe(false);
+        // expect palette visibility flag to flip on
+        expect(toolbar.props().showNodePalette).toBe(true);
         // emit toggle-palette again
         toolbar.vm.$emit('toggle-palette');
         await nextTick();
-        // expect palette visibility flag to flip back on
-        expect(toolbar.props().showNodePalette).toBe(true);
+        // expect palette visibility flag to flip back off
+        expect(toolbar.props().showNodePalette).toBe(false);
     });
 
     it('passes debugMode prop to TopToolbar', () => {

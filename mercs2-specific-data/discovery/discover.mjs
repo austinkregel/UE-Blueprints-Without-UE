@@ -185,7 +185,7 @@ function buildBindingCategories(globalByCat) {
         cats[categoryKey] = {
             name: `Mercs2 · ${global}`,
             color: NS_COLORS[global] || 'slate',
-            icon: 'mercs2',
+            icon: 'function',
             description: `Mercenaries 2 ${global} engine bindings`
         };
     }
@@ -193,9 +193,9 @@ function buildBindingCategories(globalByCat) {
 }
 
 const AUTHORING_CATEGORIES = {
-    MERCS2_MISSION: { name: 'Mercs2 · Mission', color: 'violet', icon: 'mercs2', description: 'Mission roots and lifecycle hooks' },
-    MERCS2_EVENT: { name: 'Mercs2 · Events', color: 'red', icon: 'mercs2', description: 'Event.<Type> trigger nodes (red event nodes)' },
-    MERCS2_OBJECTIVE: { name: 'Mercs2 · Objectives', color: 'amber', icon: 'mercs2', description: 'Objective task nodes with outcome exec pins' }
+    MERCS2_MISSION: { name: 'Mercs2 · Mission', color: 'violet', icon: 'mission', description: 'Mission roots and lifecycle hooks' },
+    MERCS2_EVENT: { name: 'Mercs2 · Events', color: 'red', icon: 'event', description: 'Event.<Type> trigger nodes (red event nodes)' },
+    MERCS2_OBJECTIVE: { name: 'Mercs2 · Objectives', color: 'amber', icon: 'objective', description: 'Objective task nodes with outcome exec pins' }
 };
 
 // ---------------------------------------------------------------------------

@@ -14,8 +14,16 @@ const validators = [];
 let previewProvider = null;
 
 /**
- * Register a validator: (node, ctx) => Issue[] where Issue is
- * { level: 'warn'|'error'|'info', title: string, body?: string, fixes?: [{label, apply}] }.
+ * Register a validator: (node, ctx) => Issue[].
+ *
+ * An Issue is addressable and actionable:
+ *   {
+ *     level: 'warn' | 'error' | 'info',
+ *     title: string,
+ *     body?: string,
+ *     field?: string,                       // input/param name this issue anchors to
+ *     fixes?: [{ label: string, apply: () => void }]  // one-click remedies
+ *   }
  * ctx carries at least { connections }.
  */
 export function registerNodeValidator(fn) {
@@ -66,6 +74,15 @@ export function getNodeIssues(node, ctx = {}) {
         }
     }
     return all;
+}
+
+/**
+ * Total issue count across a set of nodes (for the status bar / outline badges).
+ */
+export function getWorkspaceIssueCount(nodeList, ctxBase = {}) {
+    let n = 0;
+    for (const node of nodeList || []) n += getNodeIssues(node, ctxBase).length;
+    return n;
 }
 
 /**

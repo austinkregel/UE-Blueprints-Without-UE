@@ -44,9 +44,13 @@
             <!-- Execution Log Panel (right, non-overlapping) -->
             <ExecutionLog :logs="executionLog" @clear="clearExecutionResults" />
 
-            <!-- Right Palette Sidebar -->
+            <!-- Palette drawer (toggled; hidden by default so the inspector is the right panel) -->
             <div v-show="showNodePalette" class="bp-panel right w-86 shrink-0 overflow-y-auto">
                 <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" />
+            </div>
+
+            <!-- Inspector (the primary right panel) -->
+            <div class="bp-panel right w-86 shrink-0 overflow-y-auto">
                 <NodeSettings :variables="currentVariables" />
             </div>
         </div>
@@ -55,6 +59,7 @@
         <footer class="bp-status shrink-0">
             <span class="s"><i class="dot" :class="isExecuting ? 'warn' : 'ok'"></i>{{ isExecuting ? 'Running' : 'Ready' }}</span>
             <span class="s mono">{{ nodes.length }} nodes</span>
+            <span v-if="issueCount" class="s" style="color: var(--warn)">⚠ {{ issueCount }} issue{{ issueCount === 1 ? '' : 's' }}</span>
             <span class="right">
                 <span class="s mono">{{ activeWorkspace?.name || 'no workspace' }}</span>
                 <span class="s mono">{{ Math.round(viewport.zoom * 100) }}%</span>
@@ -117,6 +122,7 @@
         stopExecution
     } from './utils/graph-executor.js';
     import { pickDirectory, readDirectoryTree } from './utils/file-tree.js';
+    import { getWorkspaceIssueCount } from './utils/node-inspector.js';
 
     const contextMenuVisible = ref(false);
     const contextMenuPosition = ref({ screen: { x: 0, y: 0 }, world: { x: 0, y: 0 } });
@@ -126,7 +132,7 @@
     const nodeContextMenuNode = ref(null);
     const nodeContextMenuPosition = ref({ x: 0, y: 0 });
     // UI State
-    const showNodePalette = ref(true);
+    const showNodePalette = ref(false);
     const showEntryPointManager = ref(false);
 
     const projectTree = ref(null);
@@ -146,6 +152,9 @@
         }
         return list;
     });
+
+    // Total validation issues across the graph (status bar).
+    const issueCount = computed(() => getWorkspaceIssueCount(nodes.value, { connections: getConnections() }));
 
     // Convert screen position (editor-local) to world position using canvas offset
     function screenToWorldPosition(screenPos) {
