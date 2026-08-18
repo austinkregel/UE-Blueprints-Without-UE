@@ -392,6 +392,11 @@ async function executeNodeFlow(node) {
     if (executionResults.value.has(node.id)) {
         return;
     }
+    // Disabled nodes are skipped: they don't run and execution stops here.
+    if (node.disabled) {
+        executionLog.value.push({ type: 'info', message: `Skipped disabled node ${node.name || node.nodeDefId || node.id}`, nodeId: node.id });
+        return;
+    }
     // Gate here for step/pause/breakpoint
     await executionGate(node);
     // Execute the node

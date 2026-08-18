@@ -280,6 +280,7 @@
     import { nodes, selectedNodeId } from '../utils/state.js';
     import { updateNode, updateNodeIO } from '../utils/nodes-core.js';
     import { closeSettings, selectNode } from '../utils/node-selection.js';
+    import { focusWorldPoint } from '../utils/viewport-utils.js';
     import { getConnections } from '../utils/connection-manager.js';
     import { getNodeColor } from '../utils/node-colors.js';
     import { getNodeIssues, getNodePreview } from '../utils/node-inspector.js';
@@ -375,7 +376,10 @@
     const disabled = computed(() => !!selectedNode.value?.disabled);
     function focusNode() {
         const n = selectedNode.value;
-        if (n) selectNode({ id: n.id });
+        if (!n) return;
+        selectNode({ id: n.id });
+        // Pan the canvas so the node is centred in view.
+        focusWorldPoint((n.x || 0) + 110, (n.y || 0) + 40);
     }
     function toggleDisabled() {
         const n = selectedNode.value;

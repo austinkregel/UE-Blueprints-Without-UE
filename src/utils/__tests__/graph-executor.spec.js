@@ -32,6 +32,19 @@ describe('graph-executor', () => {
         clearExecutionResults();
     });
 
+    it('skips a disabled node during execution', async () => {
+        const entry = makeNode(1, { nodeDefId: 'on_start', outputs: [{ name: 'Exec', type: 'exec' }] });
+        const target = makeNode(2, { inputs: [{ name: 'Exec', type: 'exec' }], disabled: true });
+        nodes.value = [entry, target];
+        activeWorkspace.value.connections = [{ from: { nodeId: 1, output: 'Exec' }, to: { nodeId: 2, input: 'Exec' } }];
+        addEntryPoint(1);
+
+        await executeGraph();
+
+        expect(executionResults.value.has(1)).toBe(true); // entry ran
+        expect(executionResults.value.has(2)).toBe(false); // disabled node skipped
+    });
+
     it('validateGraphInputs reports missing inputs and type mismatch warnings', () => {
         const n1 = makeNode(1, { outputs: [{ name: 'out', type: 'int' }] });
         const n2 = makeNode(2, { inputs: [{ name: 'a', type: 'string' }] });

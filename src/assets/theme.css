@@ -141,6 +141,14 @@
         0 18px 36px -16px rgba(0, 0, 0, 0.75);
     z-index: 20;
 }
+.bp-node-disabled {
+    opacity: 0.5;
+    filter: grayscale(0.55);
+}
+.bp-node-disabled .bp-node-head {
+    text-decoration: line-through;
+    text-decoration-color: rgba(255, 255, 255, 0.5);
+}
 
 .bp-node-head {
     display: flex;

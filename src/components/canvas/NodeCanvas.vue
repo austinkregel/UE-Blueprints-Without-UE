@@ -133,7 +133,7 @@
     import { getConnectionPointsArray, renderConnectionPath } from '../../utils/io-utils.js';
     import { addConnection, getConnections, removeConnection } from '../../utils/connection-manager.js';
     import { onEditorMouseDown as onEditorMouseDownUtil } from '../../utils/editor-utils.js';
-    import { getViewportTransform, setCanvasOffset, setZoom, viewport, adjustGridToWorld } from '../../utils/viewport-utils.js';
+    import { getViewportTransform, setCanvasOffset, setCanvasSize, setZoom, viewport, adjustGridToWorld } from '../../utils/viewport-utils.js';
 
     defineProps({
         debugMode: { type: Boolean, default: false }
@@ -167,7 +167,10 @@
 
     function updateCanvasOffset() {
         const rect = editorAreaRef.value?.getBoundingClientRect();
-        if (rect) setCanvasOffset(rect.left, rect.top);
+        if (rect) {
+            setCanvasOffset(rect.left, rect.top);
+            setCanvasSize(rect.width, rect.height);
+        }
     }
 
     onMounted(() => {

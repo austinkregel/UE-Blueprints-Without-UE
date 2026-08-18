@@ -5,6 +5,7 @@
             'bp-node',
             `na-${nodeColorName}`,
             isSelected ? 'sel' : '',
+            node.disabled ? 'bp-node-disabled' : '',
             executionStatusClass,
             'absolute inline-block max-w-[420px] min-w-[220px] cursor-grab text-sm select-none'
         ]"

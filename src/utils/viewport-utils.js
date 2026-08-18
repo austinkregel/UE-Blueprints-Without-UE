@@ -9,9 +9,26 @@ export const viewport = ref({
 
 // Canvas offset (top-left of the canvas area relative to the page/client)
 export const canvasOffset = ref({ x: 0, y: 0 });
+// Canvas viewport size (of the visible canvas area), used to center on a point.
+export const canvasSize = ref({ w: 0, h: 0 });
 
 export function setCanvasOffset(x, y) {
     canvasOffset.value = { x, y };
+}
+
+export function setCanvasSize(w, h) {
+    canvasSize.value = { w, h };
+}
+
+/**
+ * Pan the viewport so a world point sits at the centre of the visible canvas.
+ */
+export function focusWorldPoint(worldX, worldY) {
+    const z = viewport.value.zoom;
+    const w = canvasSize.value.w || 800;
+    const h = canvasSize.value.h || 600;
+    viewport.value.x = w / 2 - worldX * z;
+    viewport.value.y = h / 2 - worldY * z;
 }
 
 // Panning state
