@@ -99,6 +99,26 @@
                 </div>
             </div>
         </div>
+
+        <!-- Pin-types legend -->
+        <div class="bp-overlay bp-legend">
+            <div class="eyebrow">Pin Types</div>
+            <div class="items">
+                <span class="li"><i class="exec" style="background: var(--t-exec)"></i>exec</span>
+                <span class="li"><i style="background: var(--t-object)"></i>object</span>
+                <span class="li"><i style="background: var(--t-string)"></i>string</span>
+                <span class="li"><i style="background: var(--t-int)"></i>number</span>
+                <span class="li"><i style="background: var(--t-bool)"></i>bool</span>
+                <span class="li"><i style="background: var(--t-array)"></i>array</span>
+            </div>
+        </div>
+
+        <!-- Zoom controls -->
+        <div class="bp-overlay bp-zoompill" @mousedown.stop>
+            <button title="Zoom out" @click="zoomBy(0.9)">−</button>
+            <span class="zval">{{ Math.round(viewport.zoom * 100) }}%</span>
+            <button title="Zoom in" @click="zoomBy(1.1)">+</button>
+        </div>
     </div>
 </template>
 
@@ -181,6 +201,13 @@
     function onNodeContextMenu(payload) {
         // forward node context menu event to parent
         emit('node-context-menu', payload);
+    }
+
+    function zoomBy(factor) {
+        const rect = editorAreaRef.value?.getBoundingClientRect();
+        const cx = rect ? rect.width / 2 : 0;
+        const cy = rect ? rect.height / 2 : 0;
+        setZoom(viewport.value.zoom * factor, cx, cy);
     }
 
     function onWheel(event) {

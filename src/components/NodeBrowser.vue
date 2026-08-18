@@ -1,13 +1,10 @@
 <template>
-    <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click="handleOverlayClick">
-        <div
-            class="flex max-h-[80vh] w-96 flex-col rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-600 dark:bg-zinc-800"
-            @click.stop
-        >
+    <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @click="handleOverlayClick">
+        <div class="nb-modal flex max-h-[80vh] w-96 flex-col" @click.stop>
             <!-- Header -->
-            <div class="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-600">
-                <h3 class="font-semibold text-zinc-900 dark:text-white">Browse All Nodes</h3>
-                <button class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white" @click="$emit('close')">
+            <div class="nb-header flex items-center justify-between p-4">
+                <h3 class="nb-title">Browse All Nodes</h3>
+                <button class="nb-close" @click="$emit('close')">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                     </svg>
@@ -15,28 +12,20 @@
             </div>
 
             <!-- Search -->
-            <div class="border-b border-zinc-200 p-4 dark:border-zinc-600">
-                <input
-                    ref="searchInput"
-                    v-model="searchQuery"
-                    class="w-full rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                    placeholder="Search nodes..."
-                />
+            <div class="bp-filter nb-filter">
+                <input ref="searchInput" v-model="searchQuery" placeholder="Search nodes..." />
             </div>
 
             <!-- Node List -->
             <div class="flex-1 overflow-y-auto">
-                <div v-for="category in filteredCategories" :key="category.key" class="border-b border-zinc-200 last:border-b-0 dark:border-zinc-700">
-                    <div
-                        class="flex cursor-pointer items-center justify-between p-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                        @click="toggleCategory(category.key)"
-                    >
+                <div v-for="category in filteredCategories" :key="category.key" class="nb-cat">
+                    <div class="nb-cat-head" @click="toggleCategory(category.key)">
                         <div class="flex items-center gap-2">
                             <div :class="`bg-${category.color}-500`" class="h-2 w-2 rounded-full"></div>
                             <span>{{ category.name }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs text-zinc-500">{{ category.count }}</span>
+                            <span class="nb-count">{{ category.count }}</span>
                             <svg
                                 :class="{ 'rotate-180': expandedCategories[category.key] }"
                                 class="h-4 w-4 transition-transform"
@@ -49,19 +38,14 @@
                         </div>
                     </div>
 
-                    <div v-if="expandedCategories[category.key]" class="bg-zinc-50 dark:bg-zinc-900/40">
-                        <div
-                            v-for="node in category.nodes"
-                            :key="node.id"
-                            class="flex cursor-pointer flex-col gap-1 border-l-2 border-transparent p-3 pl-6 hover:border-blue-500 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                            @click="handleNodeSelect(node)"
-                        >
+                    <div v-if="expandedCategories[category.key]" class="nb-cat-body">
+                        <div v-for="node in category.nodes" :key="node.id" class="nb-node" @click="handleNodeSelect(node)">
                             <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ node.name }}</span>
+                                <span class="nb-node-name">{{ node.name }}</span>
                                 <div :class="`bg-${category.color}-400`" class="h-2 w-2 rounded-full"></div>
                             </div>
-                            <p class="text-xs text-zinc-600 dark:text-zinc-400">{{ node.description }}</p>
-                            <div class="flex justify-between text-xs text-zinc-500">
+                            <p class="nb-node-desc">{{ node.description }}</p>
+                            <div class="nb-node-meta flex justify-between">
                                 <span>{{ node.inputs?.length || 0 }} inputs</span>
                                 <span>{{ node.outputs?.length || 0 }} outputs</span>
                             </div>
@@ -70,15 +54,11 @@
                 </div>
 
                 <!-- No results -->
-                <div v-if="filteredCategories.length === 0" class="p-4 text-center text-zinc-500 dark:text-zinc-400">
-                    No nodes found matching "{{ searchQuery }}"
-                </div>
+                <div v-if="filteredCategories.length === 0" class="nb-empty">No nodes found matching "{{ searchQuery }}"</div>
             </div>
 
             <!-- Footer -->
-            <div class="border-t border-zinc-200 p-4 text-xs text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">
-                Click on a node to add it at the right-click position
-            </div>
+            <div class="nb-footer">Click on a node to add it at the right-click position</div>
         </div>
     </div>
 </template>
@@ -211,6 +191,103 @@
 </script>
 
 <style scoped>
+    .nb-modal {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow:
+            0 30px 60px -20px rgba(0, 0, 0, 0.8),
+            0 0 0 1px rgba(0, 0, 0, 0.3);
+        color: var(--ink);
+        font-family: var(--font-ui);
+        overflow: hidden;
+    }
+    .nb-header {
+        border-bottom: 1px solid var(--line);
+    }
+    .nb-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+    }
+    .nb-close {
+        color: var(--ink-3);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+    }
+    .nb-close:hover {
+        color: var(--ink);
+    }
+    .nb-filter {
+        margin: 12px;
+        border-bottom: none;
+    }
+    .nb-cat {
+        border-bottom: 1px solid var(--line-soft);
+    }
+    .nb-cat:last-child {
+        border-bottom: none;
+    }
+    .nb-cat-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink-2);
+        cursor: pointer;
+    }
+    .nb-cat-head:hover {
+        background: var(--raised);
+        color: var(--ink);
+    }
+    .nb-count {
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+    .nb-cat-body {
+        background: var(--panel-2);
+    }
+    .nb-node {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 10px 12px 10px 24px;
+        border-left: 2px solid transparent;
+        cursor: pointer;
+    }
+    .nb-node:hover {
+        background: var(--raised);
+        border-left-color: var(--accent);
+    }
+    .nb-node-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink);
+    }
+    .nb-node-desc {
+        font-size: 11.5px;
+        color: var(--ink-2);
+    }
+    .nb-node-meta {
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+    .nb-empty {
+        padding: 16px;
+        text-align: center;
+        font-size: 12.5px;
+        color: var(--ink-3);
+    }
+    .nb-footer {
+        padding: 12px 16px;
+        border-top: 1px solid var(--line);
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+
     /* Custom scrollbar for the node list */
     .overflow-y-auto {
         scrollbar-width: thin;
@@ -239,8 +316,8 @@
         animation: modalFadeIn 0.2s ease-out;
     }
 
-    /* Keep slide-in on dark container; light background still looks fine */
-    .bg-zinc-800 {
+    /* Keep slide-in on the modal container */
+    .nb-modal {
         animation: modalSlideIn 0.2s ease-out;
     }
 

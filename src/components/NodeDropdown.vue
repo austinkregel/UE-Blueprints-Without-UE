@@ -1,52 +1,34 @@
 <template>
     <div ref="dropdownRef" class="relative">
-        <button
-            class="flex items-center gap-2 rounded border border-zinc-300 bg-white px-4 py-2 text-base text-zinc-900 hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700"
-            @click="toggleDropdown"
-        >
+        <button class="bp-btn nd-trigger" @click="toggleDropdown">
             <span>{{ title }}</span>
             <svg :class="{ 'rotate-180': isOpen }" class="h-4 w-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
             </svg>
         </button>
 
-        <div
-            v-if="isOpen"
-            class="absolute top-full left-0 z-50 mt-1 w-64 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-600 dark:bg-zinc-800"
-        >
-            <div class="p-2">
-                <input
-                    v-model="searchQuery"
-                    class="w-full rounded border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-900 placeholder-zinc-400 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
-                    placeholder="Search nodes..."
-                />
+        <div v-if="isOpen" class="nd-popup absolute top-full left-0 z-50 mt-1 w-64 overflow-hidden">
+            <div class="bp-filter nd-filter">
+                <input v-model="searchQuery" placeholder="Search nodes..." />
             </div>
 
             <div class="max-h-80 overflow-y-auto">
-                <div v-for="category in filteredCategories" :key="category.key" class="border-b border-zinc-200 last:border-b-0 dark:border-zinc-700">
-                    <div
-                        class="flex cursor-pointer items-center justify-between p-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                        @click="toggleCategory(category.key)"
-                    >
+                <div v-for="category in filteredCategories" :key="category.key" class="nd-cat">
+                    <div class="nd-cat-head" @click="toggleCategory(category.key)">
                         <div class="flex items-center gap-2">
                             <div :class="`bg-${category.color}-500`" class="h-2 w-2 rounded-full"></div>
                             <span>{{ category.name }}</span>
                         </div>
-                        <span class="text-xs text-zinc-500">{{ category.count }}</span>
+                        <span class="nd-count">{{ category.count }}</span>
                     </div>
 
-                    <div v-if="expandedCategories[category.key]" class="dark:bg-zinc-850 bg-zinc-50">
-                        <div
-                            v-for="node in category.nodes"
-                            :key="node.id"
-                            class="flex cursor-pointer items-center justify-between p-2 pl-6 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                            @click="$emit('node-select', node)"
-                        >
-                            <div>
-                                <div class="font-medium text-zinc-900 dark:text-white">{{ node.name }}</div>
-                                <div class="truncate text-xs text-zinc-500 dark:text-zinc-400">{{ node.description }}</div>
+                    <div v-if="expandedCategories[category.key]" class="nd-cat-body">
+                        <div v-for="node in category.nodes" :key="node.id" class="nd-node" @click="$emit('node-select', node)">
+                            <div class="min-w-0">
+                                <div class="nd-node-name">{{ node.name }}</div>
+                                <div class="nd-node-desc truncate">{{ node.description }}</div>
                             </div>
-                            <div class="text-xs text-zinc-500">{{ node.inputs?.length || 0 }}→{{ node.outputs?.length || 0 }}</div>
+                            <div class="nd-node-meta">{{ node.inputs?.length || 0 }}→{{ node.outputs?.length || 0 }}</div>
                         </div>
                     </div>
                 </div>
@@ -129,3 +111,78 @@
         }
     }
 </script>
+
+<style scoped>
+    .nd-trigger {
+        height: auto;
+        padding: 8px 16px;
+        font-size: 15px;
+        color: var(--ink);
+    }
+
+    .nd-popup {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow:
+            0 18px 40px -16px rgba(0, 0, 0, 0.75),
+            0 0 0 1px rgba(0, 0, 0, 0.3);
+        color: var(--ink);
+        font-family: var(--font-ui);
+    }
+    .nd-filter {
+        margin: 8px;
+    }
+    .nd-cat {
+        border-bottom: 1px solid var(--line-soft);
+    }
+    .nd-cat:last-child {
+        border-bottom: none;
+    }
+    .nd-cat-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink-2);
+        cursor: pointer;
+    }
+    .nd-cat-head:hover {
+        background: var(--raised);
+        color: var(--ink);
+    }
+    .nd-count {
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+    .nd-cat-body {
+        background: var(--panel-2);
+    }
+    .nd-node {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 8px 8px 24px;
+        cursor: pointer;
+    }
+    .nd-node:hover {
+        background: var(--raised);
+    }
+    .nd-node-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink);
+    }
+    .nd-node-desc {
+        font-size: 11px;
+        color: var(--ink-3);
+    }
+    .nd-node-meta {
+        font-size: 11px;
+        color: var(--ink-3);
+        flex: none;
+    }
+</style>

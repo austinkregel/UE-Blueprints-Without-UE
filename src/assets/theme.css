@@ -485,3 +485,81 @@
     color: var(--t-array);
     letter-spacing: 0.08em;
 }
+
+/* floating popups (context menus, dropdowns, search) */
+.bp-popup {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--ink);
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.8);
+}
+
+/* canvas overlays */
+.bp-overlay {
+    position: absolute;
+    z-index: 5;
+    background: rgba(17, 21, 28, 0.85);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.7);
+    color: var(--ink);
+}
+.bp-zoompill {
+    right: 14px;
+    bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+}
+.bp-zoompill button {
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+}
+.bp-zoompill button:hover {
+    background: var(--raised);
+    color: var(--ink);
+}
+.bp-zoompill .zval {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-2);
+    padding: 0 8px;
+    min-width: 44px;
+    text-align: center;
+}
+.bp-legend {
+    top: 14px;
+    left: 14px;
+    padding: 9px 11px;
+}
+.bp-legend .items {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 4px 14px;
+    margin-top: 7px;
+}
+.bp-legend .li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ink-2);
+}
+.bp-legend .li i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex: none;
+}
+.bp-legend .li i.exec {
+    border-radius: 2px;
+}

@@ -43,7 +43,7 @@ describe('App.vue', () => {
 
     it('passes debugMode prop to TopToolbar', () => {
         const toolbar = wrapper.findComponent({ name: 'TopToolbar' });
-        // debugMode is a ref(boolean) in state, default true
-        expect(toolbar.props().debugMode).toBe(true);
+        // debugMode is a ref(boolean) in state, default false (debug overlays off)
+        expect(toolbar.props().debugMode).toBe(false);
     });
 });
