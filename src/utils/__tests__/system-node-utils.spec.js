@@ -27,9 +27,10 @@ describe('addSystemNode', () => {
                 { name: 'value', type: 'mixed' }
             ]
         });
-        // A freshly-added system node initializes with no outputs; dynamic
-        // outputs are attached later via updateNodeOutputs (see system-node-utils.js).
-        expect(node.outputs).toBeUndefined();
+        // With no dynamic outputs, the node keeps its definition's outputs
+        // (print's Exec pin), so execution can chain through it. Dynamic outputs
+        // are attached later via updateNodeOutputs (see system-node-utils.js).
+        expect(node.outputs).toEqual([{ name: 'Exec', type: 'exec' }]);
     });
 
     it('initializes with provided dynamic outputs when given', () => {

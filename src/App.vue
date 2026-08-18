@@ -46,6 +46,7 @@
 
             <!-- Right Palette Sidebar -->
             <div
+                v-show="showNodePalette"
                 class="flex max-h-screen w-86 shrink-0 flex-col overflow-y-auto border-l border-zinc-200 bg-white/80 dark:border-zinc-700 dark:bg-zinc-900/80"
             >
                 <NodePalette @node-drag-start="onNodeDragStart" @node-select="onNodeSelect" />
@@ -89,9 +90,11 @@
     import ProjectExplorer from './components/panels/ProjectExplorer.vue';
     import NodeSettings from './components/NodeSettings.vue';
 
-    import { activeWorkspace, debugMode, nodes } from './utils/state.js';
+    import { activeWorkspace, createWorkspace, debugMode, nodes, workspaceState } from './utils/state.js';
     import { addNode, deleteNode } from './utils/nodes-core.js';
     import { addNodeFromDefinition } from './utils/node-creation.js';
+    import { getConnections, removeConnection } from './utils/connection-manager.js';
+    import { getNextNodeId } from './utils/id-utils.js';
     import { selectedNodeId, selectNode, closeSettings } from './utils/node-selection.js';
     import { attachPendingConnectionToNode, pendingConnectionRequest } from './utils/pending-connection.js';
     import { addActionNode } from './utils/action-node-utils.js';
@@ -118,7 +121,7 @@
     const nodeContextMenuNode = ref(null);
     const nodeContextMenuPosition = ref({ x: 0, y: 0 });
     // UI State
-    const showNodePalette = ref(false);
+    const showNodePalette = ref(true);
     const showEntryPointManager = ref(false);
 
     const projectTree = ref(null);
@@ -180,6 +183,27 @@
         nodeContextMenuNode.value = null;
     }
 
+    // Clone a node (fresh id, offset a little so it's visibly distinct) so the
+    // user can stamp out copies without re-wiring from the palette. Connections
+    // are intentionally not copied — the duplicate starts unconnected.
+    function duplicateNode(node) {
+        const clone = JSON.parse(JSON.stringify(node));
+        clone.id = getNextNodeId(node.nodeDefId || node.type || 'node');
+        clone.x = (node.x ?? 0) + 40;
+        clone.y = (node.y ?? 0) + 40;
+        nodes.value.push(clone);
+        selectNode(clone);
+    }
+
+    // Remove every connection touching this node (either endpoint).
+    function disconnectNode(nodeId) {
+        for (const conn of [...getConnections()]) {
+            if (conn.from.nodeId === nodeId || conn.to.nodeId === nodeId) {
+                removeConnection(conn);
+            }
+        }
+    }
+
     function handleNodeContextMenuAction(actionData) {
         const { type, node } = actionData;
         switch (type) {
@@ -187,7 +211,7 @@
                 deleteNode(node.id);
                 break;
             case 'duplicate':
-                // Not yet modularized here
+                duplicateNode(node);
                 break;
             case 'copy':
                 // TODO: Implement copy to clipboard
@@ -196,7 +220,7 @@
                 selectNode(node);
                 break;
             case 'disconnect':
-                // TODO: Implement disconnect all connections for this node
+                disconnectNode(node.id);
                 break;
             case 'add-entry-point':
                 addEntryPoint(node.id);
@@ -363,6 +387,11 @@
 
     onMounted(() => {
         window.addEventListener('keydown', handleGlobalKeydown);
+        // Open a default workspace on launch so the user lands on a usable canvas
+        // instead of the empty "No active workspace" state.
+        if (!activeWorkspace.value && Object.keys(workspaceState.workspaces).length === 0) {
+            createWorkspace(Date.now(), { name: 'Workflow 0' });
+        }
     });
     onUnmounted(() => {
         window.removeEventListener('keydown', handleGlobalKeydown);

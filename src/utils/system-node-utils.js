@@ -7,12 +7,19 @@ import { createNodeFromDefinition } from './node-factory.js';
  * Add a system node by definition ID
  */
 export function addSystemNode(nodeDefId = 'print', position = { x: 500, y: 300 }, outputs = []) {
-    const newNode = createNodeFromDefinition(nodeDefId, position.x, position.y, {
+    const overrides = {
         id: getNextNodeId('system'),
         type: 'system',
-        systemName: nodeDefId,
-        outputs: outputs.length > 0 ? outputs : undefined // Initialize with dynamic outputs if provided
-    });
+        systemName: nodeDefId
+    };
+    // Only override outputs when dynamic ones are supplied; otherwise keep the
+    // definition's outputs (e.g. print's Exec pin). Passing `outputs: undefined`
+    // would clobber them via the spread in createNodeFromDefinition.
+    if (outputs.length > 0) {
+        overrides.outputs = outputs;
+    }
+
+    const newNode = createNodeFromDefinition(nodeDefId, position.x, position.y, overrides);
 
     nodes.value.push(newNode);
     return newNode;

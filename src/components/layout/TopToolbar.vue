@@ -80,15 +80,6 @@
                     Entry Points
                 </button>
             </MenuItem>
-            <MenuItem v-slot="{ active }">
-                <button
-                    :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
-                    class="w-full px-3 py-1.5 text-left text-sm"
-                    @click="$emit('open-events')"
-                >
-                    Events
-                </button>
-            </MenuItem>
         </DropdownMenu>
 
         <!-- Project menu -->
@@ -145,7 +136,6 @@
         'clear-results',
         'create-test-graph',
         'open-entry-points',
-        'open-events',
         'add-node-from-dropdown',
         'open-project'
     ]);
