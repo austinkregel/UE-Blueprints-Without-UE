@@ -15,6 +15,7 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "knip": "knip",
+        "mercs2:discover": "node mercs2-specific-data/discovery/discover.mjs",
         "instructions:compress": "node scripts/instructions-codec.mjs compress",
         "instructions:decompress": "node scripts/instructions-codec.mjs decompress",
         "instructions:verify": "node scripts/instructions-codec.mjs verify .copilot-instructions.br.json .copilot-instructions.md",
