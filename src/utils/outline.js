@@ -14,7 +14,6 @@
  */
 
 import { ref } from 'vue';
-import { getCategoryColor, getCategoryInfo, getCategoryName } from './language-definition.js';
 
 let outlineProvider = null;
 
@@ -28,45 +27,39 @@ export function registerOutlineProvider(fn) {
     outlineRevision.value++;
 }
 
-// Generic fallback: group the graph's nodes by category, plus a Variables section.
+// A node is an entry point (an "event"/graph root) if it drives execution out but
+// takes none in — the natural place authoring starts, like a UE event node.
+function isEntryPoint(node) {
+    const hasExecOut = (node.outputs || []).some((o) => o && String(o.type).toLowerCase() === 'exec');
+    const hasExecIn = (node.inputs || []).some((i) => i && String(i.type).toLowerCase() === 'exec');
+    return hasExecOut && !hasExecIn;
+}
+
+// Generic fallback: the blueprint's FOUNDATIONAL PRIMITIVES (UE "My Blueprint"
+// style) — Events (entry points) and Variables — not every placed node. Placed
+// logic/action nodes belong on the canvas, not in this panel.
 function fallbackSections({ nodes = [], variables = [] } = {}) {
-    const byCat = new Map();
-    for (const node of nodes) {
-        const cat = node.category || (node.type ? String(node.type).toUpperCase() : 'OTHER');
-        if (!byCat.has(cat)) byCat.set(cat, []);
-        byCat.get(cat).push({
-            id: `n:${node.id}`,
-            label: node.name || node.nodeDefId || `Node ${node.id}`,
-            icon: getCategoryInfo(cat)?.icon,
-            color: getCategoryColor(cat),
-            nodeId: node.id
-        });
-    }
-    const sections = [...byCat.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([cat, items]) => ({
-            id: cat,
-            title: getCategoryName(cat),
-            icon: getCategoryInfo(cat)?.icon,
-            color: getCategoryColor(cat),
-            items
+    const events = nodes
+        .filter((n) => n.type !== 'variable' && isEntryPoint(n))
+        .map((n) => ({
+            id: `n:${n.id}`,
+            label: n.name || n.nodeDefId || `Node ${n.id}`,
+            icon: 'event',
+            color: 'red',
+            nodeId: n.id
         }));
 
-    if (variables.length) {
-        sections.push({
+    return [
+        { id: 'EVENTS', title: 'Events', hint: 'entry points', icon: 'event', color: 'red', addable: true, items: events },
+        {
             id: 'VARIABLES',
             title: 'Variables',
             icon: 'variable',
             color: 'purple',
-            items: variables.map((v) => ({
-                id: `v:${v.name}`,
-                label: v.name,
-                kind: v.type || 'mixed',
-                color: 'purple'
-            }))
-        });
-    }
-    return sections;
+            addable: true,
+            items: variables.map((v) => ({ id: `v:${v.name}`, label: v.name, kind: v.type || 'mixed', color: 'purple' }))
+        }
+    ];
 }
 
 /**

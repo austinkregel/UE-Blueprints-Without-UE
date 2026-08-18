@@ -120,7 +120,6 @@
                         kind: kindFn ? kindFn(n) : undefined
                     }));
 
-            const known = new Set(['MERCS2_MISSION', 'MERCS2_EVENT', 'MERCS2_OBJECTIVE']);
             const sections = [
                 {
                     id: 'SCRIPT',
@@ -150,31 +149,10 @@
                     items: variables.map((v) => ({ id: `v:${v.name}`, label: v.name, kind: v.type || 'mixed', color: 'purple' }))
                 }
             ];
-            for (const s of sections) if (!s.icon) s.icon = 'function';
             for (const s of sections) for (const it of s.items) if (!it.color) it.color = s.color;
 
-            // Remaining nodes (control flow, engine bindings, …) group under their
-            // own category — not one flat "Nodes" bucket.
-            const others = nodes.filter((n) => !known.has(n.category) && n.type !== 'variable');
-            const byCat = new Map();
-            for (const n of others) {
-                const cat = n.category || 'OTHER';
-                if (!byCat.has(cat)) byCat.set(cat, []);
-                byCat.get(cat).push(n);
-            }
-            for (const [cat, ns] of byCat) {
-                const info = api.getCategoryInfo ? api.getCategoryInfo(cat) : null;
-                const color = info?.color || 'slate';
-                sections.push({
-                    id: cat,
-                    title: info?.name || cat,
-                    icon: info?.icon || 'function',
-                    color,
-                    addable: true,
-                    addCategory: cat,
-                    items: ns.map((n) => ({ id: `n:${n.id}`, label: n.name || n.nodeDefId || `Node ${n.id}`, nodeId: n.id, color }))
-                });
-            }
+            // Only the mission's foundational primitives live here (like UE's My
+            // Blueprint panel). Placed logic/action nodes stay on the canvas.
             return sections;
         });
     });
