@@ -20,6 +20,13 @@
                 <p v-if="selectedNode.description" class="bp-desc">{{ selectedNode.description }}</p>
             </div>
 
+            <!-- Preview (domain-provided render, if any) -->
+            <div v-if="preview" class="bp-sec">
+                <span class="bp-sec-label mb-2 block">Preview</span>
+                <!-- eslint-disable-next-line vue/no-v-html -->
+                <div v-html="preview.html"></div>
+            </div>
+
             <!-- Parameters (edit each input's default value, live) -->
             <div v-if="paramInputs.length" class="bp-sec">
                 <span class="bp-sec-label mb-2 block">Parameters</span>
@@ -53,6 +60,18 @@
                     <span class="tgt" :class="{ none: !ex.connected }">
                         {{ ex.connected ? (ex.dir === 'in' ? '← ' : '→ ') + ex.target : 'unconnected' }}
                     </span>
+                </div>
+            </div>
+
+            <!-- Validation issues (built-in rules + domain validators) -->
+            <div v-if="issues.length" class="bp-sec">
+                <span class="bp-sec-label mb-2 block">Validation</span>
+                <div v-for="(iss, i) in issues" :key="i" class="bp-issue" :class="{ error: iss.level === 'error' }">
+                    <div class="ihead">
+                        <span class="ibolt">!</span>
+                        <span class="ititle">{{ iss.title }}</span>
+                    </div>
+                    <div v-if="iss.body" class="ibody">{{ iss.body }}</div>
                 </div>
             </div>
 
@@ -265,6 +284,7 @@
     import { addVariableNode } from '../utils/node-creation.js';
     import { getConnections } from '../utils/connection-manager.js';
     import { getNodeColor } from '../utils/node-colors.js';
+    import { getNodeIssues, getNodePreview } from '../utils/node-inspector.js';
 
     defineProps({ variables: { type: Array, default: () => [] } });
     const emit = defineEmits(['update-outputs']);
@@ -306,6 +326,10 @@
     });
 
     const advancedOpen = ref(false);
+
+    // Domain-extendable inspector slots.
+    const issues = computed(() => getNodeIssues(selectedNode.value, { connections: getConnections() }));
+    const preview = computed(() => getNodePreview(selectedNode.value));
 
     function stepParam(inp, dir) {
         const cur = Number(inp.defaultValue) || 0;
