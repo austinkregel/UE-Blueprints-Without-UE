@@ -245,7 +245,7 @@
                                 <option v-if="!typeOptions.includes(output.type)" :value="output.type">{{ output.type }}</option>
                             </select>
                             <input v-model="output.type" class="bp-input !h-7 !w-24" placeholder="type" />
-                            <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeOutput(localOutputs.indexOf(output))">✕</button>
+                            <button class="bp-btn !h-7 !px-2" title="Remove" @click="removeLocalOutput(localOutputs.indexOf(output))">✕</button>
                         </li>
                     </ul>
 
@@ -281,13 +281,12 @@
     import { updateNode, updateNodeIO } from '../utils/nodes-core.js';
     import { closeSettings, selectNode } from '../utils/node-selection.js';
     import { focusWorldPoint } from '../utils/viewport-utils.js';
+    import { updateNodeOutputs } from '../utils/system-node-utils.js';
     import { getConnections } from '../utils/connection-manager.js';
     import { getNodeColor } from '../utils/node-colors.js';
     import { getNodeIssues, getNodePreview } from '../utils/node-inspector.js';
     import { getCategoryInfo } from '../utils/language-definition.js';
     import NodeGlyph from './icons/NodeGlyph.vue';
-
-    const emit = defineEmits(['update-outputs']);
 
     const selectedNode = computed(() => nodes.value.find((n) => n.id === selectedNodeId.value) || null);
 
@@ -449,17 +448,21 @@
         localInputs.value.splice(i, 1);
     }
 
+    // Local IO-editor output removal (edits the draft; persisted on Save).
+    function removeLocalOutput(i) {
+        localOutputs.value.splice(i, 1);
+    }
+
+    // System-node dynamic outputs — mutate the live node immediately.
     function addOutput() {
-        const newOutput = { id: `output-${selectedNode.value.outputs.length + 1}`, name: `Output ${selectedNode.value.outputs.length + 1}` };
-        selectedNode.value.outputs.push(newOutput);
-        emit('update-outputs', selectedNode.value.id, selectedNode.value.outputs);
+        const current = selectedNode.value.outputs || [];
+        const newOutput = { id: `output-${current.length + 1}`, name: `Output ${current.length + 1}`, type: 'exec' };
+        updateNodeOutputs(selectedNode.value.id, [...current, newOutput]);
     }
 
     function removeOutput() {
-        if (selectedNode.value.outputs.length > 0) {
-            selectedNode.value.outputs.pop();
-            emit('update-outputs', selectedNode.value.id, selectedNode.value.outputs);
-        }
+        const current = selectedNode.value.outputs || [];
+        if (current.length > 0) updateNodeOutputs(selectedNode.value.id, current.slice(0, -1));
     }
 
     function save() {

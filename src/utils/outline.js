@@ -57,7 +57,10 @@ function fallbackSections({ nodes = [], variables = [] } = {}) {
             icon: 'variable',
             color: 'purple',
             addable: true,
-            items: variables.map((v) => ({ id: `v:${v.name}`, label: v.name, kind: v.type || 'mixed', color: 'purple' }))
+            items: variables.map((v) => {
+                const vn = nodes.find((n) => n.type === 'variable' && n.varName === v.name);
+                return { id: `v:${v.name}`, label: v.name, kind: v.type || 'mixed', color: 'purple', nodeId: vn ? vn.id : undefined };
+            })
         }
     ];
 }

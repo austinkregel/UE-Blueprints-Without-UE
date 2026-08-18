@@ -1,6 +1,7 @@
 import { nextTick, onBeforeUnmount, onMounted } from 'vue';
 import { ioPositions, log } from './state.js';
 import { registerAllIOForNode } from './io-utils.js';
+import { getConnections, removeConnection } from './connection-manager.js';
 
 export function construction(emit, props, nodeRef) {
     // Helper to get IO elements for a node
@@ -79,13 +80,15 @@ export function construction(emit, props, nodeRef) {
 
     function onIOContextMenu(type, io, event) {
         event.preventDefault();
-        log('Opening IO context menu', { type, io, nodeId: props.node.id });
-        emit('io-context-menu', {
-            nodeId: props.node.id,
-            type,
-            ioName: io.name || io,
-            event
-        });
+        const nodeId = props.node.id;
+        const ioName = io.name || io;
+        // Right-click a pin breaks the connection(s) on it (a common node-editor gesture).
+        for (const c of [...getConnections()]) {
+            const match =
+                type === 'input' ? c.to?.nodeId === nodeId && c.to?.input === ioName : c.from?.nodeId === nodeId && c.from?.output === ioName;
+            if (match) removeConnection(c);
+        }
+        emit('io-context-menu', { nodeId, type, ioName, event });
     }
 
     function getConnectionPoints(conn) {

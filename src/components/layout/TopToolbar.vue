@@ -21,7 +21,7 @@
 
         <!-- Breadcrumb (static placeholder — no file concept wired yet) -->
         <div class="bp-breadcrumb">
-            <span class="file">graph.bp</span>
+            <span class="file">{{ workspaceName }}</span>
             <span aria-hidden="true">›</span>
             <span class="cur">editor</span>
         </div>
@@ -154,25 +154,55 @@
                 Run
             </button>
 
-            <!-- Settings icon -->
-            <button class="bp-iconbtn" type="button" aria-label="Settings">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <circle cx="12" cy="12" r="3" />
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.14.31.22.65.22 1s-.08.69-.22 1z"
-                    />
-                </svg>
-            </button>
+            <!-- Settings menu -->
+            <DropdownMenu button-class="bp-iconbtn" width-class="w-52" align="right">
+                <template #trigger>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.14.31.22.65.22 1s-.08.69-.22 1z"
+                        />
+                    </svg>
+                </template>
+                <MenuItem v-slot="{ active }">
+                    <button
+                        :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
+                        class="w-full px-3 py-1.5 text-left text-sm"
+                        @click="$emit('reset-viewport')"
+                    >
+                        Reset View
+                    </button>
+                </MenuItem>
+                <MenuItem v-slot="{ active }">
+                    <button
+                        :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
+                        class="w-full px-3 py-1.5 text-left text-sm"
+                        @click="$emit('reset-layout')"
+                    >
+                        Reset Panel Sizes
+                    </button>
+                </MenuItem>
+                <MenuItem v-slot="{ active }">
+                    <button
+                        :class="active ? 'bg-zinc-100 dark:bg-zinc-700' : ''"
+                        class="w-full px-3 py-1.5 text-left text-sm"
+                        @click="$emit('toggle-debug')"
+                    >
+                        {{ debugMode ? 'Hide' : 'Show' }} Debug Overlays
+                    </button>
+                </MenuItem>
+            </DropdownMenu>
         </div>
     </div>
 </template>
 
 <script setup>
-    import { defineAsyncComponent, defineEmits, defineProps } from 'vue';
+    import { computed, defineAsyncComponent } from 'vue';
     import { MenuItem } from '@headlessui/vue';
     import DropdownMenu from './DropdownMenu.vue';
+    import { activeWorkspace } from '../../utils/state.js';
 
     defineProps({
         showNodePalette: { type: Boolean, default: true },
@@ -186,6 +216,7 @@
         'toggle-palette',
         'toggle-debug',
         'reset-viewport',
+        'reset-layout',
         'run-graph',
         'stop-execution',
         'clear-results',
@@ -194,6 +225,9 @@
         'add-node-from-dropdown',
         'open-project'
     ]);
+
+    // Breadcrumb reflects the active workspace.
+    const workspaceName = computed(() => activeWorkspace.value?.name || 'untitled');
 
     const NodeDropdown = defineAsyncComponent(() => import('../NodeDropdown.vue'));
 

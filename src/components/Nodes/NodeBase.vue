@@ -89,6 +89,7 @@
     import { getCategoryInfo } from '../../utils/language-definition.js';
     import { getNodeIssues } from '../../utils/node-inspector.js';
     import { getConnections } from '../../utils/connection-manager.js';
+    import { updateNodeOutputs } from '../../utils/system-node-utils.js';
     import NodeGlyph from '../icons/NodeGlyph.vue';
     import { getNodeExecutionStatus } from '../../utils/graph-executor.js';
     import { screenToWorld } from '../../utils/viewport-utils.js';
@@ -298,14 +299,13 @@
     function addDynamicOutput() {
         const current = props.node.outputs || [];
         const newOutput = { name: `Output ${current.length + 1}`, type: 'exec' };
-        // Emit a fresh array to the parent instead of mutating the prop directly.
-        emit('update-outputs', [...current, newOutput]);
+        updateNodeOutputs(props.node.id, [...current, newOutput]);
     }
 
     function removeDynamicOutput() {
         const current = props.node.outputs || [];
         if (current.length > 0) {
-            emit('update-outputs', current.slice(0, -1));
+            updateNodeOutputs(props.node.id, current.slice(0, -1));
         }
     }
 </script>

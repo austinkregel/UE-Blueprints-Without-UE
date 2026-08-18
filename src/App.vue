@@ -11,6 +11,7 @@
                 @toggle-palette="showNodePalette = !showNodePalette"
                 @toggle-debug="debugMode = !debugMode"
                 @reset-viewport="resetViewport"
+                @reset-layout="resetLayout"
                 @run-graph="executeGraph"
                 @stop-execution="stopExecution"
                 @clear-results="clearExecutionResults"
@@ -74,7 +75,6 @@
         <ContextMenu
             :position="contextMenuPosition?.screen || contextMenuPosition"
             :visible="contextMenuVisible"
-            @action="handleContextMenuAction"
             @close="closeContextMenu"
             @node-select="onContextMenuNodeSelect"
         />
@@ -105,14 +105,13 @@
     import NodeSettings from './components/NodeSettings.vue';
 
     import { activeWorkspace, createWorkspace, debugMode, nodes, workspaceState } from './utils/state.js';
-    import { addNode, deleteNode } from './utils/nodes-core.js';
+    import { deleteNode } from './utils/nodes-core.js';
     import { addNodeFromDefinition } from './utils/node-creation.js';
     import { getConnections, removeConnection } from './utils/connection-manager.js';
     import { getNextNodeId } from './utils/id-utils.js';
     import { selectedNodeId, selectNode, closeSettings } from './utils/node-selection.js';
     import { attachPendingConnectionToNode, pendingConnectionRequest } from './utils/pending-connection.js';
-    import { addActionNode } from './utils/action-node-utils.js';
-    import { addSystemNode, updateNodeOutputs } from './utils/system-node-utils.js';
+    import { updateNodeOutputs } from './utils/system-node-utils.js';
     import { canvasOffset, screenToWorld, viewport, worldToScreen } from './utils/viewport-utils.js';
     import {
         addEntryPoint,
@@ -158,6 +157,11 @@
         window.addEventListener('mouseup', onUp);
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
+    }
+
+    function resetLayout() {
+        leftWidth.value = 224;
+        rightWidth.value = 344;
     }
 
     // The outline's per-section "+" opens the Add Node picker.
@@ -213,13 +217,33 @@
     // Clone a node (fresh id, offset a little so it's visibly distinct) so the
     // user can stamp out copies without re-wiring from the palette. Connections
     // are intentionally not copied — the duplicate starts unconnected.
-    function duplicateNode(node) {
+    const nodeClipboard = ref(null);
+
+    function cloneNodeAt(node, dx, dy) {
         const clone = JSON.parse(JSON.stringify(node));
         clone.id = getNextNodeId(node.nodeDefId || node.type || 'node');
-        clone.x = (node.x ?? 0) + 40;
-        clone.y = (node.y ?? 0) + 40;
+        clone.x = (node.x ?? 0) + dx;
+        clone.y = (node.y ?? 0) + dy;
         nodes.value.push(clone);
         selectNode(clone);
+        return clone;
+    }
+
+    function duplicateNode(node) {
+        cloneNodeAt(node, 40, 40);
+    }
+
+    function copyNode(node) {
+        nodeClipboard.value = JSON.parse(JSON.stringify(node));
+        try {
+            navigator.clipboard?.writeText(JSON.stringify(nodeClipboard.value));
+        } catch {
+            /* clipboard may be unavailable; the in-app clipboard still works */
+        }
+    }
+
+    function pasteNode() {
+        if (nodeClipboard.value) cloneNodeAt(nodeClipboard.value, 30, 30);
     }
 
     // Remove every connection touching this node (either endpoint).
@@ -241,7 +265,7 @@
                 duplicateNode(node);
                 break;
             case 'copy':
-                // TODO: Implement copy to clipboard
+                copyNode(node);
                 break;
             case 'edit':
                 selectNode(node);
@@ -257,35 +281,6 @@
                 break;
             case 'execute-from-here':
                 executeFromEntryPoint(node.id).catch(() => {});
-                break;
-            default:
-                break;
-        }
-    }
-
-    function handleContextMenuAction(actionData) {
-        const { type } = actionData;
-        const worldPosition = contextMenuPosition.value.world || contextMenuPosition.value;
-        // Use the mouse world position directly for node spawn
-        const spawnPosition = { x: worldPosition.x, y: worldPosition.y };
-        switch (type) {
-            case 'addNode': {
-                const newNode = addNode(spawnPosition);
-                if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode);
-                break;
-            }
-            case 'addActionNode': {
-                const newNode = addActionNode(spawnPosition);
-                if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode);
-                break;
-            }
-            case 'addSystemNode': {
-                const newNode = addSystemNode('print', spawnPosition);
-                if (pendingConnectionRequest.value) attachPendingConnectionToNode(newNode);
-                break;
-            }
-            case 'showNodeDropdown':
-                openNodeBrowser(spawnPosition);
                 break;
             default:
                 break;
@@ -311,11 +306,11 @@
     // Create a simple test graph for execution testing
     function createTestGraph() {
         nodes.value = [];
-        const startNode = addNodeFromDefinition('on_start', 100, 100);
-        const printNode1 = addNodeFromDefinition('print', 350, 100);
-        const emitEventNode = addNodeFromDefinition('emit_event', 600, 100);
-        const eventListenerNode = addNodeFromDefinition('on_event', 350, 250);
-        const printNode2 = addNodeFromDefinition('print', 600, 250);
+        const startNode = addNodeFromDefinition('on_start', { x: 100, y: 100 });
+        const printNode1 = addNodeFromDefinition('print', { x: 350, y: 100 });
+        const emitEventNode = addNodeFromDefinition('emit_event', { x: 600, y: 100 });
+        const eventListenerNode = addNodeFromDefinition('on_event', { x: 350, y: 250 });
+        const printNode2 = addNodeFromDefinition('print', { x: 600, y: 250 });
         if (printNode1.inputs) {
             const valueInput = printNode1.inputs.find((input) => input.name === 'value' || input.name === 'text');
             if (valueInput) valueInput.defaultValue = 'Starting execution...';
@@ -401,15 +396,42 @@
 
     // Keybinding system for node actions
     function handleGlobalKeydown(event) {
+        // Don't hijack keys while typing in a field.
+        const tag = (event.target?.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || event.target?.isContentEditable) return;
+
+        const mod = event.metaKey || event.ctrlKey;
+        // Copy the selected node.
+        if (mod && (event.key === 'c' || event.key === 'C')) {
+            const n = nodes.value.find((x) => x.id === selectedNodeId.value);
+            if (n) {
+                copyNode(n);
+                event.preventDefault();
+            }
+            return;
+        }
+        // Paste from the clipboard (works with no current selection).
+        if (mod && (event.key === 'v' || event.key === 'V')) {
+            pasteNode();
+            event.preventDefault();
+            return;
+        }
+        // Duplicate the selected node.
+        if (mod && (event.key === 'd' || event.key === 'D')) {
+            const n = nodes.value.find((x) => x.id === selectedNodeId.value);
+            if (n) {
+                duplicateNode(n);
+                event.preventDefault();
+            }
+            return;
+        }
         if (!selectedNodeId.value) return;
         // Delete or Backspace: delete selected node
         if (event.key === 'Delete' || event.key === 'Backspace') {
             deleteNode(selectedNodeId.value);
-            // Optionally clear selection after delete
             selectedNodeId.value = null;
             event.preventDefault();
         }
-        // Add more keybindings here as needed
     }
 
     onMounted(() => {
