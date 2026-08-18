@@ -529,6 +529,121 @@
     gap: 16px;
 }
 
+/* content browser — a persistent dock below the status bar. The engine renders
+   the folder/file tree; a domain fills it (what a folder means, what a document
+   is). */
+.bp-tray {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel-2);
+    border-top: 1px solid var(--line);
+}
+.bp-tray-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 30px;
+    padding: 0 12px;
+    flex: none;
+}
+.bp-tray:not(.collapsed) .bp-tray-head {
+    border-bottom: 1px solid var(--line);
+}
+.bp-tray-toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-3);
+    padding: 0;
+}
+.bp-tray-toggle:hover {
+    color: var(--ink);
+}
+.bp-tray .tw {
+    display: inline-block;
+    transition: transform 0.12s ease;
+    color: var(--ink-4);
+    font-size: 10px;
+}
+.bp-tray-count {
+    font-size: 10px;
+    color: var(--ink-4);
+    font-family: var(--font-mono, monospace);
+    min-width: 18px;
+    text-align: center;
+}
+.bp-tray-filter {
+    margin-left: auto;
+    max-width: 240px;
+    flex: 1;
+}
+.bp-tray-body {
+    height: 190px;
+    overflow-y: auto;
+    padding: 6px 6px 8px;
+}
+.bp-tray-empty {
+    padding: 22px 14px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink-3);
+}
+.bp-trow {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 25px;
+    padding-right: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--ink-2);
+    font-size: 12px;
+}
+.bp-trow:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ink);
+}
+.bp-trow.file.sel {
+    background: rgba(30, 155, 255, 0.14);
+    color: var(--ink);
+    box-shadow: inset 2px 0 0 var(--accent);
+}
+.bp-trow .ic {
+    width: 14px;
+    height: 14px;
+}
+.bp-trow.folder .ic {
+    color: var(--ink-4);
+}
+.bp-trow .nm {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.bp-trow .ct {
+    flex: none;
+    font-size: 10px;
+    color: var(--ink-4);
+    font-family: var(--font-mono, monospace);
+}
+.bp-trow .kd {
+    flex: none;
+    font-size: 10px;
+    color: var(--ink-4);
+    font-family: var(--font-mono, monospace);
+}
+.bp-trow .pth {
+    flex: none;
+    font-size: 10px;
+    color: var(--ink-4);
+}
+
 /* getter pill — a compact pure/value node */
 .bp-getter {
     display: inline-flex;

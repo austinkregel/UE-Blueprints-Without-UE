@@ -36,6 +36,11 @@ const PLUGIN_SRC = join(__dirname, '..', 'plugin', 'mercs2-plugin.js');
 const OUT_PLUGIN = join(REPO_ROOT, 'public/plugins/mercs2.js');
 const OUT_MANIFEST = join(REPO_ROOT, 'public/plugins.json');
 
+// Real Lua corpus — the actual mission/contract scripts. The content browser
+// lists these as openable documents; the plugin hydrates a starter graph per entry.
+const CORPUS_DIR = join(MERCS2_ROOT, 'crates/mercs2_script/corpus/mercs2-luacd/src');
+const OUT_CONTENT = join(REPO_ROOT, 'public/mercs2.content.json');
+
 // ---------------------------------------------------------------------------
 // Type mapping: mercs2/Rust argument types -> generic engine pin types.
 // The engine's type system: int, float, string, bool, object, array, mixed, exec.
@@ -498,6 +503,97 @@ function buildMissionNodes() {
 }
 
 // ---------------------------------------------------------------------------
+// §4 content catalog — mine the real Lua corpus into openable documents.
+//   Folders come from the corpus layout: the top dir is the "residency" band
+//   (resident / vz / shell), the second level groups by faction+type. Files are
+//   the contract/job/mission scripts. Each entry carries the class it inherits
+//   and the lifecycle hooks it overrides, so the plugin can build a starter graph.
+// ---------------------------------------------------------------------------
+const RESIDENCY_LABELS = { resident: 'Resident', vz: 'Venezuela', shell: 'Shell' };
+const FACTION_LABELS = {
+    pmc: 'PMC',
+    oil: 'Oil',
+    chi: 'Chinese',
+    gur: 'Guerrillas',
+    all: 'Allies',
+    pir: 'Pirates',
+    mec: 'Mercs',
+    jet: 'Jets',
+    vza: 'Venezuela'
+};
+const LIFECYCLE_HOOKS = ['PreLoadAssets', 'LoadAssets', 'Activated', 'Complete', 'Cancel', 'Cleanup'];
+
+function kindFromClass(cls) {
+    return cls.replace(/^MrxTask/, '').replace(/^Mrx/, '') || 'Script';
+}
+function styleForKind(kind) {
+    if (/Contract/.test(kind)) return { icon: 'mission', color: 'violet' };
+    if (/Job/.test(kind) || /Objective/.test(kind)) return { icon: 'objective', color: 'amber' };
+    if (/Tutorial/.test(kind)) return { icon: 'flow', color: 'blue' };
+    if (/Support/.test(kind)) return { icon: 'object', color: 'slate' };
+    return { icon: 'mission', color: 'violet' };
+}
+function groupFor(base, kind) {
+    const m = /^([a-z]+?)(con|job)\d/.exec(base);
+    if (m && FACTION_LABELS[m[1]]) return `${FACTION_LABELS[m[1]]} ${m[2] === 'job' ? 'Jobs' : 'Contracts'}`;
+    if (/Tutorial/.test(kind)) return 'Tutorials';
+    if (/Support/.test(kind)) return 'Support';
+    if (/Objective/.test(kind)) return 'Objectives';
+    return 'Other';
+}
+function niceName(base, kind) {
+    const m = /^([a-z]+?)(con|job)(\d+)$/.exec(base);
+    if (m && FACTION_LABELS[m[1]]) return `${FACTION_LABELS[m[1]]} ${m[2] === 'job' ? 'Job' : 'Contract'} ${m[3]}`;
+    return `${base} (${kind})`;
+}
+
+function buildContentCatalog() {
+    if (!existsSync(CORPUS_DIR)) {
+        console.warn(`[mercs2:discover] corpus not found at ${CORPUS_DIR} — content catalog will be empty.`);
+        return { entries: [] };
+    }
+    const entries = [];
+    for (const dir of readdirSync(CORPUS_DIR)) {
+        const abs = join(CORPUS_DIR, dir);
+        let files;
+        try {
+            files = readdirSync(abs);
+        } catch {
+            continue; // not a directory
+        }
+        const residency = RESIDENCY_LABELS[dir] || dir.charAt(0).toUpperCase() + dir.slice(1);
+        for (const file of files) {
+            if (!file.endsWith('.lua')) continue;
+            let src;
+            try {
+                src = readFileSync(join(abs, file), 'utf8');
+            } catch {
+                continue;
+            }
+            const inh = /inherit\("([^"]+)"\)/.exec(src);
+            if (!inh || !/^Mrx/.test(inh[1])) continue; // only task/mission scripts are openable graphs
+            const className = inh[1];
+            const base = file.replace(/\.lua$/, '');
+            const kind = kindFromClass(className);
+            const hooks = LIFECYCLE_HOOKS.filter((h) => new RegExp(`function\\s+${h}\\s*\\(`).test(src));
+            const style = styleForKind(kind);
+            entries.push({
+                id: `${dir}/${base}`,
+                name: niceName(base, kind),
+                path: [residency, groupFor(base, kind)],
+                className,
+                hooks,
+                icon: style.icon,
+                color: style.color,
+                meta: { kind }
+            });
+        }
+    }
+    entries.sort((a, b) => a.id.localeCompare(b.id));
+    return { entries };
+}
+
+// ---------------------------------------------------------------------------
 // Assemble + write
 // ---------------------------------------------------------------------------
 function mergeSpecs(...specs) {
@@ -544,6 +640,10 @@ function main() {
     writeFileSync(OUT_PLUGIN, readFileSync(PLUGIN_SRC, 'utf8'));
     writeFileSync(OUT_MANIFEST, JSON.stringify(['/plugins/mercs2.js'], null, 2) + '\n');
 
+    // Content catalog — the openable documents the content browser lists.
+    const content = buildContentCatalog();
+    writeFileSync(OUT_CONTENT, JSON.stringify(content, null, 2) + '\n');
+
     const typedBindingPins = Object.values(bindingNodes).reduce(
         (n, cat) => n + Object.values(cat).filter((d) => d.inputs.some((p) => p.type !== 'exec')).length,
         0
@@ -555,6 +655,7 @@ function main() {
     console.log(`[mercs2:discover] binding nodes with typed arg pins (from Rust): ${typedBindingPins}`);
     console.log(`[mercs2:discover] wrote ${OUT_CANONICAL}`);
     console.log(`[mercs2:discover] wrote ${OUT_SERVED}`);
+    console.log(`[mercs2:discover] content entries: ${content.entries.length} -> ${OUT_CONTENT}`);
 }
 
 main();

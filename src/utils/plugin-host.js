@@ -12,6 +12,8 @@ import { getCategoryInfo, registerExtraNodeCategories, registerExtraNodeDefiniti
 import { registerNodePreviewProvider, registerNodeValidator } from './node-inspector.js';
 import { registerOutlineProvider } from './outline.js';
 import { buildGraphIR, registerCodegenTarget } from './codegen.js';
+import { registerContentSource } from './content-browser.js';
+import { createNodeFromDefinition } from './node-factory.js';
 
 // The surface a plugin receives. Generic registration hooks + read-only lookups.
 const PLUGIN_API = Object.freeze({
@@ -21,8 +23,13 @@ const PLUGIN_API = Object.freeze({
     registerNodePreviewProvider,
     registerOutlineProvider,
     registerCodegenTarget,
+    registerContentSource,
     getCategoryInfo,
-    buildGraphIR
+    buildGraphIR,
+    // Build a fully-formed node object from a registered definition (id, pins,
+    // position) WITHOUT adding it to the graph — for a content source that
+    // hydrates a document's starter graph on open.
+    createNode: createNodeFromDefinition
 });
 
 // Expose the global a plugin bundle calls. Idempotent.

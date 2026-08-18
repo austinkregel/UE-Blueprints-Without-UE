@@ -72,6 +72,9 @@
             </span>
         </footer>
 
+        <!-- Content browser (persistent dock below the status bar) -->
+        <ContentBrowser :active-id="openEntryId" @open-entry="openContentEntry" />
+
         <!-- Floating Menus/Modals outside canvas -->
         <ContextMenu
             :position="contextMenuPosition?.screen || contextMenuPosition"
@@ -104,6 +107,7 @@
     import NodeCanvas from './components/canvas/NodeCanvas.vue';
     // New panels
     import ProjectExplorer from './components/panels/ProjectExplorer.vue';
+    import ContentBrowser from './components/panels/ContentBrowser.vue';
     import NodeSettings from './components/NodeSettings.vue';
 
     import { activeWorkspace, createWorkspace, debugMode, nodes, workspaceState } from './utils/state.js';
@@ -129,6 +133,7 @@
     import { pickDirectory, readDirectoryTree } from './utils/file-tree.js';
     import { getWorkspaceIssueCount } from './utils/node-inspector.js';
     import { getCodegenTargets, runCodegen } from './utils/codegen.js';
+    import { resolveEntryGraph } from './utils/content-browser.js';
     import CodeOutput from './components/CodeOutput.vue';
 
     const contextMenuVisible = ref(false);
@@ -141,6 +146,32 @@
     // UI State
     const showNodePalette = ref(false);
     const showEntryPointManager = ref(false);
+    // The content-browser entry currently loaded into the active workspace.
+    const openEntryId = ref(null);
+
+    // Open a content-browser entry: hydrate its graph and load it into the active
+    // workspace (replacing what's there). Entries are documents, not files, so
+    // "open" swaps the whole graph, name included.
+    function openContentEntry(entry) {
+        const graph = resolveEntryGraph(entry);
+        if (!graph) return;
+        let ws = activeWorkspace.value;
+        if (!ws) {
+            createWorkspace(Date.now(), { name: graph.name, nodes: graph.nodes, connections: graph.connections });
+            ws = activeWorkspace.value;
+        } else {
+            ws.name = graph.name;
+            ws.nodes = graph.nodes;
+            ws.connections = graph.connections;
+            ws.ioPositions = {};
+            ws.selectedNodeId = null;
+            ws.draggingConnection = null;
+        }
+        nodes.value = ws.nodes;
+        selectedNodeId.value = null;
+        openEntryId.value = entry.id;
+        nextTick(resetViewport);
+    }
 
     // Resizable side panels.
     const leftWidth = ref(224);

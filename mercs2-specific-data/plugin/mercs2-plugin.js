@@ -112,6 +112,52 @@
         return lines.join('\n').trimEnd() + '\n';
     }
 
+    // ---- Content browser: hydrate a starter graph per corpus document ----
+    // The catalog (public/mercs2.content.json) is mined from the real Lua corpus
+    // by discovery. Each record opens into a starter graph: the mission root for
+    // the class it inherits, plus a node for each lifecycle hook it overrides.
+    function rootDefIdFor(className) {
+        if (/ContractOutpost/.test(className)) return 'mercs2.Root.ContractOutpost';
+        if (/Contract/.test(className)) return 'mercs2.Root.Contract';
+        if (/Job/.test(className)) return 'mercs2.Root.Job';
+        return 'mercs2.Root.Mission';
+    }
+    function buildDocumentGraph(api, rec) {
+        const nodes = [];
+        const root = api.createNode(rootDefIdFor(rec.className || ''), 60, 60);
+        if (root) nodes.push(root);
+        let y = 260;
+        for (const hook of rec.hooks || []) {
+            const node = api.createNode('mercs2.Lifecycle.' + hook, 60, y);
+            if (node) {
+                nodes.push(node);
+                y += 150;
+            }
+        }
+        return { name: rec.name, nodes, connections: [] };
+    }
+    async function loadContent(api) {
+        if (typeof fetch === 'undefined') return;
+        try {
+            const res = await fetch('/mercs2.content.json');
+            if (!res.ok) return;
+            const cat = await res.json();
+            const records = Array.isArray(cat.entries) ? cat.entries : [];
+            const entries = records.map((rec) => ({
+                id: rec.id,
+                name: rec.name,
+                path: rec.path,
+                icon: rec.icon,
+                color: rec.color,
+                meta: rec.meta,
+                open: () => buildDocumentGraph(api, rec)
+            }));
+            api.registerContentSource(() => entries);
+        } catch (e) {
+            console.warn('[mercs2] content catalog load failed', e);
+        }
+    }
+
     // Inject the mercs2 HUD styles once (kept out of the engine's theme.css).
     function injectStyles() {
         if (document.getElementById('mercs2-plugin-styles')) return;
@@ -257,5 +303,8 @@
             code: generateLua(graph, api.buildGraphIR(graph)),
             language: 'lua'
         }));
+
+        // Content browser: list the corpus's documents (async — fetch the catalog).
+        loadContent(api);
     });
 })();
