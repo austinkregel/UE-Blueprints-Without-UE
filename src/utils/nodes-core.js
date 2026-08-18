@@ -21,6 +21,18 @@ export function addNode({ x = 200, y = 200, id, type, nodeDefId, ...args } = {})
     return node;
 }
 
+/**
+ * Deep-clone a node with a new id, offset by (dx, dy). Pure — the returned node
+ * shares no references with the original (safe to mutate independently).
+ */
+export function cloneNode(node, newId, dx = 0, dy = 0) {
+    const clone = JSON.parse(JSON.stringify(node));
+    clone.id = newId;
+    clone.x = (node.x ?? 0) + dx;
+    clone.y = (node.y ?? 0) + dy;
+    return clone;
+}
+
 export function moveNode({ id, x, y }) {
     const node = nodes.value.find((n) => n.id === id);
     if (node) {

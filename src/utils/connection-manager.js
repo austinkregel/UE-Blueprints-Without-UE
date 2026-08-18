@@ -52,6 +52,15 @@ export function addConnection({ from, to }) {
     activeWorkspace.value.connections.push({ from, to });
 }
 
+/**
+ * Connections touching a given pin (an input on the node, or an output). Pure.
+ */
+export function connectionsOnPin(connections, nodeId, ioName, ioType) {
+    return (connections || []).filter((c) =>
+        ioType === 'input' ? c.to?.nodeId === nodeId && c.to?.input === ioName : c.from?.nodeId === nodeId && c.from?.output === ioName
+    );
+}
+
 export function removeConnection({ from, to }) {
     const key = connectionKey({ from, to });
     activeWorkspace.value.connections = activeWorkspace.value.connections.filter((conn) => connectionKey(conn) !== key);

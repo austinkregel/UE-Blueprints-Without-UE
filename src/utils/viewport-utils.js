@@ -21,14 +21,20 @@ export function setCanvasSize(w, h) {
 }
 
 /**
+ * The viewport offset that centres a world point in a w×h canvas at a given zoom.
+ * Pure.
+ */
+export function centerOffset(worldX, worldY, zoom, w, h) {
+    return { x: w / 2 - worldX * zoom, y: h / 2 - worldY * zoom };
+}
+
+/**
  * Pan the viewport so a world point sits at the centre of the visible canvas.
  */
 export function focusWorldPoint(worldX, worldY) {
-    const z = viewport.value.zoom;
-    const w = canvasSize.value.w || 800;
-    const h = canvasSize.value.h || 600;
-    viewport.value.x = w / 2 - worldX * z;
-    viewport.value.y = h / 2 - worldY * z;
+    const { x, y } = centerOffset(worldX, worldY, viewport.value.zoom, canvasSize.value.w || 800, canvasSize.value.h || 600);
+    viewport.value.x = x;
+    viewport.value.y = y;
 }
 
 // Panning state

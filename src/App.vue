@@ -107,7 +107,7 @@
     import NodeSettings from './components/NodeSettings.vue';
 
     import { activeWorkspace, createWorkspace, debugMode, nodes, workspaceState } from './utils/state.js';
-    import { deleteNode } from './utils/nodes-core.js';
+    import { cloneNode, deleteNode } from './utils/nodes-core.js';
     import { addNodeFromDefinition } from './utils/node-creation.js';
     import { getConnections, removeConnection } from './utils/connection-manager.js';
     import { getNextNodeId } from './utils/id-utils.js';
@@ -245,10 +245,7 @@
     const nodeClipboard = ref(null);
 
     function cloneNodeAt(node, dx, dy) {
-        const clone = JSON.parse(JSON.stringify(node));
-        clone.id = getNextNodeId(node.nodeDefId || node.type || 'node');
-        clone.x = (node.x ?? 0) + dx;
-        clone.y = (node.y ?? 0) + dy;
+        const clone = cloneNode(node, getNextNodeId(node.nodeDefId || node.type || 'node'), dx, dy);
         nodes.value.push(clone);
         selectNode(clone);
         return clone;

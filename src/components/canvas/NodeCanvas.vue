@@ -156,6 +156,7 @@
         viewport
     } from '../../utils/viewport-utils.js';
     import { getNodeColor } from '../../utils/node-colors.js';
+    import { computeMinimapLayout, minimapPointToWorld } from '../../utils/minimap.js';
 
     defineProps({
         debugMode: { type: Boolean, default: false }
@@ -241,41 +242,24 @@
     const NODE_H = 120;
 
     const minimap = computed(() => {
-        const ns = nodes.value;
         const w = canvasSize.value.w || 800;
         const h = canvasSize.value.h || 600;
         const off = canvasOffset.value;
-        // Current visible world region (top-left / bottom-right).
         const tl = screenToWorld(off.x, off.y);
         const br = screenToWorld(off.x + w, off.y + h);
-        let minX = Math.min(tl.x, br.x);
-        let minY = Math.min(tl.y, br.y);
-        let maxX = Math.max(tl.x, br.x);
-        let maxY = Math.max(tl.y, br.y);
-        for (const n of ns) {
-            minX = Math.min(minX, n.x);
-            minY = Math.min(minY, n.y);
-            maxX = Math.max(maxX, n.x + NODE_W);
-            maxY = Math.max(maxY, n.y + NODE_H);
-        }
-        const bw = Math.max(1, maxX - minX);
-        const bh = Math.max(1, maxY - minY);
-        const scale = Math.min((MM.w - MM.pad * 2) / bw, (MM.h - MM.pad * 2) / bh);
-        const map = (wx, wy) => ({ x: MM.pad + (wx - minX) * scale, y: MM.pad + (wy - minY) * scale });
-        const blips = ns.map((n) => ({ id: n.id, ...map(n.x, n.y), color: getNodeColor(n.type, n.nodeDefId) || 'blue' }));
-        const v1 = map(tl.x, tl.y);
-        const v2 = map(br.x, br.y);
-        const view = { x: Math.min(v1.x, v2.x), y: Math.min(v1.y, v2.y), w: Math.abs(v2.x - v1.x), h: Math.abs(v2.y - v1.y) };
-        return { blips, view, minX, minY, scale };
+        const layout = computeMinimapLayout({ nodes: nodes.value, tl, br, mm: { ...MM, nodeW: NODE_W, nodeH: NODE_H } });
+        const byId = new Map(nodes.value.map((n) => [n.id, n]));
+        const blips = layout.blips.map((b) => {
+            const n = byId.get(b.id);
+            return { ...b, color: getNodeColor(n?.type, n?.nodeDefId) || 'blue' };
+        });
+        return { ...layout, blips };
     });
 
     function minimapClick(e) {
         const rect = e.currentTarget.getBoundingClientRect();
-        const m = minimap.value;
-        if (!m.scale) return;
-        const wx = m.minX + (e.clientX - rect.left - MM.pad) / m.scale;
-        const wy = m.minY + (e.clientY - rect.top - MM.pad) / m.scale;
-        focusWorldPoint(wx, wy);
+        const wp = minimapPointToWorld(e.clientX - rect.left, e.clientY - rect.top, minimap.value, MM.pad);
+        focusWorldPoint(wp.x, wp.y);
     }
 
     function onWheel(event) {

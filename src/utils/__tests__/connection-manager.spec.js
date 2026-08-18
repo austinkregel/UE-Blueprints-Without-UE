@@ -1,6 +1,24 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { activeWorkspace, createWorkspace, workspaceState } from '../state.js';
-import { addConnection, getConnections, removeConnection } from '../connection-manager.js';
+import { addConnection, connectionsOnPin, getConnections, removeConnection } from '../connection-manager.js';
+
+describe('connectionsOnPin', () => {
+    const conns = [
+        { from: { nodeId: 1, output: 'out' }, to: { nodeId: 2, input: 'a' } },
+        { from: { nodeId: 3, output: 'x' }, to: { nodeId: 2, input: 'a' } },
+        { from: { nodeId: 2, output: 'res' }, to: { nodeId: 4, input: 'b' } }
+    ];
+    it('finds every connection into an input pin', () => {
+        expect(connectionsOnPin(conns, 2, 'a', 'input')).toHaveLength(2);
+    });
+    it('finds connections from an output pin', () => {
+        expect(connectionsOnPin(conns, 2, 'res', 'output')).toHaveLength(1);
+    });
+    it('returns [] for an unconnected pin or a missing list', () => {
+        expect(connectionsOnPin(conns, 9, 'z', 'input')).toEqual([]);
+        expect(connectionsOnPin(undefined, 1, 'a', 'input')).toEqual([]);
+    });
+});
 
 function makeNode(id, inputs, outputs) {
     return { id, inputs, outputs };
