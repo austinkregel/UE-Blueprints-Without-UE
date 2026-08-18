@@ -51,7 +51,7 @@
 
             <!-- Inspector (the primary right panel) -->
             <div class="bp-panel right w-86 shrink-0 overflow-y-auto">
-                <NodeSettings :variables="currentVariables" />
+                <NodeSettings />
             </div>
         </div>
 
@@ -136,23 +136,6 @@
     const showEntryPointManager = ref(false);
 
     const projectTree = ref(null);
-    const currentVariables = computed(() => {
-        const seen = new Set();
-        const list = [];
-        for (const n of nodes.value) {
-            if (n.type === 'variable' && n.varName) {
-                const name = n.varName;
-                const type = n.varType || 'mixed';
-                const key = `${name}|${type}`;
-                if (!seen.has(key)) {
-                    seen.add(key);
-                    list.push({ name, type });
-                }
-            }
-        }
-        return list;
-    });
-
     // Total validation issues across the graph (status bar).
     const issueCount = computed(() => getWorkspaceIssueCount(nodes.value, { connections: getConnections() }));
 

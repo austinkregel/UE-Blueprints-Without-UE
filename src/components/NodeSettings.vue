@@ -269,46 +269,8 @@
             </div>
         </div>
 
-        <!-- Variables List Section -->
-        <div :class="{ 'mt-2': !!selectedNode }" class="flex items-center gap-1 border-t border-[var(--line)] px-2 py-2">
-            <span class="bp-sec-label !text-[var(--ink)]">Variables</span>
-            <span v-if="variables?.length" :title="variables.length + ' variables'" class="ml-auto text-[10px] text-[var(--ink-3)]">{{
-                variables.length
-            }}</span>
-        </div>
-        <div class="max-h-56 overflow-y-auto p-1.5">
-            <div v-if="!variables || variables.length === 0" class="px-2 py-3 text-[10px] text-[var(--ink-3)]">No variables detected.</div>
-            <ul v-else class="space-y-1">
-                <li v-for="v in variables" :key="v.name" class="bp-row min-w-0 !gap-1 !py-1 text-[10px]">
-                    <span class="text-amber-300">$</span>
-                    <span :title="v.name" class="flex-1 truncate text-[var(--ink-2)]">{{ v.name }}</span>
-                    <span :title="v.type || 'mixed'" class="ml-auto text-[var(--ink-3)]">{{ v.type || 'mixed' }}</span>
-                </li>
-            </ul>
-            <!-- Add Variable Form -->
-            <div class="mt-2 grid grid-cols-5 items-end gap-1">
-                <div class="col-span-2">
-                    <label class="block text-[10px] text-[var(--ink-3)]">Name</label>
-                    <input v-model="newVarName" class="bp-input !h-7" placeholder="myVar" />
-                </div>
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]">Type</label>
-                    <select v-model="newVarType" class="bp-input !h-7 !px-1.5">
-                        <option v-for="t in typeOptions" :key="t" :value="t">{{ t }}</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] text-[var(--ink-3)]">Action</label>
-                    <select v-model="newVarAction" class="bp-input !h-7 !px-1.5">
-                        <option value="get">get</option>
-                        <option value="set">set</option>
-                    </select>
-                </div>
-                <div>
-                    <button class="bp-btn primary !h-7 w-full justify-center" @click="createVariable">Add</button>
-                </div>
-            </div>
-        </div>
+        <!-- Empty state (variables live in the left outline, not here) -->
+        <div v-if="!selectedNode" class="px-4 py-12 text-center text-[11px] text-[var(--ink-3)]">Select a node to inspect it.</div>
     </div>
 </template>
 
@@ -318,14 +280,12 @@
     import { nodes, selectedNodeId } from '../utils/state.js';
     import { updateNode, updateNodeIO } from '../utils/nodes-core.js';
     import { closeSettings, selectNode } from '../utils/node-selection.js';
-    import { addVariableNode } from '../utils/node-creation.js';
     import { getConnections } from '../utils/connection-manager.js';
     import { getNodeColor } from '../utils/node-colors.js';
     import { getNodeIssues, getNodePreview } from '../utils/node-inspector.js';
     import { getCategoryInfo } from '../utils/language-definition.js';
     import NodeGlyph from './icons/NodeGlyph.vue';
 
-    defineProps({ variables: { type: Array, default: () => [] } });
     const emit = defineEmits(['update-outputs']);
 
     const selectedNode = computed(() => nodes.value.find((n) => n.id === selectedNodeId.value) || null);
@@ -437,9 +397,6 @@
     const localLiteralValueBool = ref(false);
 
     // Add Variable form state
-    const newVarName = ref('');
-    const newVarType = ref('mixed');
-    const newVarAction = ref('get');
 
     function normalizeIO(ioArr) {
         return (ioArr || []).map((io) => (typeof io === 'object' ? { ...io } : { name: io, type: '' }));
@@ -531,18 +488,6 @@
 
     function close() {
         closeSettings();
-    }
-
-    function createVariable() {
-        const name = (newVarName.value || '').trim();
-        if (!name) return;
-        const node = addVariableNode(name, newVarType.value || 'mixed', newVarAction.value || 'get');
-        if (node) {
-            selectNode({ id: node.id });
-            newVarName.value = '';
-            newVarType.value = 'mixed';
-            newVarAction.value = 'get';
-        }
     }
 
     function formatRange(r) {

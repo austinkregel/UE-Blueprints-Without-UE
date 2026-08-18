@@ -10,6 +10,8 @@
  * without the engine hard-coding anything domain-specific.
  */
 
+import { BUILTIN_RULES } from './graph-validation.js';
+
 const validators = [];
 let previewProvider = null;
 
@@ -38,34 +40,14 @@ export function registerNodePreviewProvider(fn) {
     previewProvider = typeof fn === 'function' ? fn : null;
 }
 
-// Built-in, domain-agnostic rule: a non-exec input with neither a value nor an
-// incoming connection is unset and won't carry data at runtime.
-function unsetParamsValidator(node, ctx) {
-    const issues = [];
-    const conns = ctx?.connections || [];
-    for (const inp of node.inputs || []) {
-        if (!inp || typeof inp !== 'object') continue;
-        if (String(inp.type).toLowerCase() === 'exec') continue;
-        const hasValue = inp.defaultValue !== undefined && inp.defaultValue !== null && inp.defaultValue !== '';
-        const hasConn = conns.some((c) => c.to?.nodeId === node.id && c.to?.input === inp.name);
-        if (!hasValue && !hasConn) {
-            issues.push({
-                level: 'warn',
-                title: `“${inp.name}” is unset`,
-                body: `Parameter ${inp.name} (${inp.type}) has no value and no incoming connection, so it will be empty at runtime.`
-            });
-        }
-    }
-    return issues;
-}
-
 /**
- * Collect issues for a node from the built-in rule plus any registered validators.
+ * Collect issues for a node from the engine's built-in rules (graph-validation.js)
+ * plus any registered domain validators.
  */
 export function getNodeIssues(node, ctx = {}) {
     if (!node) return [];
     const all = [];
-    for (const v of [unsetParamsValidator, ...validators]) {
+    for (const v of [...BUILTIN_RULES, ...validators]) {
         try {
             const r = v(node, ctx);
             if (Array.isArray(r)) all.push(...r);

@@ -26,9 +26,11 @@ describe('node-inspector', () => {
         expect(getNodeIssues(node, { connections })).toHaveLength(0);
     });
 
-    it('ignores exec inputs', () => {
+    it('flags an unconnected exec input as unreachable, not as "unset"', () => {
         const node = { id: 1, inputs: [{ name: 'Exec', type: 'exec' }] };
-        expect(getNodeIssues(node, { connections: [] })).toHaveLength(0);
+        const issues = getNodeIssues(node, { connections: [] });
+        expect(issues.some((i) => /is unset/.test(i.title))).toBe(false);
+        expect(issues.some((i) => i.title === 'No incoming execution')).toBe(true);
     });
 
     it('runs registered validators and survives one that throws', () => {

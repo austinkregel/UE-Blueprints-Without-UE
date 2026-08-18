@@ -56,7 +56,9 @@
                             <span class="ml-auto flex-none text-[10px] text-[var(--ink-4)]">{{ section.items.length }}</span>
                             <span class="tw flex-none" :class="{ 'rotate-90': !collapsed[section.id] }">▸</span>
                         </button>
-                        <button v-if="section.addable" class="bp-btn ml-1 !h-5 !w-5 flex-none !p-0 text-xs" title="Add" @click.stop>+</button>
+                        <button v-if="section.addable" class="bp-btn ml-1 !h-5 !w-5 flex-none !p-0 text-xs" title="Add" @click.stop="onAdd(section)">
+                            +
+                        </button>
                     </div>
 
                     <div v-show="!collapsed[section.id]" class="mt-0.5">
@@ -90,6 +92,7 @@
     import { computed, ref } from 'vue';
     import { createWorkspace, deleteWorkspace, nodes, selectedNodeId, switchWorkspace, workspaceState } from '../../utils/state';
     import { selectNode } from '../../utils/node-selection.js';
+    import { addVariableNode } from '../../utils/node-creation.js';
     import { getOutlineSections } from '../../utils/outline.js';
     import { getNodeIssues } from '../../utils/node-inspector.js';
     import { getConnections } from '../../utils/connection-manager.js';
@@ -171,6 +174,16 @@
 
     function onItemClick(item) {
         if (item.nodeId != null) selectNode({ id: item.nodeId });
+    }
+
+    function onAdd(section) {
+        // Variables live in this panel; other sections' add affordances are
+        // reserved for domain-specific node creation.
+        if (section.id === 'VARIABLES') {
+            const count = nodes.value.filter((x) => x.type === 'variable').length + 1;
+            const n = addVariableNode(`var${count}`, 'mixed', 'get');
+            if (n) selectNode({ id: n.id });
+        }
     }
 
     function addTab() {
