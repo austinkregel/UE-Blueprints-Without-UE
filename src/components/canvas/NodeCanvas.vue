@@ -2,7 +2,7 @@
     <div
         ref="editorAreaRef"
         :class="{ 'drag-over': isDragOver }"
-        class="relative z-0 flex-1"
+        class="node-canvas-surface relative z-0 flex-1"
         @contextmenu="onContextMenu"
         @dragleave="onDragLeave"
         @drop="onDrop"
@@ -13,19 +13,16 @@
     >
         <!-- Infinite Canvas Container -->
         <div class="absolute inset-0 z-0 overflow-hidden">
-            <!-- Background Grid -->
+            <!-- Background dot grid -->
             <div
-                class="bg-grid absolute inset-0"
+                class="node-canvas-dots absolute inset-0"
                 :style="{
                     transform: `translate(${adjustedGridOffset.x}px, ${adjustedGridOffset.y}px)`,
-                    backgroundSize: `${Math.max(gridSize * viewport.zoom, 1)}px ${Math.max(gridSize * viewport.zoom, 1)}px`,
-                    backgroundImage: `
-                        linear-gradient(to right, rgba(50, 50, 50, 0.2) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(50, 50, 50, 0.2) 1px, transparent 1px),
-                        linear-gradient(to right, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max((5 * gridSize) / viewport.zoom, 1))}px),
-                        linear-gradient(to bottom, rgba(100, 100, 100, 0.4) ${Math.min(1, Math.max(5 * (gridSize / viewport.zoom), 1))}px, transparent ${Math.min(1, Math.max((5 * gridSize) / viewport.zoom, 1))}px)`
+                    backgroundSize: `${Math.max(gridSize * viewport.zoom, 1)}px ${Math.max(gridSize * viewport.zoom, 1)}px`
                 }"
             ></div>
+            <!-- Vignette -->
+            <div class="node-canvas-vignette pointer-events-none absolute inset-0"></div>
 
             <div :style="{ transform: getViewportTransform() }" class="canvas-content">
                 <!-- Connections under nodes -->
@@ -239,8 +236,17 @@
         @apply pointer-events-none absolute top-1/2 left-1/2 z-[1000] -translate-x-1/2 -translate-y-1/2 transform text-2xl font-bold text-blue-500/80;
     }
 
-    .bg-grid {
-        background-image:
-            linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    .node-canvas-surface {
+        background-color: var(--canvas-bg);
+    }
+
+    .node-canvas-dots {
+        background-image: radial-gradient(circle, var(--canvas-dot) 1.3px, transparent 1.4px);
+        background-position: -1px -1px;
+    }
+
+    /* Soft radial vignette so the graph reads as a focused stage. */
+    .node-canvas-vignette {
+        background: radial-gradient(120% 120% at 45% 38%, transparent 52%, rgba(4, 7, 11, 0.6) 100%);
     }
 </style>

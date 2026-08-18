@@ -1,6 +1,14 @@
 @import 'tailwindcss';
+@import './theme.css';
+
+/* Drive `dark:` utilities from a `.dark` class on <html> so the editor can commit
+   to its dark game-scripting world regardless of the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+    --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
     /* Teal color scale */
     --color-teal-50: #f0fdfa;
     --color-teal-100: #ccfbf1;

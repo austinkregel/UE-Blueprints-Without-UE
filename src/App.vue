@@ -1,5 +1,5 @@
 <template>
-    <div class="flex h-full w-full flex-col bg-white font-sans text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
+    <div class="blueprints-app flex h-full w-full flex-col">
         <!-- Top Toolbar (no overlap) -->
         <div class="shrink-0 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-700 dark:bg-zinc-800/80">
             <TopToolbar
@@ -416,6 +416,18 @@
 </script>
 
 <style>
+    body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-ui);
+    }
+
+    .blueprints-app {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-ui);
+    }
+
     /* Optional background helpers */
     .bg-checkerboard {
         background-color: #222;

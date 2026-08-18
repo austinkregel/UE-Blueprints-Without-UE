@@ -1,0 +1,76 @@
+/* ================================================================
+   Blueprints editor theme — game-scripting dark world.
+   Design tokens shared by the shell, canvas, nodes, and inspector.
+   These are generic (no domain names); category colors for a domain
+   come from its registered category metadata, not from here.
+   Fonts (Archivo, JetBrains Mono) load via <link> in index.html.
+   ================================================================ */
+:root {
+    --bg: #0e1218;
+    --panel: #151a22;
+    --panel-2: #11151c;
+    --raised: #1c232e;
+    --raised-2: #232b38;
+    --line: #28303d;
+    --line-soft: #1f2632;
+
+    --ink: #e7ecf3;
+    --ink-2: #aab4c2;
+    --ink-3: #6f7d8e;
+    --ink-4: #4a5666;
+
+    --accent: #1e9bff;
+    --accent-dim: #1a6fb8;
+    --accent-glow: rgba(30, 155, 255, 0.35);
+
+    --ok: #37d67a;
+    --warn: #f5b942;
+
+    /* pin / data-type palette */
+    --t-exec: #f4f6fa;
+    --t-bool: #ef4444;
+    --t-int: #10b981;
+    --t-float: #34d399;
+    --t-string: #ec4899;
+    --t-array: #f97316;
+    --t-object: #8b5cf6;
+    --t-mixed: #64748b;
+
+    --font-ui: 'Archivo', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    /* canvas */
+    --canvas-bg: #0c1015;
+    --canvas-dot: rgba(120, 140, 165, 0.14);
+}
+
+.mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Map a data-type name to its pin color (used by nodes/pins/inspector). */
+.type-exec {
+    color: var(--t-exec);
+}
+.type-bool {
+    color: var(--t-bool);
+}
+.type-int {
+    color: var(--t-int);
+}
+.type-float {
+    color: var(--t-float);
+}
+.type-string {
+    color: var(--t-string);
+}
+.type-array {
+    color: var(--t-array);
+}
+.type-object {
+    color: var(--t-object);
+}
+.type-mixed {
+    color: var(--t-mixed);
+}
