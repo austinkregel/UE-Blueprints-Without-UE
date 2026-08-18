@@ -7,12 +7,9 @@ describe('node-inspector', () => {
         registerNodePreviewProvider(null);
     });
 
-    it('flags a non-exec input with no value and no connection', () => {
+    it('does not surface "unset input" noise by default (unfinished ≠ broken)', () => {
         const node = { id: 1, inputs: [{ name: 'nQuota', type: 'int' }] };
-        const issues = getNodeIssues(node, { connections: [] });
-        expect(issues).toHaveLength(1);
-        expect(issues[0].level).toBe('warn');
-        expect(issues[0].title).toContain('nQuota');
+        expect(getNodeIssues(node, { connections: [] })).toHaveLength(0);
     });
 
     it('does not flag an input that has a value', () => {
@@ -26,11 +23,11 @@ describe('node-inspector', () => {
         expect(getNodeIssues(node, { connections })).toHaveLength(0);
     });
 
-    it('flags an unconnected exec input as unreachable, not as "unset"', () => {
+    it('does not surface "no incoming execution" noise for an unwired node by default', () => {
         const node = { id: 1, inputs: [{ name: 'Exec', type: 'exec' }] };
         const issues = getNodeIssues(node, { connections: [] });
-        expect(issues.some((i) => /is unset/.test(i.title))).toBe(false);
-        expect(issues.some((i) => i.title === 'No incoming execution')).toBe(true);
+        expect(issues.some((i) => i.title === 'No incoming execution')).toBe(false);
+        expect(issues).toHaveLength(0);
     });
 
     it('runs registered validators and survives one that throws', () => {

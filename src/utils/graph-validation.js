@@ -92,5 +92,12 @@ export function unsetInputRule(node, ctx = {}) {
     return issues;
 }
 
-// The built-in engine rules, in report order (errors first).
-export const BUILTIN_RULES = [typeMismatchRule, orphanExecRule, unsetInputRule];
+// The built-in engine rules run by default.
+//
+// Only genuine problems belong here. Type mismatch is always a real bug, so it
+// stays. "Unset input" and "no incoming execution" describe a graph that is
+// simply unfinished — every freshly-placed, not-yet-wired node trips them — so
+// surfacing them as warnings just floods a work-in-progress graph with noise.
+// They remain exported (and tested) as opt-in rules a domain can register if it
+// wants them, but the engine does not surface them on its own.
+export const BUILTIN_RULES = [typeMismatchRule];
