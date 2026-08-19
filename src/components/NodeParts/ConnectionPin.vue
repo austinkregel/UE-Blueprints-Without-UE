@@ -21,6 +21,8 @@
                 v-bind="iconProps"
             />
             <Type :name="io.name" :type="io.type" class="io-label" :class="labelClasses" />
+            <!-- Show a literal value baked onto the pin (e.g. a call argument) inline. -->
+            <span v-if="showDefault" class="io-default" :title="String(io.defaultValue)">{{ displayDefault }}</span>
         </template>
 
         <!-- Output layout: Label first, then icon -->
@@ -83,6 +85,27 @@
             type: Object,
             default: () => ({})
         }
+    });
+
+    // A literal value baked onto an (unconnected) input pin — shown inline so
+    // parameters read on the node face, not just in the inspector.
+    const showDefault = computed(
+        () =>
+            ioType === 'input' &&
+            !connection &&
+            io &&
+            typeof io === 'object' &&
+            io.defaultValue !== undefined &&
+            io.defaultValue !== null &&
+            io.defaultValue !== ''
+    );
+    const displayDefault = computed(() => {
+        const v = io && io.defaultValue;
+        if (typeof v === 'string') {
+            const s = v.length > 28 ? v.slice(0, 28) + '…' : v;
+            return `"${s}"`;
+        }
+        return String(v);
     });
 
     const emit = defineEmits(['io-context-menu']);

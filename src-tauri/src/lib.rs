@@ -1040,6 +1040,8 @@ fn parse_code_to_graph(
                 match n.kind() {
                     "number" | "string" | "true" | "false" | "nil" => None,
                     "identifier" | "dot_index_expression" => {
+                        // Variable read. Its output pin is named after the variable
+                        // so the getter reads as the name (the node has no header).
                         let name = txt(n, text);
                         let id = next_id("variable", vcnt);
                         push_node(
@@ -1052,9 +1054,9 @@ fn parse_code_to_graph(
                             160,
                             y,
                             vec![],
-                            vec![io("value", "mixed")],
+                            vec![io(name, "mixed")],
                         );
-                        Some((id, "value".into()))
+                        Some((id, name.to_string()))
                     }
                     "binary_expression" => {
                         // operator is the first anonymous child between operands
@@ -1284,6 +1286,8 @@ fn parse_code_to_graph(
                             .map(|nm| txt(nm, text).to_string())
                             .unwrap_or_else(|| "var".into());
                         let id = next_id("variable", vcnt);
+                        // The value pin is named after the variable so the setter
+                        // reads as an assignment: "self.count = 5".
                         push_node(
                             out,
                             id.clone(),
@@ -1293,7 +1297,7 @@ fn parse_code_to_graph(
                             "VARIABLE",
                             520,
                             y,
-                            vec![io("exec", "exec"), io("value", "mixed")],
+                            vec![io("exec", "exec"), io(&var_name, "mixed")],
                             vec![io("exec", "exec")],
                         );
                         if let Some((pid, pport)) = prev.take() {
@@ -1305,7 +1309,7 @@ fn parse_code_to_graph(
                                 .child_by_field_name("value")
                                 .or_else(|| el.named_child(0))
                             {
-                                bake_or_wire(text, val, out, fcnt, vcnt, &id, "value");
+                                bake_or_wire(text, val, out, fcnt, vcnt, &id, &var_name);
                             }
                         }
                     }
@@ -1341,11 +1345,16 @@ fn parse_code_to_graph(
                             lower_block(text, cons, out, fcnt, vcnt, &mut p);
                         }
                         if let Some(alt) = n.child_by_field_name("alternative") {
+                            // if/else: both paths are excursions, main flow ends here.
                             let body = alt.child_by_field_name("body").unwrap_or(alt);
                             let mut p = Some((id.clone(), "else".to_string()));
                             lower_block(text, body, out, fcnt, vcnt, &mut p);
+                            *prev = None;
+                        } else {
+                            // Guard clause (no else): execution falls through the
+                            // "else" pin, so keep the main chain flowing from it.
+                            *prev = Some((id, "else".into()));
                         }
-                        *prev = None;
                     }
                     "return_statement" => {
                         let id = next_id("function", fcnt);
@@ -1491,6 +1500,33 @@ end
         assert!(
             g.connections.iter().any(|c| c.from.output == "body"),
             "entry body should wire into the first statement"
+        );
+
+        // `local x = 5` → a set node whose value pin is named after the variable
+        // and carries the literal, so it reads as an assignment (not a bare "value").
+        let set_x = g
+            .nodes
+            .iter()
+            .find(|n| n.varName.as_deref() == Some("x") && n.varAction.as_deref() == Some("set"))
+            .expect("set node for x");
+        let xpin = set_x
+            .inputs
+            .as_ref()
+            .unwrap()
+            .iter()
+            .find(|i| i.name == "x")
+            .expect("value pin named after the variable");
+        assert_eq!(xpin.defaultValue, Some(serde_json::json!(5)));
+        // A variable read exposes its value on an output pin named after the variable.
+        assert!(
+            g.nodes.iter().any(|n| n.varAction.as_deref() == Some("get")
+                && n.outputs
+                    .as_ref()
+                    .map(|o| o
+                        .iter()
+                        .any(|p| p.name == n.varName.clone().unwrap_or_default()))
+                    .unwrap_or(false)),
+            "a getter's output pin should be named after its variable"
         );
     }
 

@@ -10,6 +10,8 @@
  * browser (no Tauri) every function returns null so callers fall back.
  */
 
+import { layoutGraph } from './graph-layout.js';
+
 function isTauri() {
     return typeof window !== 'undefined' && typeof window.__TAURI_INTERNALS__ !== 'undefined';
 }
@@ -20,11 +22,14 @@ export async function parseSourceToGraph(source, language) {
     const { invoke } = await import('@tauri-apps/api/core');
     const res = await invoke('parse_code_to_graph', { lang: language, text: source });
     if (!res || !Array.isArray(res.nodes)) return null;
-    return {
+    const graph = {
         nodes: res.nodes,
         connections: Array.isArray(res.connections) ? res.connections : [],
         warnings: Array.isArray(res.warnings) ? res.warnings : []
     };
+    // Positions from the parser are naive; lay the graph out so the flow reads.
+    layoutGraph(graph);
+    return graph;
 }
 
 /** Read a file's text via the backend, or null when not under Tauri. */
