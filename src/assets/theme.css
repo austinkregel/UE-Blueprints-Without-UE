@@ -576,6 +576,26 @@
     min-width: 18px;
     text-align: center;
 }
+.bp-tray-btn {
+    flex: none;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink-2);
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.bp-tray-btn:hover:not(:disabled) {
+    color: var(--ink);
+    border-color: var(--accent);
+}
+.bp-tray-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
 .bp-tray-filter {
     margin-left: auto;
     max-width: 240px;

@@ -11,8 +11,19 @@
                     <circle cx="11" cy="11" r="7" />
                     <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
                 </svg>
-                <input v-model="filter" placeholder="Filter…" />
+                <input
+                    v-model="filter"
+                    :placeholder="semantic ? 'Search by meaning… (Enter)' : 'Filter…  (Enter = search by meaning)'"
+                    @keyup.enter="runSemantic"
+                    @keyup.esc="clearSemantic"
+                />
             </div>
+            <button v-if="semantic || searching" class="bp-tray-btn" title="Clear semantic search" @click="clearSemantic">
+                {{ searching ? '…' : '✕ meaning' }}
+            </button>
+            <button class="bp-tray-btn" :disabled="indexing" :title="indexError || 'Build the semantic index over this corpus'" @click="runIndex">
+                {{ indexing ? 'Indexing…' : 'Index' }}
+            </button>
         </div>
 
         <div v-show="!collapsed" class="bp-tray-body">
@@ -42,7 +53,8 @@
                             style="color: var(--na)"
                         />
                         <span class="nm">{{ row.entry.name }}</span>
-                        <span v-if="filter && row.path" class="pth">{{ row.path }}</span>
+                        <span v-if="row.score != null" class="io-default" title="semantic distance (lower = closer)">{{ row.score.toFixed(2) }}</span>
+                        <span v-else-if="filter && row.path" class="pth">{{ row.path }}</span>
                         <span v-if="row.entry.meta && row.entry.meta.kind" class="kd">{{ row.entry.meta.kind }}</span>
                     </template>
                 </div>
@@ -54,6 +66,7 @@
 <script setup>
     import { computed, ref, watch } from 'vue';
     import { buildContentTree, contentRevision, getContentEntries } from '../../utils/content-browser.js';
+    import { commonRoot, defaultDbPath, indexCorpus, rankEntriesByHits, semanticSearch } from '../../utils/intel.js';
     import NodeGlyph from '../icons/NodeGlyph.vue';
 
     defineProps({ activeId: { type: [String, Number], default: null } });
@@ -62,6 +75,50 @@
     const filter = ref('');
     const collapsed = ref(false);
     const expanded = ref(new Set());
+
+    // Semantic search (LanceDB + embeddings, via the Rust backend).
+    const indexing = ref(false);
+    const indexError = ref('');
+    const searching = ref(false);
+    const semanticRanked = ref(null); // [{ id, score }] when a meaning search is active
+    const semantic = computed(() => semanticRanked.value != null);
+
+    async function runIndex() {
+        indexing.value = true;
+        indexError.value = '';
+        try {
+            const root = commonRoot(entries.value);
+            const db = await defaultDbPath();
+            if (root && db) await indexCorpus(root, db);
+        } catch (e) {
+            indexError.value = String(e);
+        } finally {
+            indexing.value = false;
+        }
+    }
+
+    async function runSemantic() {
+        const q = filter.value.trim();
+        if (!q) {
+            clearSemantic();
+            return;
+        }
+        searching.value = true;
+        try {
+            const db = await defaultDbPath();
+            const hits = await semanticSearch(q, db);
+            semanticRanked.value = rankEntriesByHits(entries.value, hits);
+        } catch (e) {
+            indexError.value = String(e);
+            semanticRanked.value = [];
+        } finally {
+            searching.value = false;
+        }
+    }
+
+    function clearSemantic() {
+        semanticRanked.value = null;
+    }
 
     // Re-read the source whenever a plugin (re)registers it — plugins populate the
     // content source asynchronously, after fetching their catalog.
@@ -113,9 +170,19 @@
         for (const e of folder.files) acc.push({ entry: e, path: folder.path.join(' / ') });
     }
 
-    // Filtering flattens to matching files (folder collapse ignored); otherwise a
-    // depth-first tree honoring the expanded set.
+    const entriesById = computed(() => new Map(entries.value.map((e) => [e.id, e])));
+
+    // Semantic results (ranked, with scores) win; then substring filter (flattened
+    // matches); otherwise the depth-first folder tree honoring the expanded set.
     const rows = computed(() => {
+        if (semantic.value) {
+            return semanticRanked.value
+                .map(({ id, score }) => {
+                    const entry = entriesById.value.get(id);
+                    return entry ? { type: 'file', depth: 0, entry, score, key: `s:${id}` } : null;
+                })
+                .filter(Boolean);
+        }
         const q = filter.value.trim().toLowerCase();
         if (q) {
             const files = [];

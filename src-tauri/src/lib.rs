@@ -6,6 +6,7 @@ use std::thread;
 use tauri::Emitter;
 use tree_sitter::Parser;
 
+pub mod intel;
 pub mod parser;
 use once_cell::sync::Lazy;
 use parser::javascript::JavascriptAdapter;
@@ -1471,7 +1472,9 @@ pub fn run() {
             start_php_scan,
             parse_php_file_to_symbols,
             list_languages,
-            parse_code_to_graph
+            parse_code_to_graph,
+            intel::intel_index_corpus,
+            intel::intel_search
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
