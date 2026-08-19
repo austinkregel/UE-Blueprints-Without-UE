@@ -19,6 +19,15 @@
         return found ? found.defaultValue : undefined;
     }
 
+    // The name of whatever feeds a node's input pin (e.g. the "Event.ObjectProximity"
+    // getter wired into _CreateEvent's first argument).
+    function providerName(node, pin, ctx) {
+        const conn = (ctx.connections || []).find((c) => c.to && c.to.nodeId === node.id && c.to.input === pin);
+        if (!conn) return undefined;
+        const src = (ctx.nodes || []).find((n) => n.id === conn.from.nodeId);
+        return src ? src.funcName || src.varName : undefined;
+    }
+
     // ---- Lua codegen helpers ----
     function luaLiteral(v) {
         if (v === undefined || v === null || v === '') return 'nil';
@@ -306,6 +315,27 @@
             code: generateLua(graph, api.buildGraphIR(graph)),
             language: 'lua'
         }));
+
+        // Node resolver: identify the mercs2 method calls the generic name match
+        // can't, and map them to their real objective/event nodes.
+        //   self:CreateChild({ sModuleName = "MrxTaskObjectiveDestroy", … })
+        //     → mercs2.Objective.Destroy   (amber objective node + HUD preview)
+        //   self:_CreateEvent(Event.ObjectProximity, …)
+        //     → mercs2.Event.ObjectProximity  (red event node)
+        api.registerNodeResolver((node, ctx) => {
+            const fn = node.funcName || '';
+            if (/(^|[.:])CreateChild$/.test(fn)) {
+                const mod = param(node, 'sModuleName');
+                const m = /^MrxTaskObjective(.+)$/.exec(String(mod || ''));
+                if (m) return 'mercs2.Objective.' + m[1];
+            }
+            if (/_CreateEvent$/.test(fn) || /_CreatePersistentEvent$/.test(fn)) {
+                const ev = providerName(node, 'arg1', ctx) || param(node, 'arg1');
+                const m = /^Event\.(.+)$/.exec(String(ev || ''));
+                if (m) return 'mercs2.Event.' + m[1];
+            }
+            return null;
+        });
 
         // Content browser: list the corpus's documents (async — fetch the catalog).
         loadContent(api);

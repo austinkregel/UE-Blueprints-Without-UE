@@ -13,6 +13,7 @@ import { registerNodePreviewProvider, registerNodeValidator } from './node-inspe
 import { registerOutlineProvider } from './outline.js';
 import { buildGraphIR, registerCodegenTarget } from './codegen.js';
 import { registerContentSource } from './content-browser.js';
+import { registerNodeResolver } from './graph-resolve.js';
 import { createNodeFromDefinition } from './node-factory.js';
 
 // The surface a plugin receives. Generic registration hooks + read-only lookups.
@@ -24,6 +25,7 @@ const PLUGIN_API = Object.freeze({
     registerOutlineProvider,
     registerCodegenTarget,
     registerContentSource,
+    registerNodeResolver,
     getCategoryInfo,
     buildGraphIR,
     // Build a fully-formed node object from a registered definition (id, pins,

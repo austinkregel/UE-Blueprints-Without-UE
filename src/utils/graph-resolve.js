@@ -17,6 +17,42 @@ import { getAllNodeDefinitions } from './language-definition.js';
 
 const isExec = (io) => io && String(io.type).toLowerCase() === 'exec';
 
+// Domain-registered resolvers. A resolver inspects a lowered node (its funcName,
+// pins, and the surrounding graph via ctx) and returns the id/name of the real
+// definition it represents — e.g. mapping self:CreateChild{sModuleName=…} to the
+// concrete objective node. Returns null when it doesn't recognize the node.
+const nodeResolvers = [];
+
+/** Register a domain node resolver: (node, ctx) => defId | defName | null. */
+export function registerNodeResolver(fn) {
+    if (typeof fn === 'function') nodeResolvers.push(fn);
+}
+
+/** Test hook: drop all registered resolvers. */
+export function clearNodeResolvers() {
+    nodeResolvers.length = 0;
+}
+
+// Adopt a definition's IDENTITY without disturbing already-named pins — for a
+// domain node whose pins the lowering already named (an objective's config fields)
+// or whose args must stay (an event's). Sets nodeDefId + category + display name,
+// types any input the def also declares, and adds the def's own outputs (an
+// objective's outcome exec pins, an event's callback) that aren't present yet.
+function adoptIdentity(node, def) {
+    node.nodeDefId = def.id;
+    if (def.category) node.category = def.category;
+    if (def.name) node.name = def.name;
+    const defIns = def.inputs || [];
+    for (const inp of node.inputs || []) {
+        const d = defIns.find((x) => x.name === inp.name);
+        if (d && d.type && (!inp.type || inp.type === 'mixed')) inp.type = d.type;
+    }
+    const outs = node.outputs || (node.outputs = []);
+    for (const o of def.outputs || []) {
+        if (!outs.some((x) => x.name === o.name)) outs.push({ ...o });
+    }
+}
+
 /** Index definitions by their call name (e.g. "ObjectFilter.SetFilter"). */
 export function indexDefinitionsByName(defs) {
     const byName = new Map();
@@ -67,9 +103,32 @@ function applyDefinition(node, def, connections) {
 export function resolveAgainstDefinitions(graph, defs) {
     const nodes = (graph && graph.nodes) || [];
     const connections = (graph && graph.connections) || [];
-    const byName = indexDefinitionsByName(defs || getAllNodeDefinitions());
+    const all = defs || getAllNodeDefinitions();
+    const byName = indexDefinitionsByName(all);
+    const getDef = (key) => all[key] || byName.get(key) || null;
+    const ctx = { nodes, connections, getDef };
     for (const n of nodes) {
         if (n.type !== 'function' || !n.funcName) continue;
+        // 1. Domain resolvers first — they identify method calls (objectives,
+        //    events) the generic name match can't, and adopt the def's identity.
+        let handled = false;
+        for (const resolve of nodeResolvers) {
+            let res;
+            try {
+                res = resolve(n, ctx);
+            } catch {
+                res = null;
+            }
+            if (!res) continue;
+            const def = typeof res === 'string' ? getDef(res) : res && (res.def || getDef(res.defId || res.defName));
+            if (def) {
+                adoptIdentity(n, def);
+                handled = true;
+                break;
+            }
+        }
+        if (handled) continue;
+        // 2. Generic name match — overlay the real binding signature.
         const def = byName.get(n.funcName);
         if (def) applyDefinition(n, def, connections);
     }

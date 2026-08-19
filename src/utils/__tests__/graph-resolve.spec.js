@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { indexDefinitionsByName, resolveAgainstDefinitions } from '../graph-resolve.js';
+import { afterEach, describe, expect, it } from 'vitest';
+import { clearNodeResolvers, indexDefinitionsByName, registerNodeResolver, resolveAgainstDefinitions } from '../graph-resolve.js';
 
 // A tiny stand-in for the discovered definitions.
 const DEFS = {
@@ -86,5 +86,61 @@ describe('resolveAgainstDefinitions', () => {
     it('indexes definitions by their call name', () => {
         const idx = indexDefinitionsByName(DEFS);
         expect(idx.get('ObjectFilter.SetFilter').id).toBe('mercs2.ObjectFilter.SetFilter');
+    });
+});
+
+describe('domain node resolvers', () => {
+    afterEach(() => clearNodeResolvers());
+
+    const OBJ_DEFS = {
+        'mercs2.Objective.Destroy': {
+            id: 'mercs2.Objective.Destroy',
+            name: 'Destroy Objective',
+            category: 'MERCS2_OBJECTIVE',
+            inputs: [
+                { name: 'Exec', type: 'exec' },
+                { name: 'nQuota', type: 'int' }
+            ],
+            outputs: [{ name: 'tOnComplete', type: 'exec' }]
+        }
+    };
+
+    it('adopts a definition identity a resolver points to, keeping named pins', () => {
+        // A lowered self:CreateChild whose config table was expanded into pins.
+        registerNodeResolver((node) => {
+            const mod = (node.inputs || []).find((i) => i.name === 'sModuleName');
+            const m = /^MrxTaskObjective(.+)$/.exec(String(mod && mod.defaultValue));
+            return m ? 'mercs2.Objective.' + m[1] : null;
+        });
+        const graph = {
+            nodes: [
+                {
+                    id: 'n1',
+                    type: 'function',
+                    funcName: 'self:CreateChild',
+                    inputs: [
+                        { name: 'exec', type: 'exec' },
+                        { name: 'sModuleName', type: 'mixed', defaultValue: 'MrxTaskObjectiveDestroy' },
+                        { name: 'nQuota', type: 'mixed', defaultValue: 3 }
+                    ],
+                    outputs: [{ name: 'exec', type: 'exec' }]
+                }
+            ],
+            connections: []
+        };
+        resolveAgainstDefinitions(graph, OBJ_DEFS);
+        const n = graph.nodes[0];
+        expect(n.nodeDefId).toBe('mercs2.Objective.Destroy');
+        expect(n.category).toBe('MERCS2_OBJECTIVE'); // now colors amber, gets HUD preview
+        expect(n.name).toBe('Destroy Objective'); // header reads as the objective
+        expect(n.inputs.find((i) => i.name === 'nQuota').type).toBe('int'); // typed from the def
+        expect(n.inputs.find((i) => i.name === 'nQuota').defaultValue).toBe(3); // value preserved
+        expect(n.outputs.some((o) => o.name === 'tOnComplete')).toBe(true); // outcome pin added
+    });
+
+    it('falls through to the generic name match when no resolver claims the node', () => {
+        registerNodeResolver(() => null);
+        const g = resolveAgainstDefinitions(loweredCall(), DEFS);
+        expect(g.nodes[0].nodeDefId).toBe('mercs2.ObjectFilter.SetFilter');
     });
 });
