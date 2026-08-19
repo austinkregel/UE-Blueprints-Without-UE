@@ -20,14 +20,14 @@
                 class="mr-1 h-4 w-4"
                 v-bind="iconProps"
             />
-            <Type :name="io.name" :type="io.type" class="io-label" :class="labelClasses" />
+            <Type :name="displayName" :type="io.type" class="io-label" :class="labelClasses" />
             <!-- Show a literal value baked onto the pin (e.g. a call argument) inline. -->
             <span v-if="showDefault" class="io-default" :title="String(io.defaultValue)">{{ displayDefault }}</span>
         </template>
 
         <!-- Output layout: Label first, then icon -->
         <template v-else>
-            <Type :name="io.name" :type="io.type" class="io-label" :class="labelClasses" />
+            <Type :name="displayName" :type="io.type" class="io-label" :class="labelClasses" />
             <component
                 :is="iconComponent"
                 :active="!!connection"
@@ -85,6 +85,16 @@
             type: Object,
             default: () => ({})
         }
+    });
+
+    // Generic placeholder pin names the lowering emits when it has no real name
+    // (unresolved/argless calls). Blank them — the wired value or baked literal
+    // already says what's passed, so "arg1/arg2/result" is just noise. Resolved
+    // definitions carry real names and are shown as-is.
+    const GENERIC_PIN = /^(arg\d+|result)$/;
+    const displayName = computed(() => {
+        const n = io && typeof io === 'object' ? io.name : io;
+        return GENERIC_PIN.test(String(n)) ? '' : n;
     });
 
     // A literal value baked onto an (unconnected) input pin — shown inline so
