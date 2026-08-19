@@ -165,10 +165,11 @@
 
     // The node's accent color name (e.g. 'red'/'violet'/'amber'), resolved from its
     // category. Drives the `.na-<color>` class that tints the header via --na.
-    const nodeColorName = computed(() => getNodeColor(props.node.type, props.node.nodeDefId) || 'blue');
-
-    // Category-derived glyph for the header icon (falls back to a default shape).
-    const glyphName = computed(() => getCategoryInfo(props.node.category)?.icon || props.node.type || '');
+    // An explicit per-node color/glyph wins (set by the lowering for generic nodes
+    // it can classify — branches, operators, getters); otherwise fall back to the
+    // node type / category (real definitions carry a category that colors them).
+    const nodeColorName = computed(() => props.node.color || getNodeColor(props.node.type, props.node.nodeDefId) || 'blue');
+    const glyphName = computed(() => props.node.glyph || getCategoryInfo(props.node.category)?.icon || props.node.type || '');
 
     // Validation issues on this node → warning badge.
     const nodeIssues = computed(() => getNodeIssues(props.node, { connections: props.connections || getConnections() }));

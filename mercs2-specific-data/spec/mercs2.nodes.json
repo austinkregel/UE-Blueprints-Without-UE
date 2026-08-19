@@ -2,14 +2,14 @@
   "categories": {
     "MERCS2_TABLE": {
       "name": "Mercs2 · Table",
-      "color": "slate",
-      "icon": "function",
+      "color": "indigo",
+      "icon": "object",
       "description": "Mercenaries 2 Table engine bindings"
     },
     "MERCS2_OBJECTFILTER": {
       "name": "Mercs2 · ObjectFilter",
       "color": "violet",
-      "icon": "function",
+      "icon": "object",
       "description": "Mercenaries 2 ObjectFilter engine bindings"
     },
     "MERCS2_EVENT": {
@@ -27,19 +27,19 @@
     "MERCS2_WEAPON": {
       "name": "Mercs2 · Weapon",
       "color": "red",
-      "icon": "function",
+      "icon": "objective",
       "description": "Mercenaries 2 Weapon engine bindings"
     },
     "MERCS2_VO": {
       "name": "Mercs2 · VO",
       "color": "pink",
-      "icon": "function",
+      "icon": "vo",
       "description": "Mercenaries 2 VO engine bindings"
     },
     "MERCS2_VEHICLE": {
       "name": "Mercs2 · Vehicle",
       "color": "cyan",
-      "icon": "function",
+      "icon": "vehicle",
       "description": "Mercenaries 2 Vehicle engine bindings"
     },
     "MERCS2_SYS": {
@@ -51,169 +51,169 @@
     "MERCS2_SOUND": {
       "name": "Mercs2 · Sound",
       "color": "pink",
-      "icon": "function",
+      "icon": "sound",
       "description": "Mercenaries 2 Sound engine bindings"
     },
     "MERCS2_REPORT": {
       "name": "Mercs2 · Report",
-      "color": "slate",
+      "color": "green",
       "icon": "function",
       "description": "Mercenaries 2 Report engine bindings"
     },
     "MERCS2_PLAYER": {
       "name": "Mercs2 · Player",
       "color": "green",
-      "icon": "function",
+      "icon": "player",
       "description": "Mercenaries 2 Player engine bindings"
     },
     "MERCS2_PG": {
       "name": "Mercs2 · Pg",
       "color": "blue",
-      "icon": "function",
+      "icon": "object",
       "description": "Mercenaries 2 Pg engine bindings"
     },
     "MERCS2_OBJECTSTATE": {
       "name": "Mercs2 · ObjectState",
       "color": "violet",
-      "icon": "function",
+      "icon": "object",
       "description": "Mercenaries 2 ObjectState engine bindings"
     },
     "MERCS2_OBJECT": {
       "name": "Mercs2 · Object",
       "color": "violet",
-      "icon": "function",
+      "icon": "object",
       "description": "Mercenaries 2 Object engine bindings"
     },
     "MERCS2_NET": {
       "name": "Mercs2 · Net",
       "color": "emerald",
-      "icon": "function",
+      "icon": "net",
       "description": "Mercenaries 2 Net engine bindings"
     },
     "MERCS2_MOVIE": {
       "name": "Mercs2 · Movie",
-      "color": "slate",
-      "icon": "function",
+      "color": "red",
+      "icon": "ui",
       "description": "Mercenaries 2 Movie engine bindings"
     },
     "MERCS2_TIMER": {
       "name": "Mercs2 · Timer",
       "color": "amber",
-      "icon": "function",
+      "icon": "timer",
       "description": "Mercenaries 2 Timer engine bindings"
     },
     "MERCS2_MATH": {
       "name": "Mercs2 · Math",
       "color": "green",
-      "icon": "function",
+      "icon": "math",
       "description": "Mercenaries 2 Math engine bindings"
     },
     "MERCS2_LTILIBNAME": {
       "name": "Mercs2 · LTILibName",
-      "color": "slate",
+      "color": "cyan",
       "icon": "function",
       "description": "Mercenaries 2 LTILibName engine bindings"
     },
     "MERCS2_JUNK": {
       "name": "Mercs2 · Junk",
-      "color": "slate",
+      "color": "pink",
       "icon": "function",
       "description": "Mercenaries 2 Junk engine bindings"
     },
     "MERCS2_HUMAN": {
       "name": "Mercs2 · Human",
       "color": "orange",
-      "icon": "function",
+      "icon": "player",
       "description": "Mercenaries 2 Human engine bindings"
     },
     "MERCS2_HUMAN_INVENTORY": {
       "name": "Mercs2 · Human.Inventory",
-      "color": "slate",
-      "icon": "function",
+      "color": "cyan",
+      "icon": "player",
       "description": "Mercenaries 2 Human.Inventory engine bindings"
     },
     "MERCS2__GUIINTERNAL": {
       "name": "Mercs2 · _GuiInternal",
-      "color": "slate",
-      "icon": "function",
+      "color": "violet",
+      "icon": "ui",
       "description": "Mercenaries 2 _GuiInternal engine bindings"
     },
     "MERCS2_GUI": {
       "name": "Mercs2 · Gui",
       "color": "indigo",
-      "icon": "function",
+      "icon": "ui",
       "description": "Mercenaries 2 Gui engine bindings"
     },
     "MERCS2_GRAPHICS": {
       "name": "Mercs2 · Graphics",
       "color": "cyan",
-      "icon": "function",
+      "icon": "ui",
       "description": "Mercenaries 2 Graphics engine bindings"
     },
     "MERCS2_CAMERA": {
       "name": "Mercs2 · Camera",
       "color": "cyan",
-      "icon": "function",
+      "icon": "ui",
       "description": "Mercenaries 2 Camera engine bindings"
     },
     "MERCS2_ATMOSPHERE": {
       "name": "Mercs2 · Atmosphere",
-      "color": "slate",
-      "icon": "function",
+      "color": "red",
+      "icon": "ui",
       "description": "Mercenaries 2 Atmosphere engine bindings"
     },
     "MERCS2_BLOOM": {
       "name": "Mercs2 · Bloom",
-      "color": "slate",
-      "icon": "function",
+      "color": "orange",
+      "icon": "ui",
       "description": "Mercenaries 2 Bloom engine bindings"
     },
     "MERCS2_FADE": {
       "name": "Mercs2 · Fade",
-      "color": "slate",
-      "icon": "function",
+      "color": "cyan",
+      "icon": "ui",
       "description": "Mercenaries 2 Fade engine bindings"
     },
     "MERCS2_GRAPHICS_FUELTRAIL": {
       "name": "Mercs2 · Graphics.FuelTrail",
-      "color": "slate",
-      "icon": "function",
+      "color": "blue",
+      "icon": "ai",
       "description": "Mercenaries 2 Graphics.FuelTrail engine bindings"
     },
     "MERCS2__SYS": {
       "name": "Mercs2 · _SYS",
-      "color": "slate",
+      "color": "pink",
       "icon": "function",
       "description": "Mercenaries 2 _SYS engine bindings"
     },
     "MERCS2_FACE": {
       "name": "Mercs2 · Face",
-      "color": "slate",
-      "icon": "function",
+      "color": "orange",
+      "icon": "player",
       "description": "Mercenaries 2 Face engine bindings"
     },
     "MERCS2_AIRSTRIKE": {
       "name": "Mercs2 · Airstrike",
       "color": "red",
-      "icon": "function",
+      "icon": "objective",
       "description": "Mercenaries 2 Airstrike engine bindings"
     },
     "MERCS2_AI": {
       "name": "Mercs2 · Ai",
       "color": "orange",
-      "icon": "function",
+      "icon": "ai",
       "description": "Mercenaries 2 Ai engine bindings"
     },
     "MERCS2_SOCKET": {
       "name": "Mercs2 · socket",
-      "color": "slate",
-      "icon": "function",
+      "color": "blue",
+      "icon": "net",
       "description": "Mercenaries 2 socket engine bindings"
     },
     "MERCS2_STRING": {
       "name": "Mercs2 · String",
       "color": "pink",
-      "icon": "function",
+      "icon": "variable",
       "description": "Mercenaries 2 String engine bindings"
     },
     "MERCS2_MISSION": {

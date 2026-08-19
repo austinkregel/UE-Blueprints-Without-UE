@@ -13,6 +13,7 @@
 import { layoutGraph } from './graph-layout.js';
 import { resolveAgainstDefinitions } from './graph-resolve.js';
 import { inferTypes } from './graph-infer.js';
+import { styleLoweredNodes } from './graph-style.js';
 
 function isTauri() {
     return typeof window !== 'undefined' && typeof window.__TAURI_INTERNALS__ !== 'undefined';
@@ -30,9 +31,11 @@ export async function parseSourceToGraph(source, language) {
         warnings: Array.isArray(res.warnings) ? res.warnings : []
     };
     // Identify calls against the engine's real signatures, hypothesize the rest of
-    // the types by data-flow, then lay the graph out so the flow reads.
+    // the types by data-flow, give the generic nodes a specific look, then lay the
+    // graph out so the flow reads.
     resolveAgainstDefinitions(graph);
     inferTypes(graph);
+    styleLoweredNodes(graph);
     layoutGraph(graph);
     return graph;
 }

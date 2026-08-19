@@ -39,6 +39,61 @@
             <circle cx="12" cy="12" r="8.5" />
             <path d="M10 8.5l4.5 3.5L10 15.5z" fill="currentColor" stroke="none" />
         </template>
+        <!-- math / operator -->
+        <template v-else-if="glyph === 'math'">
+            <path d="M4 8h6M7 5v6" />
+            <path d="M14 16h6" />
+            <circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" />
+            <circle cx="7" cy="17" r="1" fill="currentColor" stroke="none" />
+        </template>
+        <!-- branch / condition -->
+        <template v-else-if="glyph === 'branch'">
+            <circle cx="6" cy="6" r="2" />
+            <path d="M6 8v3a4 4 0 0 0 4 4h6" />
+            <path d="M14 12l3 3-3 3" />
+        </template>
+        <!-- getter / query -->
+        <template v-else-if="glyph === 'get'">
+            <circle cx="10" cy="10" r="6" />
+            <path d="M20 20l-5-5" />
+        </template>
+        <!-- ai -->
+        <template v-else-if="glyph === 'ai'">
+            <rect x="7" y="7" width="10" height="10" rx="2" />
+            <path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4" />
+        </template>
+        <!-- ui / screen -->
+        <template v-else-if="glyph === 'ui'">
+            <rect x="3" y="4" width="18" height="12" rx="2" />
+            <path d="M8 20h8M12 16v4" />
+        </template>
+        <!-- sound / audio -->
+        <template v-else-if="glyph === 'sound'">
+            <path d="M4 10v4M8 6v12M12 8v8M16 5v14M20 10v4" />
+        </template>
+        <!-- vehicle -->
+        <template v-else-if="glyph === 'vehicle'">
+            <path d="M3 14l2-6h14l2 6v3h-2M5 17H3v-3M9 17h6" />
+            <circle cx="7" cy="17" r="1.6" />
+            <circle cx="17" cy="17" r="1.6" />
+        </template>
+        <!-- network -->
+        <template v-else-if="glyph === 'net'">
+            <circle cx="6" cy="6" r="2" />
+            <circle cx="18" cy="6" r="2" />
+            <circle cx="12" cy="18" r="2" />
+            <path d="M7.5 7.5 11 16M16.5 7.5 13 16M8 6h8" />
+        </template>
+        <!-- timer -->
+        <template v-else-if="glyph === 'timer'">
+            <circle cx="12" cy="13" r="7" />
+            <path d="M12 13V9M9.5 3h5" />
+        </template>
+        <!-- player / character -->
+        <template v-else-if="glyph === 'player'">
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+        </template>
         <!-- default: filled rounded square -->
         <rect v-else x="6" y="6" width="12" height="12" rx="3" fill="currentColor" stroke="none" />
     </svg>
@@ -49,25 +104,52 @@
 
     const props = defineProps({ name: { type: String, default: '' } });
 
-    // Fold many category icon names onto the small built-in glyph set.
+    // Fold category icon names that have no dedicated shape onto the nearest glyph.
     const ALIASES = {
         bolt: 'event',
         trigger: 'event',
         target: 'objective',
         flag: 'mission',
-        sound: 'vo',
-        audio: 'vo',
-        music: 'vo',
+        audio: 'sound',
+        music: 'sound',
         control: 'flow',
-        branch: 'flow',
         fn: 'function',
         method: 'function',
-        calculate: 'function',
+        calculate: 'math',
+        operator: 'math',
+        compare: 'math',
         list: 'object',
         array: 'object',
-        dictionary: 'object'
+        dictionary: 'object',
+        clock: 'timer',
+        network: 'net',
+        query: 'get',
+        screen: 'ui',
+        hud: 'ui',
+        gui: 'ui',
+        character: 'player',
+        human: 'player'
     };
-    const KNOWN = new Set(['event', 'objective', 'mission', 'vo', 'variable', 'flow', 'object', 'function']);
+    const KNOWN = new Set([
+        'event',
+        'objective',
+        'mission',
+        'vo',
+        'variable',
+        'flow',
+        'object',
+        'function',
+        'math',
+        'branch',
+        'get',
+        'ai',
+        'ui',
+        'sound',
+        'vehicle',
+        'net',
+        'timer',
+        'player'
+    ]);
 
     const glyph = computed(() => {
         const n = (props.name || '').toLowerCase();

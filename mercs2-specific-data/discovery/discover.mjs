@@ -184,13 +184,79 @@ const NS_COLORS = {
     Sys: 'slate'
 };
 
+// A fitting glyph per namespace, so a resolved node reads as what it is (an AI
+// node, an object node, a getter…) instead of a generic function. Presentation
+// only — keyed on the real namespace name, with a keyword fallback.
+const NS_ICONS = {
+    Object: 'object',
+    ObjectState: 'object',
+    ObjectFilter: 'object',
+    Pg: 'object',
+    Table: 'object',
+    Player: 'player',
+    Human: 'player',
+    Face: 'player',
+    Ai: 'ai',
+    Vehicle: 'vehicle',
+    Sound: 'sound',
+    VO: 'vo',
+    Gui: 'ui',
+    Hud: 'ui',
+    Graphics: 'ui',
+    Camera: 'ui',
+    Bloom: 'ui',
+    Fade: 'ui',
+    Atmosphere: 'ui',
+    Movie: 'ui',
+    Net: 'net',
+    Socket: 'net',
+    Math: 'math',
+    String: 'variable',
+    Weapon: 'objective',
+    Airstrike: 'objective',
+    Timer: 'timer',
+    Event: 'event',
+    Mission: 'mission',
+    Objective: 'objective'
+};
+
+function iconForNamespace(global) {
+    if (NS_ICONS[global]) return NS_ICONS[global];
+    const g = global.toLowerCase();
+    if (/object|^pg|world/.test(g)) return 'object';
+    if (/player|human|face|character/.test(g)) return 'player';
+    if (/ai|goal/.test(g)) return 'ai';
+    if (/vehicle|heli|tank|boat/.test(g)) return 'vehicle';
+    if (/sound|audio|music/.test(g)) return 'sound';
+    if (/voice|^vo/.test(g)) return 'vo';
+    if (/gui|hud|graphic|camera|bloom|fade|atmos|movie|screen|ui/.test(g)) return 'ui';
+    if (/net|socket/.test(g)) return 'net';
+    if (/math/.test(g)) return 'math';
+    if (/string|text/.test(g)) return 'variable';
+    if (/weapon|airstrike|missile/.test(g)) return 'objective';
+    if (/timer|clock/.test(g)) return 'timer';
+    if (/event/.test(g)) return 'event';
+    if (/mission/.test(g)) return 'mission';
+    if (/objective/.test(g)) return 'objective';
+    return 'function';
+}
+
+const NS_PALETTE = ['blue', 'green', 'purple', 'red', 'cyan', 'pink', 'orange', 'amber', 'violet', 'indigo', 'emerald'];
+function colorForNamespace(global) {
+    if (NS_COLORS[global]) return NS_COLORS[global];
+    // stable hash → palette so even un-mapped namespaces get a distinct color
+    let h = 0;
+    for (const c of global) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    return NS_PALETTE[h % NS_PALETTE.length];
+}
+
 function buildBindingCategories(globalByCat) {
     const cats = {};
     for (const [categoryKey, global] of Object.entries(globalByCat)) {
         cats[categoryKey] = {
             name: `Mercs2 · ${global}`,
-            color: NS_COLORS[global] || 'slate',
-            icon: 'function',
+            color: colorForNamespace(global),
+            icon: iconForNamespace(global),
             description: `Mercenaries 2 ${global} engine bindings`
         };
     }
