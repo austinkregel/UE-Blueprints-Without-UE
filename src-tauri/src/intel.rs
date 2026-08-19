@@ -53,7 +53,14 @@ static EMBEDDER: OnceCell<Mutex<TextEmbedding>> = OnceCell::new();
 
 fn embedder() -> Result<&'static Mutex<TextEmbedding>, String> {
     EMBEDDER.get_or_try_init(|| {
-        TextEmbedding::try_new(InitOptions::new(EmbeddingModel::BGESmallENV15))
+        let mut opts = InitOptions::new(EmbeddingModel::BGESmallENV15);
+        // Cache the ~130MB model under the user's home, NOT the process CWD — the
+        // default lands it in src-tauri/.fastembed_cache, which must never be
+        // committed. Falls back to the default only if $HOME is unavailable.
+        if let Ok(home) = std::env::var("HOME") {
+            opts = opts.with_cache_dir(PathBuf::from(home).join(".cache").join("blueprints-fastembed"));
+        }
+        TextEmbedding::try_new(opts)
             .map(Mutex::new)
             .map_err(|e| format!("embedder init failed: {e}"))
     })

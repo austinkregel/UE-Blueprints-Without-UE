@@ -30,3 +30,7 @@ public/language-extras.json
 public/plugins.json
 public/plugins/
 public/mercs2.content.json
+
+# Embedding model cache (downloaded ~130MB) — never commit
+**/.fastembed_cache/
+*.lance/
