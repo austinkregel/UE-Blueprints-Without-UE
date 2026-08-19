@@ -11,6 +11,8 @@
  */
 
 import { layoutGraph } from './graph-layout.js';
+import { resolveAgainstDefinitions } from './graph-resolve.js';
+import { inferTypes } from './graph-infer.js';
 
 function isTauri() {
     return typeof window !== 'undefined' && typeof window.__TAURI_INTERNALS__ !== 'undefined';
@@ -27,7 +29,10 @@ export async function parseSourceToGraph(source, language) {
         connections: Array.isArray(res.connections) ? res.connections : [],
         warnings: Array.isArray(res.warnings) ? res.warnings : []
     };
-    // Positions from the parser are naive; lay the graph out so the flow reads.
+    // Identify calls against the engine's real signatures, hypothesize the rest of
+    // the types by data-flow, then lay the graph out so the flow reads.
+    resolveAgainstDefinitions(graph);
+    inferTypes(graph);
     layoutGraph(graph);
     return graph;
 }

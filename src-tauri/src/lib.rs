@@ -1008,9 +1008,45 @@ fn parse_code_to_graph(
                     }
                 }
             }
+            // Give an input pin a concrete type (so it colors) instead of "mixed".
+            fn set_input_type(out: &mut GraphResult, id: &str, pin: &str, ty: &str) {
+                if let Some(node) = out.nodes.iter_mut().find(|g| g.id == id) {
+                    if let Some(inputs) = node.inputs.as_mut() {
+                        if let Some(p) = inputs.iter_mut().find(|i| i.name == pin) {
+                            p.r#type = Some(ty.into());
+                        }
+                    }
+                }
+            }
+            // The engine's concrete pin type for a literal (so pins color by kind).
+            fn lit_type(n: tree_sitter::Node, text: &str) -> Option<&'static str> {
+                match n.kind() {
+                    "number" => {
+                        let s = txt(n, text);
+                        if s.contains('.') || s.contains('e') || s.contains('E') {
+                            Some("float")
+                        } else {
+                            Some("int")
+                        }
+                    }
+                    "string" => Some("string"),
+                    "true" | "false" => Some("bool"),
+                    _ => None,
+                }
+            }
+            // The declared type of a node's named output pin, if any.
+            fn output_type(out: &GraphResult, id: &str, port: &str) -> Option<String> {
+                out.nodes
+                    .iter()
+                    .find(|g| g.id == id)
+                    .and_then(|g| g.outputs.as_ref())
+                    .and_then(|outs| outs.iter().find(|o| o.name == port))
+                    .and_then(|o| o.r#type.clone())
+            }
 
-            // A value expression: either bake a literal onto the target pin, or
-            // lower a sub-expression node and wire it in.
+            // A value expression: either bake a literal onto the target pin (typing
+            // the pin by the literal's kind), or lower a sub-expression node, wire
+            // it in, and propagate the provider's output type onto the pin.
             fn bake_or_wire(
                 text: &str,
                 n: tree_sitter::Node,
@@ -1022,8 +1058,16 @@ fn parse_code_to_graph(
             ) {
                 if let Some(v) = lit_value(n, text) {
                     set_default(out, target, pin, v);
+                    if let Some(t) = lit_type(n, text) {
+                        set_input_type(out, target, pin, t);
+                    }
                 } else if let Some((sid, sout)) = lower_value(text, n, out, fcnt, vcnt) {
                     connect(out, &sid, &sout, target, pin);
+                    if let Some(t) = output_type(out, &sid, &sout) {
+                        if t != "mixed" && t != "exec" {
+                            set_input_type(out, target, pin, &t);
+                        }
+                    }
                 }
             }
 
