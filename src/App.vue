@@ -134,6 +134,7 @@
     import { getWorkspaceIssueCount } from './utils/node-inspector.js';
     import { getCodegenTargets, runCodegen } from './utils/codegen.js';
     import { resolveEntryGraph } from './utils/content-browser.js';
+    import { graphFromSourceFile } from './utils/source-graph.js';
     import CodeOutput from './components/CodeOutput.vue';
 
     const contextMenuVisible = ref(false);
@@ -151,9 +152,22 @@
 
     // Open a content-browser entry: hydrate its graph and load it into the active
     // workspace (replacing what's there). Entries are documents, not files, so
-    // "open" swaps the whole graph, name included.
-    function openContentEntry(entry) {
-        const graph = resolveEntryGraph(entry);
+    // "open" swaps the whole graph, name included. When the entry points at a real
+    // source file, lower THAT (via the Rust backend) into the graph; the entry's
+    // own open() (a starter stub) is only the fallback when parsing isn't available.
+    async function openContentEntry(entry) {
+        let graph = null;
+        if (entry && entry.file && entry.language) {
+            try {
+                const parsed = await graphFromSourceFile(entry.file, entry.language);
+                if (parsed && parsed.nodes.length) {
+                    graph = { name: entry.name, nodes: parsed.nodes, connections: parsed.connections };
+                }
+            } catch (e) {
+                console.warn('[content] source parse failed, using fallback', e);
+            }
+        }
+        if (!graph) graph = resolveEntryGraph(entry);
         if (!graph) return;
         let ws = activeWorkspace.value;
         if (!ws) {

@@ -589,6 +589,11 @@ function buildContentCatalog() {
                 id: `${dir}/${base}`,
                 name: md?.module || base,
                 path: [residency, faction || kind],
+                // The real source file: opening the entry lowers THIS into a graph
+                // (the engine parses it via the backend). `hooks`/`className` remain
+                // for the starter-stub fallback when parsing isn't available.
+                file: join(abs, file),
+                language: 'lua',
                 className,
                 hooks,
                 icon: style.icon,

@@ -383,10 +383,15 @@ struct GraphConnection {
 }
 
 #[derive(Serialize, Clone, Default)]
+#[allow(non_snake_case)]
 struct IoItem {
     name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     r#type: Option<String>,
+    // A literal value baked onto the pin (e.g. a call argument that was a string
+    // or number in the source), mirroring the JS node schema's `defaultValue`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    defaultValue: Option<serde_json::Value>,
 }
 
 #[derive(Serialize, Clone, Default)]
@@ -469,6 +474,7 @@ fn parse_code_to_graph(
                     .map(|(n, t)| IoItem {
                         name: (*n).into(),
                         r#type: Some((*t).into()),
+                        defaultValue: None,
                     })
                     .collect(),
             ),
@@ -478,6 +484,7 @@ fn parse_code_to_graph(
                     .map(|(n, t)| IoItem {
                         name: (*n).into(),
                         r#type: Some((*t).into()),
+                        defaultValue: None,
                     })
                     .collect(),
             ),
@@ -509,6 +516,7 @@ fn parse_code_to_graph(
                 Some(vec![IoItem {
                     name: "value".into(),
                     r#type: Some(ty.into()),
+                    defaultValue: None,
                 }])
             } else {
                 Some(vec![])
@@ -517,6 +525,7 @@ fn parse_code_to_graph(
                 Some(vec![IoItem {
                     name: "value".into(),
                     r#type: Some(ty.into()),
+                    defaultValue: None,
                 }])
             } else {
                 Some(vec![])
@@ -885,6 +894,507 @@ fn parse_code_to_graph(
             }
             Ok(out)
         }
+        "lua" => {
+            let mut parser = Parser::new();
+            parser
+                .set_language(&tree_sitter_lua::LANGUAGE.into())
+                .map_err(|e| format!("set_language(lua) failed: {:?}", e))?;
+            let tree = parser
+                .parse(&text, None)
+                .ok_or_else(|| "parse failed".to_string())?;
+            let root = tree.root_node();
+
+            // Y by source row so the graph reads top-down like the file; data
+            // (values) sits to the left, statements/flow to the right.
+            fn py(row: usize) -> i32 {
+                60 + (row as i32) * 120
+            }
+            fn txt<'a>(n: tree_sitter::Node, text: &'a str) -> &'a str {
+                n.utf8_text(text.as_bytes()).unwrap_or("").trim()
+            }
+            fn io(name: &str, ty: &str) -> IoItem {
+                IoItem {
+                    name: name.into(),
+                    r#type: Some(ty.into()),
+                    defaultValue: None,
+                }
+            }
+            // A literal source expression → a JSON value to bake onto a pin.
+            fn lit_value(n: tree_sitter::Node, text: &str) -> Option<serde_json::Value> {
+                match n.kind() {
+                    "number" => {
+                        let s = txt(n, text);
+                        if let Ok(i) = s.parse::<i64>() {
+                            Some(serde_json::json!(i))
+                        } else if let Ok(f) = s.parse::<f64>() {
+                            Some(serde_json::json!(f))
+                        } else {
+                            Some(serde_json::json!(s))
+                        }
+                    }
+                    "string" => {
+                        let s = txt(n, text);
+                        let inner = s
+                            .strip_prefix('"')
+                            .and_then(|x| x.strip_suffix('"'))
+                            .or_else(|| s.strip_prefix('\'').and_then(|x| x.strip_suffix('\'')))
+                            .unwrap_or(s);
+                        Some(serde_json::json!(inner))
+                    }
+                    "true" => Some(serde_json::json!(true)),
+                    "false" => Some(serde_json::json!(false)),
+                    "nil" => Some(serde_json::Value::Null),
+                    _ => None,
+                }
+            }
+            #[allow(clippy::too_many_arguments)]
+            fn push_node(
+                out: &mut GraphResult,
+                id: String,
+                ntype: &str,
+                name: &str,
+                action: Option<&str>,
+                category: &str,
+                x: i32,
+                y: i32,
+                inputs: Vec<IoItem>,
+                outputs: Vec<IoItem>,
+            ) {
+                out.nodes.push(GraphNode {
+                    id,
+                    r#type: ntype.into(),
+                    nodeDefId: None,
+                    funcName: if ntype == "function" {
+                        Some(name.to_string())
+                    } else {
+                        None
+                    },
+                    varName: if ntype == "variable" {
+                        Some(name.to_string())
+                    } else {
+                        None
+                    },
+                    varType: if ntype == "variable" {
+                        Some("mixed".into())
+                    } else {
+                        None
+                    },
+                    varAction: action.map(|a| a.to_string()),
+                    x,
+                    y,
+                    inputs: Some(inputs),
+                    outputs: Some(outputs),
+                    category: Some(category.into()),
+                });
+            }
+            fn connect(out: &mut GraphResult, from: &str, fout: &str, to: &str, tin: &str) {
+                out.connections.push(GraphConnection {
+                    from: GraphPortRef {
+                        nodeId: from.into(),
+                        output: fout.into(),
+                    },
+                    to: GraphPortDst {
+                        nodeId: to.into(),
+                        input: tin.into(),
+                    },
+                });
+            }
+            fn set_default(out: &mut GraphResult, id: &str, pin: &str, v: serde_json::Value) {
+                if let Some(node) = out.nodes.iter_mut().find(|g| g.id == id) {
+                    if let Some(inputs) = node.inputs.as_mut() {
+                        if let Some(p) = inputs.iter_mut().find(|i| i.name == pin) {
+                            p.defaultValue = Some(v);
+                        }
+                    }
+                }
+            }
+
+            // A value expression: either bake a literal onto the target pin, or
+            // lower a sub-expression node and wire it in.
+            fn bake_or_wire(
+                text: &str,
+                n: tree_sitter::Node,
+                out: &mut GraphResult,
+                fcnt: &mut i32,
+                vcnt: &mut i32,
+                target: &str,
+                pin: &str,
+            ) {
+                if let Some(v) = lit_value(n, text) {
+                    set_default(out, target, pin, v);
+                } else if let Some((sid, sout)) = lower_value(text, n, out, fcnt, vcnt) {
+                    connect(out, &sid, &sout, target, pin);
+                }
+            }
+
+            // Lower a value-producing expression; return (nodeId, outputPort), or
+            // None for a bare literal (the caller bakes it onto a pin instead).
+            fn lower_value(
+                text: &str,
+                n: tree_sitter::Node,
+                out: &mut GraphResult,
+                fcnt: &mut i32,
+                vcnt: &mut i32,
+            ) -> Option<(String, String)> {
+                let y = py(n.start_position().row);
+                match n.kind() {
+                    "number" | "string" | "true" | "false" | "nil" => None,
+                    "identifier" | "dot_index_expression" => {
+                        let name = txt(n, text);
+                        let id = next_id("variable", vcnt);
+                        push_node(
+                            out,
+                            id.clone(),
+                            "variable",
+                            name,
+                            Some("get"),
+                            "VARIABLE",
+                            160,
+                            y,
+                            vec![],
+                            vec![io("value", "mixed")],
+                        );
+                        Some((id, "value".into()))
+                    }
+                    "binary_expression" => {
+                        // operator is the first anonymous child between operands
+                        let mut op = "op".to_string();
+                        let mut i = 0;
+                        while i < n.child_count() {
+                            if let Some(c) = n.child(i) {
+                                if !c.is_named() {
+                                    op = txt(c, text).to_string();
+                                    break;
+                                }
+                            }
+                            i += 1;
+                        }
+                        let id = next_id("function", fcnt);
+                        push_node(
+                            out,
+                            id.clone(),
+                            "function",
+                            &op,
+                            None,
+                            "FUNCTION",
+                            160,
+                            y,
+                            vec![io("a", "mixed"), io("b", "mixed")],
+                            vec![io("result", "mixed")],
+                        );
+                        if let Some(l) = n.child_by_field_name("left") {
+                            bake_or_wire(text, l, out, fcnt, vcnt, &id, "a");
+                        }
+                        if let Some(r) = n.child_by_field_name("right") {
+                            bake_or_wire(text, r, out, fcnt, vcnt, &id, "b");
+                        }
+                        Some((id, "result".into()))
+                    }
+                    "function_call" => {
+                        let id = lower_call(text, n, out, fcnt, vcnt, false);
+                        Some((id, "result".into()))
+                    }
+                    "function_definition" => {
+                        let id = next_id("function", fcnt);
+                        push_node(
+                            out,
+                            id.clone(),
+                            "function",
+                            "λ callback",
+                            None,
+                            "FUNCTION",
+                            160,
+                            y,
+                            vec![],
+                            vec![io("fn", "exec")],
+                        );
+                        Some((id, "fn".into()))
+                    }
+                    _ => {
+                        let mut i = 0;
+                        while i < n.named_child_count() {
+                            if let Some(c) = n.named_child(i) {
+                                if let Some(r) = lower_value(text, c, out, fcnt, vcnt) {
+                                    return Some(r);
+                                }
+                            }
+                            i += 1;
+                        }
+                        None
+                    }
+                }
+            }
+
+            // Lower a call. `with_exec` adds exec pins (statement form); a single
+            // table-constructor argument is expanded so its named fields become
+            // populated pins (the mercs2 config-table idiom) — this is what makes
+            // objective parameters visible on the node.
+            fn lower_call(
+                text: &str,
+                n: tree_sitter::Node,
+                out: &mut GraphResult,
+                fcnt: &mut i32,
+                vcnt: &mut i32,
+                with_exec: bool,
+            ) -> String {
+                let y = py(n.start_position().row);
+                let name = n
+                    .child_by_field_name("name")
+                    .map(|nm| txt(nm, text).to_string())
+                    .unwrap_or_else(|| "call".into());
+                let id = next_id("function", fcnt);
+                let mut inputs: Vec<IoItem> = vec![];
+                if with_exec {
+                    inputs.push(io("exec", "exec"));
+                }
+                let mut arg_pins: Vec<(String, tree_sitter::Node)> = vec![];
+                if let Some(args) = n.child_by_field_name("arguments") {
+                    let mut argv: Vec<tree_sitter::Node> = vec![];
+                    if args.kind() == "table_constructor" {
+                        argv.push(args);
+                    } else {
+                        let mut i = 0;
+                        while i < args.named_child_count() {
+                            if let Some(c) = args.named_child(i) {
+                                argv.push(c);
+                            }
+                            i += 1;
+                        }
+                    }
+                    if argv.len() == 1 && argv[0].kind() == "table_constructor" {
+                        // expand named/positional fields into pins
+                        let tbl = argv[0];
+                        let mut j = 0;
+                        let mut pos = 1;
+                        while j < tbl.named_child_count() {
+                            if let Some(field) = tbl.named_child(j) {
+                                if field.kind() == "field" {
+                                    let pin = field
+                                        .child_by_field_name("name")
+                                        .map(|nm| txt(nm, text).to_string())
+                                        .unwrap_or_else(|| {
+                                            let p = format!("[{}]", pos);
+                                            pos += 1;
+                                            p
+                                        });
+                                    if let Some(val) = field.child_by_field_name("value") {
+                                        inputs.push(io(&pin, "mixed"));
+                                        arg_pins.push((pin, val));
+                                    }
+                                }
+                            }
+                            j += 1;
+                        }
+                    } else {
+                        for (k, a) in argv.iter().enumerate() {
+                            let pin = format!("arg{}", k + 1);
+                            inputs.push(io(&pin, "mixed"));
+                            arg_pins.push((pin, *a));
+                        }
+                    }
+                }
+                let mut outputs = vec![];
+                if with_exec {
+                    outputs.push(io("exec", "exec"));
+                }
+                outputs.push(io("result", "mixed"));
+                push_node(
+                    out,
+                    id.clone(),
+                    "function",
+                    &name,
+                    None,
+                    "FUNCTION",
+                    520,
+                    y,
+                    inputs,
+                    outputs,
+                );
+                for (pin, an) in arg_pins {
+                    bake_or_wire(text, an, out, fcnt, vcnt, &id, &pin);
+                }
+                id
+            }
+
+            fn lower_block(
+                text: &str,
+                block: tree_sitter::Node,
+                out: &mut GraphResult,
+                fcnt: &mut i32,
+                vcnt: &mut i32,
+                prev: &mut Option<(String, String)>,
+            ) {
+                let mut i = 0;
+                while i < block.named_child_count() {
+                    if let Some(c) = block.named_child(i) {
+                        lower_stmt(text, c, out, fcnt, vcnt, prev);
+                    }
+                    i += 1;
+                }
+            }
+
+            // Lower a statement, giving it exec pins and chaining it after `prev`.
+            fn lower_stmt(
+                text: &str,
+                n: tree_sitter::Node,
+                out: &mut GraphResult,
+                fcnt: &mut i32,
+                vcnt: &mut i32,
+                prev: &mut Option<(String, String)>,
+            ) {
+                let y = py(n.start_position().row);
+                match n.kind() {
+                    "function_declaration" => {
+                        let name = n
+                            .child_by_field_name("name")
+                            .map(|nm| txt(nm, text).to_string())
+                            .unwrap_or_else(|| "function".into());
+                        let id = next_id("function", fcnt);
+                        push_node(
+                            out,
+                            id.clone(),
+                            "function",
+                            &name,
+                            None,
+                            "EVENT",
+                            520,
+                            y,
+                            vec![],
+                            vec![io("body", "exec")],
+                        );
+                        if let Some(body) = n.child_by_field_name("body") {
+                            let mut p = Some((id, "body".to_string()));
+                            lower_block(text, body, out, fcnt, vcnt, &mut p);
+                        }
+                        *prev = None;
+                    }
+                    "variable_declaration" => {
+                        let mut i = 0;
+                        while i < n.named_child_count() {
+                            if let Some(c) = n.named_child(i) {
+                                lower_stmt(text, c, out, fcnt, vcnt, prev);
+                            }
+                            i += 1;
+                        }
+                    }
+                    "assignment_statement" => {
+                        let var_name = n
+                            .named_child(0)
+                            .and_then(|vl| vl.child_by_field_name("name"))
+                            .map(|nm| txt(nm, text).to_string())
+                            .unwrap_or_else(|| "var".into());
+                        let id = next_id("variable", vcnt);
+                        push_node(
+                            out,
+                            id.clone(),
+                            "variable",
+                            &var_name,
+                            Some("set"),
+                            "VARIABLE",
+                            520,
+                            y,
+                            vec![io("exec", "exec"), io("value", "mixed")],
+                            vec![io("exec", "exec")],
+                        );
+                        if let Some((pid, pport)) = prev.take() {
+                            connect(out, &pid, &pport, &id, "exec");
+                        }
+                        *prev = Some((id.clone(), "exec".into()));
+                        if let Some(el) = n.named_child(1) {
+                            if let Some(val) = el
+                                .child_by_field_name("value")
+                                .or_else(|| el.named_child(0))
+                            {
+                                bake_or_wire(text, val, out, fcnt, vcnt, &id, "value");
+                            }
+                        }
+                    }
+                    "function_call" => {
+                        let id = lower_call(text, n, out, fcnt, vcnt, true);
+                        if let Some((pid, pport)) = prev.take() {
+                            connect(out, &pid, &pport, &id, "exec");
+                        }
+                        *prev = Some((id, "exec".into()));
+                    }
+                    "if_statement" => {
+                        let id = next_id("function", fcnt);
+                        push_node(
+                            out,
+                            id.clone(),
+                            "function",
+                            "Branch",
+                            None,
+                            "CONTROL",
+                            520,
+                            y,
+                            vec![io("exec", "exec"), io("condition", "bool")],
+                            vec![io("then", "exec"), io("else", "exec")],
+                        );
+                        if let Some((pid, pport)) = prev.take() {
+                            connect(out, &pid, &pport, &id, "exec");
+                        }
+                        if let Some(cond) = n.child_by_field_name("condition") {
+                            bake_or_wire(text, cond, out, fcnt, vcnt, &id, "condition");
+                        }
+                        if let Some(cons) = n.child_by_field_name("consequence") {
+                            let mut p = Some((id.clone(), "then".to_string()));
+                            lower_block(text, cons, out, fcnt, vcnt, &mut p);
+                        }
+                        if let Some(alt) = n.child_by_field_name("alternative") {
+                            let body = alt.child_by_field_name("body").unwrap_or(alt);
+                            let mut p = Some((id.clone(), "else".to_string()));
+                            lower_block(text, body, out, fcnt, vcnt, &mut p);
+                        }
+                        *prev = None;
+                    }
+                    "return_statement" => {
+                        let id = next_id("function", fcnt);
+                        push_node(
+                            out,
+                            id.clone(),
+                            "function",
+                            "return",
+                            None,
+                            "FUNCTION",
+                            520,
+                            y,
+                            vec![io("exec", "exec"), io("value", "mixed")],
+                            vec![],
+                        );
+                        if let Some((pid, pport)) = prev.take() {
+                            connect(out, &pid, &pport, &id, "exec");
+                        }
+                        if let Some(v) = n.named_child(0) {
+                            bake_or_wire(text, v, out, fcnt, vcnt, &id, "value");
+                        }
+                        *prev = None;
+                    }
+                    _ => {
+                        let mut i = 0;
+                        while i < n.named_child_count() {
+                            if let Some(c) = n.named_child(i) {
+                                lower_stmt(text, c, out, fcnt, vcnt, prev);
+                            }
+                            i += 1;
+                        }
+                    }
+                }
+            }
+
+            let mut prev: Option<(String, String)> = None;
+            let mut i = 0;
+            while i < root.named_child_count() {
+                if let Some(c) = root.named_child(i) {
+                    lower_stmt(&text, c, &mut out, &mut fcnt, &mut vcnt, &mut prev);
+                }
+                i += 1;
+            }
+            if out.nodes.is_empty() {
+                out.warnings
+                    .push("No statements lowered from Lua AST".into());
+            }
+            Ok(out)
+        }
         _ => Err(format!(
             "Graph lowering not implemented for language: {}",
             lang
@@ -925,5 +1435,71 @@ mod tests {
         assert!(ids.contains(&"php".to_string()));
         assert!(ids.contains(&"javascript".to_string()));
         assert!(ids.contains(&"rust".to_string()));
+    }
+
+    #[test]
+    fn lua_lowering_produces_real_structure() {
+        let src = r#"
+function Activated(self)
+  local x = 5
+  self:CreateChild({ sModuleName = "MrxTaskObjectiveDestroy", sName = "Blow it up", nQuota = 3 })
+  if self.count > 2 then
+    Ui.Show("hi")
+  end
+end
+"#;
+        let g = parse_code_to_graph("lua".into(), src.into(), None).expect("lua lowers");
+
+        // The function declaration becomes an EVENT entry node.
+        let entry = g
+            .nodes
+            .iter()
+            .find(|n| n.funcName.as_deref() == Some("Activated"))
+            .expect("entry node for Activated");
+        assert_eq!(entry.category.as_deref(), Some("EVENT"));
+
+        // The config-table call expands its named fields into populated pins —
+        // this is what "parameters populate" means: the values come from the source.
+        let create = g
+            .nodes
+            .iter()
+            .find(|n| n.funcName.as_deref() == Some("self:CreateChild"))
+            .expect("CreateChild call node");
+        let inputs = create.inputs.as_ref().unwrap();
+        let sname = inputs
+            .iter()
+            .find(|i| i.name == "sName")
+            .expect("sName pin");
+        assert_eq!(sname.defaultValue, Some(serde_json::json!("Blow it up")));
+        let quota = inputs
+            .iter()
+            .find(|i| i.name == "nQuota")
+            .expect("nQuota pin");
+        assert_eq!(quota.defaultValue, Some(serde_json::json!(3)));
+
+        // The `if` becomes a Branch with then/else exec outs.
+        let branch = g
+            .nodes
+            .iter()
+            .find(|n| n.funcName.as_deref() == Some("Branch"))
+            .expect("branch node");
+        let outs = branch.outputs.as_ref().unwrap();
+        assert!(outs.iter().any(|o| o.name == "then"));
+        assert!(outs.iter().any(|o| o.name == "else"));
+
+        // Statements are exec-chained (the entry's body drives the first statement).
+        assert!(
+            g.connections.iter().any(|c| c.from.output == "body"),
+            "entry body should wire into the first statement"
+        );
+    }
+
+    #[test]
+    fn lua_lowering_is_the_graph_backend_for_lua() {
+        // The frontend content browser opens a corpus document by calling this
+        // command with lang="lua"; make sure it does not fall through to the
+        // "not implemented" arm.
+        let g = parse_code_to_graph("lua".into(), "Foo.Bar(1)".into(), None);
+        assert!(g.is_ok());
     }
 }

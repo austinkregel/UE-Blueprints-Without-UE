@@ -150,6 +150,9 @@
                 icon: rec.icon,
                 color: rec.color,
                 meta: rec.meta,
+                // Real source file the engine lowers on open; open() is the stub fallback.
+                file: rec.file,
+                language: rec.language,
                 open: () => buildDocumentGraph(api, rec)
             }));
             api.registerContentSource(() => entries);
